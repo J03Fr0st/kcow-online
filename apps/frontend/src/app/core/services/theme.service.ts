@@ -252,18 +252,9 @@ export class ThemeService {
   }
 
   private getInitialTheme(): Theme {
-    if (!this.isBrowser) {
-      // Default theme for SSR/prerender
-      return 'light';
-    }
-
-    // Check system preference (fallback since we now use comprehensive settings)
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    // Fallback default
-    return 'light';
+    // Story 1.5: Dark theme is the default and only enabled theme
+    // tailwind.config.js only has 'dark' in themes array
+    return 'dark';
   }
 
   private applyCurrentSettings(): void {

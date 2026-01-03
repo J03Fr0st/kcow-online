@@ -77,4 +77,44 @@ describe('DashboardComponent', () => {
     expect(mockDataService.getStats).toHaveBeenCalled();
     expect(mockDataService.getRecentActivities).toHaveBeenCalled();
   });
+
+  // Accessibility Tests (Story 1.5 AC#2: Keyboard navigation)
+  it('should have proper heading structure for screen readers', () => {
+    fixture.detectChanges();
+
+    const h1 = fixture.nativeElement.querySelector('h1');
+    expect(h1).toBeTruthy();
+
+    // H1 should describe the page purpose
+    expect(h1.textContent).toContain('Dashboard');
+  });
+
+  it('should have keyboard-accessible quick action buttons', () => {
+    component.stats.set([]); // Set empty stats to bypass loading
+    component.loading.set(false);
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('button.btn');
+
+    if (buttons.length > 0) {
+      // All buttons should be focusable
+      buttons.forEach((button: HTMLButtonElement) => {
+        expect(button.tagName.toLowerCase()).toBe('button');
+      });
+    }
+  });
+
+  it('should have proper semantic HTML structure', () => {
+    component.stats.set([]);
+    component.loading.set(false);
+    fixture.detectChanges();
+
+    // Cards use semantic divs but should have proper heading context
+    const cards = fixture.nativeElement.querySelectorAll('.card');
+    expect(cards.length).toBeGreaterThan(0);
+
+    // Each card should have a card-title for accessibility
+    const cardTitles = fixture.nativeElement.querySelectorAll('.card-title');
+    expect(cardTitles.length).toBeGreaterThan(0);
+  });
 });

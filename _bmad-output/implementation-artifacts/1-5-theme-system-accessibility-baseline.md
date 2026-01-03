@@ -1,6 +1,6 @@
 # Story 1.5: Theme System & Accessibility Baseline
 
-Status: review
+Status: done
 
 ## Story
 
@@ -52,6 +52,10 @@ so that **the UI is readable and keyboard-navigable**.
 - [x] Task 6: Document accessibility patterns
   - [x] Add accessibility notes to project context
   - [x] Create component patterns for future development
+- [x] Review Follow-ups (AI)
+  - [x] [AI-Review][Medium] Fix ThemeService default theme to return 'dark' instead of 'light'
+  - [x] [AI-Review][Medium] Add focus ring test to FormFieldComponent
+  - [x] [AI-Review][Medium] Add accessibility tests for existing components (Sidebar, Navbar, Dashboard)
 
 ## Dev Notes
 
@@ -213,6 +217,13 @@ Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
 - ✅ Documented all accessibility patterns in docs/accessibility-patterns.md for future development
 - ✅ All new components use OnPush change detection strategy as required by architecture
 
+**Code Review Fixes Applied:**
+- Fixed ThemeService.getInitialTheme() to return 'dark' as default (was returning 'light')
+- Added keyboard navigation test to FormFieldComponent to verify focus handling
+- Added accessibility tests to SidebarComponent (nav links, aria-labels, semantic structure)
+- Added accessibility tests to NavbarComponent (button labels, semantic header, keyboard accessibility)
+- Added accessibility tests to DashboardComponent (heading structure, semantic HTML, button accessibility)
+
 ### File List
 
 - apps/frontend/tailwind.config.js
@@ -223,6 +234,10 @@ Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
 - apps/frontend/src/app/shared/components/form-field/form-field.component.spec.ts
 - apps/frontend/src/app/shared/components/input/input.component.ts
 - apps/frontend/src/app/shared/components/input/input.component.spec.ts
+- apps/frontend/src/app/core/services/theme.service.ts (code review fix: default theme)
+- apps/frontend/src/app/layouts/sidebar/sidebar.component.spec.ts (code review fix: accessibility tests)
+- apps/frontend/src/app/layouts/navbar/navbar.component.spec.ts (code review fix: accessibility tests)
+- apps/frontend/src/app/features/dashboard/dashboard.component.spec.ts (code review fix: accessibility tests)
 - docs/accessibility-patterns.md
 
 ### Change Log

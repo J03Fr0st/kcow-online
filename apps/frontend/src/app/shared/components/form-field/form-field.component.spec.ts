@@ -126,4 +126,19 @@ describe('FormFieldComponent', () => {
     const input = compiled.querySelector('input#test-input');
     expect(input).toBeTruthy();
   });
+
+  it('should support keyboard navigation focus (Story 1.5 AC#2)', () => {
+    fixture.detectChanges();
+    const input = compiled.querySelector('input#test-input') as HTMLInputElement;
+
+    // Simulate keyboard focus
+    input.focus();
+
+    // Verify element receives focus
+    expect(document.activeElement).toBe(input);
+
+    // Note: Focus ring styling is applied via global CSS in styles.css
+    // Visible focus rings are verified through manual testing
+    // See: apps/frontend/src/styles.css @layer base focus ring styles
+  });
 });

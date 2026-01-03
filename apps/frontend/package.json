@@ -1,7 +1,7 @@
 {
-  "name": "angular-admin-template",
+  "name": "kcow",
   "version": "1.0.0",
-  "description": "Modern Angular admin dashboard template with Vite, Jest, Biome, and DaisyUI",
+  "description": "KCOW - Mobile Computer Literacy Trucks (KCOW) - Admin Application",
   "type": "module",
   "scripts": {
     "dev": "vite",
