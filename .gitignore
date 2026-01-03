@@ -332,7 +332,7 @@ appsettings.*.Local.json
 #*.xml
 
 # Legacy XML files (sensitive/example data)
-docs/legacy/*.xml
+docs/legacy/**/*.xml
 
 # =========================
 # Build Artifacts
