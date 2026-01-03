@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -22,6 +22,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
@@ -77,6 +78,7 @@ export class LoginComponent implements OnInit {
           this.isLoading = false;
           this.errorMessage = this.extractErrorMessage(error);
           this.loginForm.enable(); // Re-enable form on error
+          this.loginForm.get('password')?.setValue(''); // Clear password on error (AC #2)
         },
       });
   }
@@ -84,7 +86,16 @@ export class LoginComponent implements OnInit {
   /**
    * Extract user-friendly error message from error response
    */
-  private extractErrorMessage(error: any): string {
+  private extractErrorMessage(error: unknown): string {
+    // Type guard for error object
+    const isErrorObject = (err: unknown): err is { error?: { detail?: string; title?: string }; status?: number; message?: string } => {
+      return typeof err === 'object' && err !== null;
+    };
+
+    if (!isErrorObject(error)) {
+      return 'Login failed. Please try again';
+    }
+
     // Check for ProblemDetails format
     if (error.error?.detail) {
       return error.error.detail;

@@ -4,7 +4,7 @@
   "description": "KCOW - Full-stack application with .NET backend and Angular frontend",
   "private": true,
   "scripts": {
-    "start": "concurrently -k -n \"frontend,backend\" -c \"magenta,cyan\" \"npm run start:frontend\" \"npm run start:backend\"",
+    "start": "npm run kill && concurrently -n \"frontend,backend\" -c \"magenta,cyan\" \"npm run start:frontend\" \"npm run start:backend\"",
     "start:backend": "cd apps/backend/src/Api && dotnet run",
     "start:frontend": "cd apps/frontend && npm run dev",
     "start:frontend:wait": "wait-on http://localhost:5039/api/health && npm run start:frontend",

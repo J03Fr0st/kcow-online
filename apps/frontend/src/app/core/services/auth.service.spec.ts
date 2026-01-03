@@ -102,24 +102,34 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('should call logout API, clear storage, and redirect', (done) => {
+    it('should call logout API and clear storage (no navigation)', (done) => {
       httpClientSpy.post.mockReturnValue(of({}));
       localStorage.setItem('auth_token', 'fake-token');
 
-      // Setup user state to be logged in
-      // Since we can't easily set signals from outside, we assume logout clears whatever is there.
-      
       service.logout().subscribe({
         next: () => {
           expect(httpClientSpy.post).toHaveBeenCalledWith(`${environment.apiUrl}/auth/logout`, {});
           expect(localStorage.getItem('auth_token')).toBeNull();
           expect(service.isAuthenticated()).toBe(false);
           expect(service.currentUser()).toBeNull();
-          expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
+          expect(routerSpy.navigate).not.toHaveBeenCalled(); // Logout doesn't navigate anymore
           done();
         },
         error: done.fail
       });
+    });
+  });
+
+  describe('clearSessionAndRedirect', () => {
+    it('should clear storage synchronously and redirect to login', () => {
+      localStorage.setItem('auth_token', 'fake-token');
+
+      service.clearSessionAndRedirect();
+
+      expect(localStorage.getItem('auth_token')).toBeNull();
+      expect(service.isAuthenticated()).toBe(false);
+      expect(service.currentUser()).toBeNull();
+      expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
     });
   });
 

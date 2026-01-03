@@ -28,10 +28,10 @@ export class AuthService {
   private userSignal = signal<User | null>(null);
   private isLoadingSignal = signal<boolean>(false);
 
-  // Computed signals
+  // Public readonly signals
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
   readonly currentUser = computed(() => this.userSignal());
-  readonly isLoading = computed(() => this.isLoadingSignal());
+  readonly isLoading = this.isLoadingSignal.asReadonly();
 
   constructor() {
     // Check for existing session on init
@@ -50,6 +50,17 @@ export class AuthService {
       .post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap((response) => {
+          // Validate token exists and is not empty
+          if (!response.token || response.token.trim() === '') {
+            throw new Error('Invalid token received from server');
+          }
+
+          // Basic JWT format validation (xxx.yyy.zzz)
+          const tokenParts = response.token.split('.');
+          if (tokenParts.length !== 3) {
+            throw new Error('Malformed JWT token received');
+          }
+
           // Store auth token
           localStorage.setItem(this.tokenKey, response.token);
 
@@ -66,7 +77,8 @@ export class AuthService {
   }
 
   /**
-   * Logout current user
+   * Logout current user and call logout API
+   * Note: Caller is responsible for navigation after logout completes
    * @returns Observable<void>
    */
   logout(): Observable<void> {
@@ -74,19 +86,23 @@ export class AuthService {
 
     return this.http.post<void>(`${this.apiUrl}/auth/logout`, {}).pipe(
       tap(() => {
-        this.doLogoutCleanup();
+        this.clearSession();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
         // Even if API call fails, clear local session
-        this.doLogoutCleanup();
+        this.clearSession();
         this.isLoadingSignal.set(false);
-        throw error;
+        return throwError(() => error);
       })
     );
   }
 
-  private doLogoutCleanup(): void {
+  /**
+   * Clear session data synchronously without API call
+   * Use this when you need immediate logout (e.g., on 401 error)
+   */
+  clearSessionAndRedirect(): void {
     this.clearSession();
     this.router.navigate(['/login']);
   }

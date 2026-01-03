@@ -13,7 +13,7 @@ describe('authInterceptor', () => {
   beforeEach(() => {
     authServiceSpy = {
       getToken: jest.fn(),
-      logout: jest.fn(),
+      clearSessionAndRedirect: jest.fn(),
     } as unknown as jest.Mocked<AuthService>;
 
     TestBed.configureTestingModule({
@@ -51,7 +51,7 @@ describe('authInterceptor', () => {
     expect(req.request.headers.has('Authorization')).toBe(false);
   });
 
-  it('should call logout on 401 error', () => {
+  it('should call clearSessionAndRedirect on 401 error', () => {
     authServiceSpy.getToken.mockReturnValue('test-token');
 
     httpClient.get('/test').subscribe({
@@ -63,6 +63,6 @@ describe('authInterceptor', () => {
     const req = httpMock.expectOne('/test');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    expect(authServiceSpy.logout).toHaveBeenCalled();
+    expect(authServiceSpy.clearSessionAndRedirect).toHaveBeenCalled();
   });
 });

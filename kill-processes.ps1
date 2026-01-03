@@ -1,87 +1,60 @@
-# Kill Frontend and Backend Processes
-# This script kills all running frontend (Angular) and backend (.NET) processes
+<# 
+  Kill Frontend and Backend Dev Processes
+  - Backend: stop any running Kcow.Api process and anything bound to the dev ports
+  - Frontend: stop only the Node process bound to the dev port
 
-Write-Host "Killing Frontend and Backend processes..." -ForegroundColor Yellow
+  This intentionally avoids killing *all* dotnet/node processes on your machine.
+#>
 
-# Kill Backend processes
-Write-Host "`n[Backend] Searching for backend processes..." -ForegroundColor Cyan
-$backendProcesses = Get-Process -Name "backend" -ErrorAction SilentlyContinue
-if ($backendProcesses) {
-    foreach ($proc in $backendProcesses) {
-        Write-Host "  Killing backend process (PID: $($proc.Id))..." -ForegroundColor Gray
-        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+Write-Host "Killing KCOW dev processes (safe mode)..." -ForegroundColor Yellow
+
+function Stop-ProcessById([int]$ProcessId, [string]$Reason) {
+    $proc = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+    if (-not $proc) { return }
+    Write-Host "  Killing PID $ProcessId ($($proc.ProcessName)) - $Reason" -ForegroundColor Gray
+    Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
+}
+
+function Get-PidsOnPort([int]$Port) {
+    try {
+        return Get-NetTCPConnection -LocalPort $Port -ErrorAction Stop | Select-Object -ExpandProperty OwningProcess -Unique
+    } catch {
+        return @()
     }
-    Write-Host "  Backend processes killed." -ForegroundColor Green
+}
+
+# Backend: stop Kcow.Api if it exists (this is what was locking the DLLs)
+Write-Host "`n[Backend] Searching for Kcow.Api process..." -ForegroundColor Cyan
+$kcowApi = Get-Process -Name "Kcow.Api" -ErrorAction SilentlyContinue
+if ($kcowApi) {
+    foreach ($proc in $kcowApi) {
+        Stop-ProcessById -ProcessId $proc.Id -Reason "Kcow.Api"
+    }
 } else {
-    Write-Host "  No backend processes found." -ForegroundColor Gray
+    Write-Host "  No Kcow.Api process found." -ForegroundColor Gray
 }
 
-# Kill .NET Host processes (often used by backend)
-Write-Host "`n[.NET Host] Searching for .NET Host processes..." -ForegroundColor Cyan
-$dotnetProcesses = Get-Process -Name "dotnet" -ErrorAction SilentlyContinue
-if ($dotnetProcesses) {
-    foreach ($proc in $dotnetProcesses) {
-        Write-Host "  Killing .NET process (PID: $($proc.Id))..." -ForegroundColor Gray
-        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-    }
-    Write-Host "  .NET processes killed." -ForegroundColor Green
-} else {
-    Write-Host "  No .NET processes found." -ForegroundColor Gray
-}
-
-# Kill Frontend processes (Node.js/Angular)
-Write-Host "`n[Frontend] Searching for frontend processes..." -ForegroundColor Cyan
-
-# Kill all node processes (Angular typically runs via node)
-$nodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue
-if ($nodeProcesses) {
-    foreach ($proc in $nodeProcesses) {
-        Write-Host "  Killing Node process (PID: $($proc.Id))..." -ForegroundColor Gray
-        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-    }
-    Write-Host "  Node processes killed." -ForegroundColor Green
-} else {
-    Write-Host "  No Node processes found." -ForegroundColor Gray
-}
-
-# Kill node processes running on port 4200 (default Angular port)
-$port4200Processes = Get-NetTCPConnection -LocalPort 4200 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-if ($port4200Processes) {
-    foreach ($pid in $port4200Processes) {
-        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($proc -and $proc.ProcessName -eq "node") {
-            Write-Host "  Killing Node process on port 4200 (PID: $pid)..." -ForegroundColor Gray
-            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-        }
+# Backend: stop anything bound to the KCOW dev ports
+$backendPorts = @(5039, 7278)
+Write-Host "`n[Backend] Searching for processes on ports $($backendPorts -join ', ')..." -ForegroundColor Cyan
+foreach ($port in $backendPorts) {
+    $pids = Get-PidsOnPort -Port $port
+    foreach ($processId in $pids) {
+        Stop-ProcessById -ProcessId $processId -Reason "port $port"
     }
 }
 
-# Kill processes running on port 5039 (backend HTTP port)
-$port5039Processes = Get-NetTCPConnection -LocalPort 5039 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-if ($port5039Processes) {
-    foreach ($pid in $port5039Processes) {
-        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($proc) {
-            Write-Host "  Killing process on port 5039 (PID: $pid, Name: $($proc.ProcessName))..." -ForegroundColor Gray
-            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-        }
-    }
-}
-
-# Kill processes running on port 7029 (backend HTTPS port)
-$port7029Processes = Get-NetTCPConnection -LocalPort 7029 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-if ($port7029Processes) {
-    foreach ($pid in $port7029Processes) {
-        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
-        if ($proc) {
-            Write-Host "  Killing process on port 7029 (PID: $pid, Name: $($proc.ProcessName))..." -ForegroundColor Gray
-            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
-        }
+# Frontend: stop only node bound to port 4200
+Write-Host "`n[Frontend] Searching for Node process on port 4200..." -ForegroundColor Cyan
+$frontendPids = Get-PidsOnPort -Port 4200
+foreach ($processId in $frontendPids) {
+    $proc = Get-Process -Id $processId -ErrorAction SilentlyContinue
+    if ($proc -and $proc.ProcessName -eq "node") {
+        Stop-ProcessById -ProcessId $processId -Reason "frontend dev port 4200"
     }
 }
 
 Write-Host "`nDone! Waiting 2 seconds for processes to fully terminate..." -ForegroundColor Yellow
 Start-Sleep -Seconds 2
-
 Write-Host "`nProcess cleanup complete!" -ForegroundColor Green
 

@@ -1,6 +1,6 @@
 # Story 1.3: Frontend Auth Service & Login Page
 
-Status: review
+Status: done
 
 ## Story
 
@@ -212,12 +212,44 @@ Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
 - apps/frontend/src/app/core/guards/auth.guard.spec.ts
 - apps/frontend/src/app/features/auth/login.component.ts
 - apps/frontend/src/app/features/auth/login.component.html
+- apps/frontend/src/app/features/auth/login.component.scss
 - apps/frontend/src/app/features/auth/login.component.spec.ts
 - apps/frontend/src/app/features/auth/models/user.model.ts
 - apps/frontend/src/app/features/auth/models/login-request.model.ts
 - apps/frontend/src/app/features/auth/models/login-response.model.ts
 - apps/frontend/src/app/app.config.ts
+- apps/frontend/e2e/auth/login.spec.ts
+
+### Code Review Fixes Applied
+
+**Date:** 2026-01-03
+**Reviewer:** Adversarial Code Review (AI)
+**Issues Found:** 8 HIGH, 4 MEDIUM, 2 LOW
+**Issues Fixed:** 12 (all HIGH and MEDIUM issues)
+
+**Critical Fixes:**
+1. ✅ Fixed auth interceptor 401 handling - now calls `clearSessionAndRedirect()` synchronously
+2. ✅ Removed navigation from logout service method - follows SRP, components handle navigation
+3. ✅ Fixed `isLoading` signal pattern - changed from computed to asReadonly()
+4. ✅ Added JWT token validation - validates format and non-empty before storing
+5. ✅ Implemented password clearing on login error - satisfies AC #2
+6. ✅ Added OnPush change detection strategy - mandatory architecture requirement
+7. ✅ Fixed interceptor test false positive - now mocks `clearSessionAndRedirect()`
+8. ✅ Added missing files to File List - login.component.scss and E2E test
+
+**Quality Improvements:**
+9. ✅ Added aria-live accessibility - error alerts announced to screen readers
+10. ✅ Replaced `any` type with `unknown` - proper type safety with guards
+11. ✅ Refactored to use DaisyUI components - removed custom CSS, uses design system
+12. ✅ Created comprehensive E2E test - covers full login flow with 11 test cases
+
+**Service Pattern Update:**
+- `logout()` - Returns Observable, clears session, NO navigation
+- `clearSessionAndRedirect()` - New synchronous method for immediate logout + navigation
+- Components call `logout().subscribe(() => router.navigate(...))` pattern
+- Interceptor calls `clearSessionAndRedirect()` for 401 errors
 
 ### Change Log
 
 - 2026-01-03: Implemented frontend authentication system with AuthService, Interceptor, Guard, and Login Page (Story 1.3)
+- 2026-01-03: Code review fixes applied - 12 issues resolved (8 HIGH, 4 MEDIUM)
