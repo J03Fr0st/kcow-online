@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KCOW UX Design Directions</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --bg-2: #0f1520;
+    --panel: #111827;
+    --panel-2: #0f172a;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --accent: #22d3ee;
+    --accent-2: #a3e635;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --ok: #10b981;
+    --grid: rgba(255,255,255,0.06);
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --radius: 14px;
+    --gap: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Space Grotesk", "IBM Plex Sans", "Work Sans", sans-serif;
+    background: linear-gradient(180deg, #0a0f16 0%, #0d1422 40%, #0a1018 100%);
+    color: var(--text);
+  }
+  header {
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--grid);
+    position: sticky;
+    top: 0;
+    background: rgba(10,15,22,0.9);
+    backdrop-filter: blur(6px);
+    z-index: 5;
+  }
+  header h1 { margin: 0 0 6px 0; font-size: 22px; letter-spacing: 0.5px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+  .wrap { padding: 28px 32px 60px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 22px;
+  }
+  .card {
+    background: linear-gradient(180deg, rgba(17,24,39,0.9), rgba(9,13,20,0.95));
+    border: 1px solid var(--grid);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    min-height: 360px;
+  }
+  .card h2 { margin: 0 0 8px 0; font-size: 16px; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid var(--grid);
+    padding: 4px 8px;
+    border-radius: 999px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .sidebar {
+    background: var(--panel-2);
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    padding: 8px 6px;
+  }
+  .sidebar div {
+    height: 18px;
+    margin: 8px 0;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+  }
+  .main {
+    background: var(--panel);
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    padding: 10px;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .chip { padding: 4px 8px; border-radius: 7px; background: rgba(255,255,255,0.08); font-size: 11px; }
+  .search { flex: 1; height: 24px; border-radius: 6px; background: rgba(255,255,255,0.08); }
+  .tabs { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+  .tab { font-size: 10px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--grid); color: var(--muted); }
+  .tab.active { color: #fff; border-color: rgba(255,255,255,0.2); background: rgba(34,211,238,0.12); }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .field { height: 12px; border-radius: 4px; background: rgba(255,255,255,0.08); margin-bottom: 6px; }
+  .accent { background: linear-gradient(90deg, rgba(34,211,238,0.4), rgba(34,211,238,0.15)); }
+  .ok { background: linear-gradient(90deg, rgba(16,185,129,0.5), rgba(16,185,129,0.15)); }
+  .warn { background: linear-gradient(90deg, rgba(245,158,11,0.5), rgba(245,158,11,0.15)); }
+  .dense table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .dense th, .dense td { border-bottom: 1px dashed var(--grid); padding: 4px 2px; color: var(--muted); }
+  .footer { margin-top: 14px; font-size: 11px; color: var(--muted); }
+
+  /* Direction-specific tweaks */
+  .dir-1 { --accent: #22d3ee; --panel: #0f172a; }
+  .dir-2 { --accent: #f472b6; --panel: #111827; }
+  .dir-3 { --accent: #a3e635; --panel: #0b1220; }
+  .dir-4 { --accent: #fbbf24; --panel: #0f172a; }
+  .dir-5 { --accent: #38bdf8; --panel: #0c1220; }
+  .dir-6 { --accent: #34d399; --panel: #0c1322; }
+  .dir-7 { --accent: #e879f9; --panel: #0c1220; }
+</style>
+</head>
+<body>
+<header>
+  <h1>KCOW UX Design Directions</h1>
+  <p>Six visual directions exploring layout hierarchy, density, and data‑first admin workflows. Default theme: dark, professional.</p>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <section class="card dir-1">
+      <h2>Direction 1: Midnight Ledger</h2>
+      <span class="tag">Dense + precise</span>
+      <div class="layout">
+        <div class="sidebar">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="main">
+          <div class="topbar"><div class="search"></div><div class="chip">Thandi</div></div>
+          <div class="tabs"><div class="tab active">Child Info</div><div class="tab">Financial</div><div class="tab">Attendance</div></div>
+          <div class="cols">
+            <div>
+              <div class="field accent"></div><div class="field"></div><div class="field"></div>
+            </div>
+            <div>
+              <div class="field ok"></div><div class="field"></div><div class="field"></div>
+            </div>
+            <div>
+              <div class="field warn"></div><div class="field"></div><div class="field"></div>
+            </div>
+          </div>
+          <div class="footer">Profile at-a-glance with color cues.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card dir-2">
+      <h2>Direction 2: Signal Grid</h2>
+      <span class="tag">Grid + status chips</span>
+      <div class="layout">
+        <div class="sidebar">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="main">
+          <div class="topbar"><div class="search"></div><div class="chip">Class ADOR01</div></div>
+          <div class="dense">
+            <table>
+              <thead><tr><th>Name</th><th>Grade</th><th>Seat</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Z van Dyk</td><td>GR7</td><td>04</td><td>Paid</td></tr>
+                <tr><td>L Naidoo</td><td>GR5</td><td>02</td><td>Due</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="footer">Fast scanning for class groups.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card dir-3">
+      <h2>Direction 3: Quiet Control</h2>
+      <span class="tag">Comfortable density</span>
+      <div class="layout">
+        <div class="sidebar">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="main">
+          <div class="topbar"><div class="search"></div><div class="chip">Search by School</div></div>
+          <div class="tabs"><div class="tab active">Overview</div><div class="tab">Billing</div><div class="tab">Eval</div></div>
+          <div class="cols">
+            <div><div class="field"></div><div class="field"></div><div class="field"></div></div>
+            <div><div class="field"></div><div class="field"></div><div class="field"></div></div>
+            <div><div class="field"></div><div class="field"></div><div class="field"></div></div>
+          </div>
+          <div class="footer">Soft hierarchy, reduced cognitive load.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card dir-4">
+      <h2>Direction 4: Circuit Ledger</h2>
+      <span class="tag">Bold status clarity</span>
+      <div class="layout">
+        <div class="sidebar">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="main">
+          <div class="topbar"><div class="search"></div><div class="chip">Attendance</div></div>
+          <div class="tabs"><div class="tab active">Today</div><div class="tab">History</div></div>
+          <div class="dense">
+            <table>
+              <thead><tr><th>Student</th><th>Seat</th><th>Activity</th><th>Present</th></tr></thead>
+              <tbody>
+                <tr><td>Z van Dyk</td><td>04</td><td>Math</td><td>Yes</td></tr>
+                <tr><td>L Naidoo</td><td>02</td><td>Reading</td><td>No</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="footer">Action‑first tables and strong feedback.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card dir-5">
+      <h2>Direction 5: Library Desk</h2>
+      <span class="tag">Form‑centric</span>
+      <div class="layout">
+        <div class="sidebar">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="main">
+          <div class="topbar"><div class="search"></div><div class="chip">Family</div></div>
+          <div class="cols">
+            <div>
+              <div class="field accent"></div><div class="field"></div><div class="field"></div>
+            </div>
+            <div>
+              <div class="field"></div><div class="field"></div><div class="field"></div>
+            </div>
+            <div>
+              <div class="field"></div><div class="field"></div><div class="field"></div>
+            </div>
+          </div>
+          <div class="footer">Form grouping + comfortable spacing.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card dir-6">
+      <h2>Direction 6: Ops Radar</h2>
+      <span class="tag">Status‑first</span>
+      <div class="layout">
+        <div class="sidebar">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="main">
+          <div class="topbar"><div class="search"></div><div class="chip">Alerts</div></div>
+          <div class="tabs"><div class="tab active">At‑Risk</div><div class="tab">Due</div><div class="tab">Recent</div></div>
+          <div class="dense">
+            <table>
+              <thead><tr><th>Student</th><th>Issue</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td>Z van Dyk</td><td>Payment due</td><td>Notify</td></tr>
+                <tr><td>L Naidoo</td><td>Absent</td><td>Mark</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="footer">Workflow queue for quick triage.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

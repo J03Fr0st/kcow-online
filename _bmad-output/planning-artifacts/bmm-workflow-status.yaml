@@ -27,8 +27,8 @@ workflow_status:
   research: skipped
   product-brief: skipped
   prd: "_bmad-output/planning-artifacts/prd.md"
-  create-ux-design: "docs/ux-design-specification.md"
-  create-architecture: "docs/architecture.md"
+  create-ux-design: "_bmad-output/planning-artifacts/ux-design-specification.md"
+  create-architecture: "_bmad-output/planning-artifacts/architecture.md"
   create-epics-and-stories: required
   test-design: optional
   implementation-readiness: required
