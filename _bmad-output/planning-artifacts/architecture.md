@@ -22,9 +22,17 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Requirements Overview
 
 **Functional Requirements:**
-- Student management, family/guardian relationships, class groups, attendance, evaluations, billing, school registry, and search/lookup.
-- Legacy XML/XSD import with preview, exception handling, re-run, and audit log.
-- Single-screen student profile updates with dense data entry.
+- **Truck/Fleet**: Manage mobile computer literacy trucks (Trok) that visit schools.
+- **School**: Manage schools with contacts, billing settings, visit schedules, and truck assignments.
+- **Class Group**: Manage scheduled class sessions at schools with day/time/sequence and truck assignment.
+- **Student (Children)**: Manage student enrollment records with personal details, family contacts, class assignment.
+- **Activity**: Manage educational programs/curriculum delivered during class sessions.
+- **Attendance**: Track student attendance per class group session.
+- **Evaluations**: Track student progress evaluations (activity scores, speed/accuracy metrics).
+- **Billing/Financials**: Track invoices, receipts, payments, and balance per student.
+- **Search/Lookup**: Fast student search by name, school, grade, class group with disambiguation.
+- **Legacy Import**: XML/XSD import with preview, exception handling, re-run, and audit log.
+- **Single-Screen Profile**: Student profile updates with tabbed sub-sections.
 
 **Non-Functional Requirements:**
 - Performance: search and core pages under 2 seconds.
