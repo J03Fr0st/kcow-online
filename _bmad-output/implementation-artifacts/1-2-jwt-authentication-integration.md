@@ -1,6 +1,6 @@
 # Story 1.2: ASP.NET Core Authentication Integration
 
-Status: review
+Status: done
 
 ## Story
 
