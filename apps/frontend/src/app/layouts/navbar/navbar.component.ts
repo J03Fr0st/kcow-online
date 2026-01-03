@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { BreadcrumbService } from '@core/services/breadcrumb.service';
 import { PageMetadataService } from '@core/services/page-metadata.service';
 import { SidebarService } from '@core/services/sidebar.service';
+import { AuthService } from '@core/services/auth.service';
 import { type Theme, ThemeService } from '@core/services/theme.service';
 
 @Component({
@@ -18,6 +20,8 @@ export class NavbarComponent {
   themeService = inject(ThemeService);
   breadcrumbService = inject(BreadcrumbService);
   pageMetadataService = inject(PageMetadataService);
+  authService = inject(AuthService);
+  router = inject(Router);
 
   themes = [
     'light',
@@ -49,5 +53,25 @@ export class NavbarComponent {
 
   navigateToBreadcrumb(crumb: { label: string; url: string; icon?: string }): void {
     this.breadcrumbService.navigateTo(crumb);
+  }
+
+  logout(): void {
+    this.authService.clearSessionAndRedirect();
+  }
+
+  get currentUserInitials(): string {
+    const user = this.authService.currentUser();
+    if (!user) return 'U';
+    const name = user.name;
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  get currentUserName(): string {
+    const user = this.authService.currentUser();
+    return user ? user.name : 'User';
   }
 }

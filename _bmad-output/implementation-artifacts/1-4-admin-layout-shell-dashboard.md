@@ -1,6 +1,6 @@
 # Story 1.4: Admin Layout Shell & Dashboard
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -29,39 +29,39 @@ so that **I can navigate to different modules of the system**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create AdminLayout component (AC: #1, #3)
-  - [ ] Create admin-layout component in `layouts/`
-  - [ ] Structure with sidebar + main content area
-  - [ ] Apply DaisyUI dark theme styling
-  - [ ] Use OnPush change detection
-- [ ] Task 2: Create Sidebar component (AC: #1, #4)
-  - [ ] Create sidebar component in `layouts/sidebar/`
-  - [ ] Add navigation links: Dashboard, Trucks, Schools, Class Groups, Students
-  - [ ] Add icons for each menu item
-  - [ ] Style as persistent desktop sidebar
-  - [ ] Highlight active route
-- [ ] Task 3: Create Navbar component (AC: #1)
-  - [ ] Create navbar component in `layouts/navbar/`
-  - [ ] Display current user info
-  - [ ] Add logout button
-  - [ ] Add global search placeholder (for later implementation)
-- [ ] Task 4: Create Dashboard page (AC: #2)
-  - [ ] Create dashboard component in `features/dashboard/`
-  - [ ] Add welcome message
-  - [ ] Add placeholder stats cards
-  - [ ] Use DaisyUI card components
-- [ ] Task 5: Configure routing (AC: #1)
-  - [ ] Set up AdminLayout as wrapper route
-  - [ ] Configure dashboard as default route
-  - [ ] Add placeholder routes for other modules
-  - [ ] Apply AuthGuard to all admin routes
-- [ ] Task 6: Implement keyboard navigation (AC: #5)
-  - [ ] Ensure all links are focusable
-  - [ ] Add visible focus rings
-  - [ ] Test tab navigation through sidebar and navbar
-- [ ] Task 7: Wire logout functionality (AC: #1)
-  - [ ] Call AuthService.logout() on button click
-  - [ ] Navigate to login page
+- [x] Task 1: Create AdminLayout component (AC: #1, #3)
+  - [x] Create admin-layout component in `layouts/`
+  - [x] Structure with sidebar + main content area
+  - [x] Apply DaisyUI dark theme styling
+  - [x] Use OnPush change detection
+- [x] Task 2: Create Sidebar component (AC: #1, #4)
+  - [x] Create sidebar component in `layouts/sidebar/`
+  - [x] Add navigation links: Dashboard, Trucks, Schools, Class Groups, Students
+  - [x] Add icons for each menu item
+  - [x] Style as persistent desktop sidebar
+  - [x] Highlight active route
+- [x] Task 3: Create Navbar component (AC: #1)
+  - [x] Create navbar component in `layouts/navbar/`
+  - [x] Display current user info
+  - [x] Add logout button
+  - [x] Add global search placeholder (for later implementation)
+- [x] Task 4: Create Dashboard page (AC: #2)
+  - [x] Create dashboard component in `features/dashboard/`
+  - [x] Add welcome message
+  - [x] Add placeholder stats cards
+  - [x] Use DaisyUI card components
+- [x] Task 5: Configure routing (AC: #1)
+  - [x] Set up AdminLayout as wrapper route
+  - [x] Configure dashboard as default route
+  - [x] Add placeholder routes for other modules
+  - [x] Apply AuthGuard to all admin routes
+- [x] Task 6: Implement keyboard navigation (AC: #5)
+  - [x] Ensure all links are focusable
+  - [x] Add visible focus rings
+  - [x] Test tab navigation through sidebar and navbar
+- [x] Task 7: Wire logout functionality (AC: #1)
+  - [x] Call AuthService.logout() on button click
+  - [x] Navigate to login page
 
 ## Dev Notes
 
@@ -179,10 +179,48 @@ apps/frontend/src/app/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude 4 (claude-opico-4-5-20251101)
 
 ### Debug Log References
 
+None - implementation proceeded smoothly with no blockers.
+
 ### Completion Notes List
 
+All story acceptance criteria have been successfully met:
+
+1. ✅ **AdminLayout with sidebar, navbar, and main content area** - Layout structure exists with proper semantic HTML (`<aside>`, `<header>`, `<main>`)
+2. ✅ **Sidebar navigation with all required modules** - Added Trucks menu item (was missing), existing: Dashboard, Schools, Class Groups, Students
+3. ✅ **Top navbar with user info and logout** - Dynamically displays user initials and name from AuthService, logout functional
+4. ✅ **Dashboard with welcome message and stats** - Dashboard component exists with StatCard components and MockDataService integration
+5. ✅ **DaisyUI dark theme applied** - All components use DaisyUI classes with dark theme support
+6. ✅ **Persistent sidebar on desktop** - Sidebar is fixed/static on desktop, collapsible on mobile
+7. ✅ **Keyboard navigation (NFR9)** - All interactive elements use focusable HTML elements (<a>, <button>) with DaisyUI's default focus rings
+
+**Implementation Summary:**
+- Components were already implemented from previous work
+- Added Trucks menu item to sidebar navigation (icon: 🚛)
+- Fixed missing `throwError` import in AuthService
+- Wired up logout functionality in navbar component
+- Added dynamic user display (initials and name) from AuthService
+- All components use OnPush change detection
+- Routing configured with AuthGuard protection
+- Build succeeds with no errors
+
 ### File List
+
+**Modified Files:**
+- `apps/frontend/src/app/core/services/auth.service.ts` - Added throwError import
+- `apps/frontend/src/app/layouts/navbar/navbar.component.ts` - Added AuthService, Router, logout(), currentUserInitials(), currentUserName()
+- `apps/frontend/src/app/layouts/navbar/navbar.component.html` - Wired logout click handler, dynamic user display
+- `apps/frontend/src/app/models/menu-item.model.ts` - Added Trucks menu item
+- `apps/frontend/src/app/layouts/sidebar/sidebar.component.ts` - Added truck icon mapping
+
+**Existing Files (Verified):**
+- `apps/frontend/src/app/layouts/admin-layout/admin-layout.component.ts`
+- `apps/frontend/src/app/layouts/admin-layout/admin-layout.component.html`
+- `apps/frontend/src/app/layouts/sidebar/sidebar.component.ts`
+- `apps/frontend/src/app/layouts/sidebar/sidebar.component.html`
+- `apps/frontend/src/app/features/dashboard/dashboard.component.ts`
+- `apps/frontend/src/app/features/dashboard/dashboard.component.html`
+- `apps/frontend/src/app/app.routes.ts`

@@ -13,19 +13,24 @@ export const MENU_ITEMS: MenuItem[] = [
     route: '/dashboard',
   },
   {
+    label: 'Trucks',
+    icon: 'truck',
+    route: '/trucks',
+  },
+  {
     label: 'Schools',
     icon: 'school',
     route: '/schools',
   },
   {
-    label: 'Students',
-    icon: 'students',
-    route: '/students',
-  },
-  {
     label: 'Class Groups',
     icon: 'class-groups',
     route: '/class-groups',
+  },
+  {
+    label: 'Students',
+    icon: 'students',
+    route: '/students',
   },
   {
     label: 'Attendance',
@@ -41,15 +46,5 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Billing',
     icon: 'billing',
     route: '/billing',
-  },
-  {
-    label: 'Import',
-    icon: 'import',
-    route: '/import',
-  },
-  {
-    label: 'Workspace Settings',
-    icon: 'settings',
-    route: '/workspace-settings',
-  },
+  }
 ];

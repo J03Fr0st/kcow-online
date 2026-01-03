@@ -25,6 +25,7 @@ export class SidebarComponent {
   getIcon(iconName: string): string {
     const icons: Record<string, string> = {
       home: '🏠',
+      truck: '🚛',
       school: '🏫',
       students: '👥',
       'class-groups': '📚',
