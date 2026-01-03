@@ -71,7 +71,7 @@ describe('PageMetadataService', () => {
 
     await router.navigate(['/dashboard']);
 
-    expect(setTitleSpy).toHaveBeenCalledWith('Dashboard | Angular Template');
+    expect(setTitleSpy).toHaveBeenCalledWith('KCOW — Dashboard');
   });
 
   it('should update meta description', async () => {
@@ -128,7 +128,7 @@ describe('PageMetadataService', () => {
 
     service.setTitle('Custom Title');
 
-    expect(setTitleSpy).toHaveBeenCalledWith('Custom Title | Angular Template');
+    expect(setTitleSpy).toHaveBeenCalledWith('KCOW — Custom Title');
   });
 
   it('should manually set title without app name', () => {
@@ -182,7 +182,7 @@ describe('PageMetadataService', () => {
 
     service.setMetadata(metadata);
 
-    expect(setTitleSpy).toHaveBeenCalledWith('Complete Metadata | Angular Template');
+    expect(setTitleSpy).toHaveBeenCalledWith('KCOW — Complete Metadata');
     expect(updateTagSpy).toHaveBeenCalledWith({
       name: 'description',
       content: 'Full metadata test',
@@ -194,7 +194,7 @@ describe('PageMetadataService', () => {
 
     await router.navigate(['/']);
 
-    expect(setTitleSpy).toHaveBeenCalledWith('Angular Template');
+    expect(setTitleSpy).toHaveBeenCalledWith('KCOW');
   });
 
   it('should handle routes without metadata', async () => {
@@ -221,6 +221,6 @@ describe('PageMetadataService', () => {
 
     const metadata = service.metadata();
     expect(Object.keys(metadata).length).toBe(0);
-    expect(setTitleSpy).toHaveBeenCalledWith('Angular Template');
+    expect(setTitleSpy).toHaveBeenCalledWith('KCOW');
   });
 });

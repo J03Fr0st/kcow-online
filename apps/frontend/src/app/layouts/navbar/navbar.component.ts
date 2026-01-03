@@ -23,29 +23,7 @@ export class NavbarComponent {
   authService = inject(AuthService);
   router = inject(Router);
 
-  themes = [
-    'light',
-    'dark',
-    'cupcake',
-    'bumblebee',
-    'emerald',
-    'corporate',
-    'synthwave',
-    'retro',
-    'cyberpunk',
-    'valentine',
-    'halloween',
-    'garden',
-    'forest',
-    'aqua',
-    'lofi',
-    'pastel',
-    'fantasy',
-    'wireframe',
-    'black',
-    'luxury',
-    'dracula',
-  ];
+  themes = this.themeService.AVAILABLE_THEMES;
 
   setTheme(theme: string): void {
     this.themeService.setTheme(theme as Theme);

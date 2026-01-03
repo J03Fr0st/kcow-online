@@ -1,0 +1,18 @@
+export const MENU_ICONS: Record<string, string> = {
+  home: '🏠',
+  truck: '🚛',
+  school: '🏫',
+  students: '👥',
+  'class-groups': '📚',
+  attendance: '✅',
+  evaluations: '📊',
+  billing: '💰',
+  import: '📥',
+  settings: '⚙️',
+  table: '📊',
+  edit: '📝',
+  'monitor-heart': '🏥',
+  bell: '🔔',
+  window: '🪟',
+  alert: '🚨',
+};

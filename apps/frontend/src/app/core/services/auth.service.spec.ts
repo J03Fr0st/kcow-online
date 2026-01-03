@@ -60,7 +60,7 @@ describe('AuthService', () => {
     };
 
     const mockResponse: LoginResponse = {
-      token: 'fake-jwt-token',
+      token: 'header.payload.signature',
       user: mockUser,
     };
 
@@ -74,7 +74,7 @@ describe('AuthService', () => {
             `${environment.apiUrl}/auth/login`,
             credentials
           );
-          expect(localStorage.getItem('auth_token')).toBe('fake-jwt-token');
+          expect(localStorage.getItem('auth_token')).toBe('header.payload.signature');
           expect(service.isAuthenticated()).toBe(true);
           expect(service.currentUser()).toEqual(mockUser);
           expect(service.isLoading()).toBe(false);

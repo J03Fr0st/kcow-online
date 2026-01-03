@@ -76,6 +76,30 @@ export class ThemeService {
   // Combined settings signal for batch operations
   workspaceSettings = signal<WorkspaceSettings>(this.getDefaultSettings());
 
+  readonly AVAILABLE_THEMES: Theme[] = [
+    'light',
+    'dark',
+    'cupcake',
+    'bumblebee',
+    'emerald',
+    'corporate',
+    'synthwave',
+    'retro',
+    'cyberpunk',
+    'valentine',
+    'halloween',
+    'garden',
+    'forest',
+    'aqua',
+    'lofi',
+    'pastel',
+    'fantasy',
+    'wireframe',
+    'black',
+    'luxury',
+    'dracula',
+  ];
+
   constructor() {
     // Apply settings immediately if in browser
     if (this.isBrowser) {

@@ -17,15 +17,9 @@ export class DashboardComponent implements OnInit {
   private mockDataService = inject(MockDataService);
 
   stats = signal<StatCard[]>([]);
+  recentActivities = signal<RecentActivity[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
-
-  recentActivities: RecentActivity[] = [
-    { id: 1, user: 'JD', action: 'Created new project', time: '2 minutes ago' },
-    { id: 2, user: 'AB', action: 'Updated user profile', time: '15 minutes ago' },
-    { id: 3, user: 'CD', action: 'Uploaded new file', time: '1 hour ago' },
-    { id: 4, user: 'EF', action: 'Completed task', time: '2 hours ago' },
-  ];
 
   ngOnInit(): void {
     this.loadData();
@@ -39,18 +33,38 @@ export class DashboardComponent implements OnInit {
 
   private loadData(): void {
     this.loadStats();
+    this.loadRecentActivities();
   }
 
   private loadStats(): void {
     this.mockDataService.getStats().subscribe({
       next: (data) => {
         this.stats.set(data);
-        this.loading.set(false);
+        this.checkLoading();
       },
       error: () => {
         this.error.set('Failed to load dashboard data. Please try again.');
         this.loading.set(false);
       },
     });
+  }
+
+  private loadRecentActivities(): void {
+    this.mockDataService.getRecentActivities().subscribe({
+      next: (data) => {
+        this.recentActivities.set(data);
+        this.checkLoading();
+      },
+      error: () => {
+        // Non-critical, just log or ignore
+        console.error('Failed to load recent activities');
+      },
+    });
+  }
+
+  private checkLoading(): void {
+    if (this.stats().length > 0) {
+      this.loading.set(false);
+    }
   }
 }

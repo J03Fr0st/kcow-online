@@ -119,15 +119,7 @@ export class AuthService {
    * @returns Observable<User | null>
    */
   getCurrentUser(): Observable<User | null> {
-    return this.http.get<UserDto>(`${this.apiUrl}/auth/me`).pipe(
-      map(userDto => {
-        // Map backend UserDto to User model if needed, or if they match:
-        // Backend UserDto has: Id (int), Email, Name, Role
-        // Our model User has: id (number), email, name, role
-        // Need to ensure casing matches or map it.
-        // Assuming backend returns camelCase JSON.
-        return userDto as unknown as User;
-      }),
+    return this.http.get<User>(`${this.apiUrl}/auth/me`).pipe(
       tap((user) => {
         this.userSignal.set(user);
       }),
@@ -176,13 +168,4 @@ export class AuthService {
     localStorage.removeItem(this.returnUrlKey);
     return returnUrl || '/dashboard';
   }
-}
-
-// Temporary internal interface for backend response if it differs significantly, 
-// but we cast to User model.
-interface UserDto {
-  id: number;
-  email: string;
-  name: string;
-  role: string;
 }

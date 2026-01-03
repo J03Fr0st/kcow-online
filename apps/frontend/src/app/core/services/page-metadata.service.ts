@@ -22,8 +22,8 @@ export class PageMetadataService {
   private titleService = inject(Title);
   private metaService = inject(Meta);
 
-  private readonly APP_TITLE = 'Angular Template';
-  private readonly DEFAULT_SEPARATOR = ' | ';
+  private readonly APP_TITLE = 'KCOW';
+  private readonly DEFAULT_SEPARATOR = ' — ';
 
   // Listen to navigation events and extract metadata
   private navigationEnd$ = this.router.events.pipe(
@@ -78,9 +78,7 @@ export class PageMetadataService {
    */
   private updateDocumentMetadata(metadata: PageMetadata): void {
     // Update title
-    const title = metadata.title
-      ? `${metadata.title}${this.DEFAULT_SEPARATOR}${this.APP_TITLE}`
-      : this.APP_TITLE;
+    const title = this.formatTitle(metadata.title);
     this.titleService.setTitle(title);
 
     // Update meta description
@@ -126,8 +124,13 @@ export class PageMetadataService {
    * Manually set page title
    */
   setTitle(title: string, appendAppName = true): void {
-    const fullTitle = appendAppName ? `${title}${this.DEFAULT_SEPARATOR}${this.APP_TITLE}` : title;
+    const fullTitle = appendAppName ? this.formatTitle(title) : title;
     this.titleService.setTitle(fullTitle);
+  }
+
+  private formatTitle(pageTitle?: string): string {
+    if (!pageTitle) return this.APP_TITLE;
+    return `${this.APP_TITLE}${this.DEFAULT_SEPARATOR}${pageTitle}`;
   }
 
   /**

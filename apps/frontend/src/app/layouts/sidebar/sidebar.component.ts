@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SidebarService } from '@core/services/sidebar.service';
 import { MENU_ITEMS } from '@models/menu-item.model';
+import { MENU_ICONS } from '@core/constants/icons.constants';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,24 +24,6 @@ export class SidebarComponent {
   }
 
   getIcon(iconName: string): string {
-    const icons: Record<string, string> = {
-      home: '🏠',
-      truck: '🚛',
-      school: '🏫',
-      students: '👥',
-      'class-groups': '📚',
-      attendance: '✅',
-      evaluations: '📊',
-      billing: '💰',
-      import: '📥',
-      settings: '⚙️',
-      table: '📊',
-      edit: '📝',
-      'monitor-heart': '🏥',
-      bell: '🔔',
-      window: '🪟',
-      alert: '🚨',
-    };
-    return icons[iconName] || '📄';
+    return MENU_ICONS[iconName] || '📄';
   }
 }

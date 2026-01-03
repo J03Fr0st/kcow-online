@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import type { StatCard } from '@models/stats.model';
 import type { ServerPaginationResponse, User } from '@models/table-data.model';
+import type { RecentActivity } from '@models/recent-activity.model';
 import { type Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
@@ -8,6 +9,16 @@ import { delay } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class MockDataService {
+  getRecentActivities(): Observable<RecentActivity[]> {
+    const activities: RecentActivity[] = [
+      { id: 1, user: 'JD', action: 'Created new project', time: '2 minutes ago' },
+      { id: 2, user: 'AB', action: 'Updated user profile', time: '15 minutes ago' },
+      { id: 3, user: 'CD', action: 'Uploaded new file', time: '1 hour ago' },
+      { id: 4, user: 'EF', action: 'Completed task', time: '2 hours ago' },
+    ];
+    return of(activities).pipe(delay(300));
+  }
+
   getStats(): Observable<StatCard[]> {
     const stats: StatCard[] = [
       {

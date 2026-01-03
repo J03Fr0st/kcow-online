@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject, PLATFORM_ID, DestroyRef } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
@@ -7,6 +8,10 @@ import { throttleTime } from 'rxjs/operators';
   providedIn: 'root',
 })
 export class SidebarService {
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
+
   isOpen = signal<boolean>(true);
   isMobile = signal<boolean>(false);
 
@@ -35,5 +40,17 @@ export class SidebarService {
 
   close(): void {
     this.isOpen.set(false);
+  }
+
+  private checkMobile(): void {
+    if (this.isBrowser) {
+      const isMobile = window.innerWidth < 1024; // lg breakpoint
+      this.isMobile.set(isMobile);
+      if (!isMobile) {
+        this.isOpen.set(true); // Always open on desktop by default
+      } else {
+        this.isOpen.set(false); // Closed on mobile by default
+      }
+    }
   }
 }
