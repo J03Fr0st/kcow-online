@@ -303,7 +303,7 @@ apps/backend/
 ### 5.2 API Design Principles
 - RESTful endpoints
 - JSON:API or similar response format
-- JWT authentication (planned)
+- Better Auth authentication (TypeScript framework)
 - Versioned API paths
 
 ### 5.3 Database Approach
@@ -375,10 +375,15 @@ npm run format       # Code formatting
      └── State: Angular Signals + RxJS
 ```
 
-### 7.2 Authentication (Planned)
-- JWT bearer tokens
-- Refresh token rotation
-- Role-based access control
+### 7.2 Authentication
+- **Better Auth** - Comprehensive TypeScript authentication framework
+- Email & Password authentication
+- Session management
+- Role-based access control (Admin role)
+- Framework agnostic (works with Angular frontend)
+- Supports OAuth providers (optional)
+- Two-factor authentication support (optional)
+- Multi-tenant/organization support (optional)
 
 ### 7.3 Error Handling
 - Frontend: ErrorBoundaryComponent + GlobalErrorHandler
@@ -421,7 +426,7 @@ npm run format       # Code formatting
 ### 9.2 Backend (Planned)
 - Input validation on all endpoints
 - Parameterized queries (EF Core)
-- Authentication/Authorization middleware
+- Better Auth authentication/authorization middleware
 - Rate limiting for API endpoints
 - Audit logging for sensitive operations
 

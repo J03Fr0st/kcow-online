@@ -334,6 +334,7 @@ themeService.setTheme('dark');
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:5000/api',
+  betterAuthUrl: 'http://localhost:5000/api/auth', // Better Auth API endpoint
   // Add other dev-specific settings
 };
 ```
@@ -344,9 +345,21 @@ export const environment = {
 export const environment = {
   production: true,
   apiUrl: '/api',
+  betterAuthUrl: '/api/auth', // Better Auth API endpoint
   // Add other prod-specific settings
 };
 ```
+
+### Better Auth Setup
+
+Better Auth is the authentication framework used in this project. It provides:
+- Email & Password authentication
+- Session management
+- Role-based access control
+- OAuth provider support (optional)
+- Two-factor authentication (optional)
+
+For setup instructions, see the [Better Auth documentation](https://www.better-auth.com/docs).
 
 ---
 

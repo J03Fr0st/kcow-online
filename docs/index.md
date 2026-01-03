@@ -133,6 +133,7 @@ docs/
 | Database | SQLite (initial) |
 | ORM | Entity Framework Core |
 | Architecture | Clean Architecture |
+| Authentication | Better Auth |
 
 ---
 

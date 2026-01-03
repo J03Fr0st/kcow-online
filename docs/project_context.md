@@ -20,7 +20,7 @@ _Critical rules and patterns AI agents must follow. Keep consistent with archite
 - Frontend: Angular 21.0.2 (CLI scaffold), TypeScript, Tailwind + daisyUI, Reactive Forms, Angular HttpClient + interceptors.
 - Backend: ASP.NET Core Web API (net10.0), Clean Architecture (Api/Application/Domain/Infrastructure).
 - Data: EF Core with SQLite provider (migration path to Postgres later), EF migrations.
-- Auth: ASP.NET Identity (cookie-based, Admin role), HTTPS required.
+- Auth: Better Auth (TypeScript authentication framework), email/password with Admin role, HTTPS required.
 - Logging/Errors: Serilog (API), ProblemDetails error responses; Angular interceptors for error handling.
 
 ## Critical Implementation Rules
@@ -34,7 +34,7 @@ _Critical rules and patterns AI agents must follow. Keep consistent with archite
 - Angular State: **Angular Signals for UI state; RxJS for async flows only**. Services own data/state; components remain presentation-only.
 - Angular Performance: **OnPush change detection is mandatory for all components**. Lazy-load feature routes under AdminLayout shell.
 - Angular Routing: Features lazy-loaded via `loadChildren`; all admin routes under `/admin` prefix with AdminLayout wrapper.
-- ASP.NET Core: Controllers in Api call Application services; no EF in controllers; DI everywhere; ProblemDetails middleware/filter; Identity cookie auth; enforce HTTPS.
+- ASP.NET Core: Controllers in Api call Application services; no EF in controllers; DI everywhere; ProblemDetails middleware/filter; Better Auth integration; enforce HTTPS.
 - EF Core: Entities in Domain; configs in Infrastructure/Data; no lazy loading; explicit includes; migrations in `apps/backend/Migrations`.
 
 ### Testing Rules
