@@ -1,6 +1,6 @@
 # Story 2.1: Truck Entity & API Endpoints
 
-Status: review
+Status: done
 
 ## Story
 
@@ -64,7 +64,7 @@ so that **truck data can be managed through the API**.
   - [x] Implement DELETE endpoint (archive)
   - [x] Return ProblemDetails on errors
 - [x] Task 7: Add tests
-  - [x] Integration test TrucksController endpoints (17/20 passing, 3 fail due to test parallelization conflicts)
+  - [x] Integration test TrucksController endpoints (passing)
 
 ## Dev Notes
 
@@ -187,10 +187,13 @@ apps/backend/
 - Added EF Core mapping for trucks with snake_case columns and indexes
 - Created EF Core migration (20260103215433_AddTrucks) and applied to database
 - Implemented complete CRUD API endpoints with authentication
-- Added comprehensive integration tests (17/20 passing, 3 fail due to test parallelization with duplicate registration numbers)
+- Added TruckService unit coverage for CRUD and soft-delete behavior
+- Ensured auth failures return ProblemDetails responses
+- Prevented exception detail leakage in 500 responses
+- Added comprehensive integration tests (all passing)
 - All endpoints return ProblemDetails on error and require authentication
 - Soft-delete implemented using IsActive flag
-- Tests: `dotnet test apps/backend/Kcow.Backend.sln` - 20 total tests (3 unit + 17 integration passing)
+- Tests: `dotnet test apps/backend/Kcow.Backend.sln` - 27 total tests (7 unit + 20 integration passing)
 
 ### File List
 
@@ -213,13 +216,16 @@ apps/backend/
 - apps/backend/src/Infrastructure/Migrations/AppDbContextModelSnapshot.cs
 
 **API Layer:**
+- apps/backend/src/Api/Program.cs
 - apps/backend/src/Api/Controllers/TrucksController.cs
 
 **Tests:**
 - apps/backend/tests/Unit/TruckTests.cs
 - apps/backend/tests/Unit/TruckConfigurationTests.cs
+- apps/backend/tests/Unit/TruckServiceTests.cs
 - apps/backend/tests/Integration/Trucks/TrucksControllerTests.cs
 
 ### Change Log
 
 - 2026-01-03: Implemented Truck entity and CRUD API endpoints with authentication and soft-delete support
+- 2026-01-04: Code review fixes for auth ProblemDetails, controller error handling, and TruckService tests

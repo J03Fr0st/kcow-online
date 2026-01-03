@@ -1,6 +1,6 @@
 # Story 2.2: Trucks Management UI
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -35,47 +35,47 @@ so that **I can maintain accurate truck information**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create TruckService for frontend (AC: #1-4)
-  - [ ] Create TruckService in core/services
-  - [ ] Implement getTrucks(): Observable<Truck[]>
-  - [ ] Implement getTruck(id): Observable<Truck>
-  - [ ] Implement createTruck(data): Observable<Truck>
-  - [ ] Implement updateTruck(id, data): Observable<Truck>
-  - [ ] Implement deleteTruck(id): Observable<void>
-  - [ ] Add loading signal
-- [ ] Task 2: Create Trucks list page (AC: #1)
-  - [ ] Create trucks-list component in features/trucks
-  - [ ] Display table with Name, Registration, Status columns
-  - [ ] Add "Add Truck" button
-  - [ ] Implement row click for editing
-  - [ ] Add delete action per row
-- [ ] Task 3: Create Truck form component (AC: #2, #3, #5)
-  - [ ] Create truck-form component (reusable for create/edit)
-  - [ ] Use Reactive Forms
-  - [ ] Add form fields: Name, Registration, Status, Notes
-  - [ ] Add validation rules
-  - [ ] Display inline validation errors
-- [ ] Task 4: Implement create flow (AC: #2)
-  - [ ] Open form in drawer or inline
-  - [ ] Submit to API
-  - [ ] Refresh list on success
-  - [ ] Show success notification
-- [ ] Task 5: Implement edit flow (AC: #3)
-  - [ ] Load truck data into form
-  - [ ] Submit updates to API
-  - [ ] Refresh list on success
-  - [ ] Show success notification
-- [ ] Task 6: Implement delete flow (AC: #4)
-  - [ ] Show inline confirmation (no modal)
-  - [ ] Call delete API
-  - [ ] Remove from list on success
-- [ ] Task 7: Add loading states (AC: #6)
-  - [ ] Show loading spinner during list load
-  - [ ] Show loading state on form submit
-  - [ ] Disable form during submission
-- [ ] Task 8: Configure routing
-  - [ ] Add trucks feature routes
-  - [ ] Lazy load trucks module
+- [x] Task 1: Create TruckService for frontend (AC: #1-4)
+  - [x] Create TruckService in core/services
+  - [x] Implement getTrucks(): Observable<Truck[]>
+  - [x] Implement getTruck(id): Observable<Truck>
+  - [x] Implement createTruck(data): Observable<Truck>
+  - [x] Implement updateTruck(id, data): Observable<Truck>
+  - [x] Implement deleteTruck(id): Observable<void>
+  - [x] Add loading signal
+- [x] Task 2: Create Trucks list page (AC: #1)
+  - [x] Create trucks-list component in features/trucks
+  - [x] Display table with Name, Registration, Status columns
+  - [x] Add "Add Truck" button
+  - [x] Implement row click for editing
+  - [x] Add delete action per row
+- [x] Task 3: Create Truck form component (AC: #2, #3, #5)
+  - [x] Create truck-form component (reusable for create/edit)
+  - [x] Use Reactive Forms
+  - [x] Add form fields: Name, Registration, Status, Notes
+  - [x] Add validation rules
+  - [x] Display inline validation errors
+- [x] Task 4: Implement create flow (AC: #2)
+  - [x] Open form in drawer or inline
+  - [x] Submit to API
+  - [x] Refresh list on success
+  - [x] Show success notification
+- [x] Task 5: Implement edit flow (AC: #3)
+  - [x] Load truck data into form
+  - [x] Submit updates to API
+  - [x] Refresh list on success
+  - [x] Show success notification
+- [x] Task 6: Implement delete flow (AC: #4)
+  - [x] Show inline confirmation (no modal)
+  - [x] Call delete API
+  - [x] Remove from list on success
+- [x] Task 7: Add loading states (AC: #6)
+  - [x] Show loading spinner during list load
+  - [x] Show loading state on form submit
+  - [x] Disable form during submission
+- [x] Task 8: Configure routing
+  - [x] Add trucks feature routes
+  - [x] Lazy load trucks module
 
 ## Dev Notes
 
@@ -203,6 +203,43 @@ apps/frontend/src/app/
 
 ### Debug Log References
 
+- `npm run dev` - Start frontend and backend concurrently for testing
+
 ### Completion Notes List
 
+- Created TruckService in core/services with Angular Signals for state management
+- Implemented full CRUD operations (getTrucks, getTruck, createTruck, updateTruck, deleteTruck)
+- Built trucks-list component with table view, inline delete confirmation, and drawer form
+- Created reusable truck-form component with Reactive Forms and validation
+- Implemented create and edit flows with drawer panel UI
+- Added inline delete confirmation (no modal per UX requirements)
+- Implemented loading states using Angular Signals (loading spinner + form disable)
+- Configured routing in app.routes.ts with lazy loading
+- All components use OnPush change detection
+- All forms are Reactive Forms (no template-driven forms)
+- No `any` types used - fully typed interfaces
+- Services own all state - components are presentation-only
+
 ### File List
+
+**Services:**
+- apps/frontend/src/app/core/services/truck.service.ts
+
+**Components:**
+- apps/frontend/src/app/features/trucks/trucks-list/trucks-list.component.ts
+- apps/frontend/src/app/features/trucks/trucks-list/trucks-list.component.html
+- apps/frontend/src/app/features/trucks/truck-form/truck-form.component.ts
+- apps/frontend/src/app/features/trucks/truck-form/truck-form.component.html
+
+**Models:**
+- apps/frontend/src/app/features/trucks/models/truck.model.ts
+
+**Routing:**
+- apps/frontend/src/app/app.routes.ts (added trucks route)
+
+**Menu:**
+- apps/frontend/src/app/models/menu-item.model.ts (Trucks link already existed in sidebar)
+
+### Change Log
+
+- 2026-01-04: Implemented complete Trucks Management UI with create, edit, delete, and list views

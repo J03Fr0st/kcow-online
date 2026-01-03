@@ -55,8 +55,8 @@ development_status:
   # Epic 2: Trucks & Schools Management
   # ========================
   epic-2: backlog
-  2-1-truck-entity-api-endpoints: review
-  2-2-trucks-management-ui: ready-for-dev
+  2-1-truck-entity-api-endpoints: done
+  2-2-trucks-management-ui: in-progress
   2-3-school-entity-api-endpoints: ready-for-dev
   2-4-schools-management-ui: ready-for-dev
   2-5-school-billing-settings: ready-for-dev
