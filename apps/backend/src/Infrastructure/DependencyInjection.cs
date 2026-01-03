@@ -1,7 +1,9 @@
 using Kcow.Application.Auth;
+using Kcow.Application.Trucks;
 using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Data.Seeders;
+using Kcow.Infrastructure.Trucks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<JwtService>();
         services.AddSingleton<PasswordHasher>();
+
+        // Register truck services
+        services.AddScoped<ITruckService, TruckService>();
 
         return services;
     }
@@ -67,7 +72,7 @@ public static class DependencyInjection
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
 
-        // Ensure database is created
+        // Ensure database is created (includes all entities from DbContext)
         await dbContext.Database.EnsureCreatedAsync();
 
         // Seed authentication data
