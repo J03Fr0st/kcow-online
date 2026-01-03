@@ -39,12 +39,8 @@ public class TrucksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving all trucks");
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "An error occurred while retrieving trucks",
-                Status = 500,
-                Detail = ex.Message
-            });
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while retrieving trucks"));
         }
     }
 
@@ -79,12 +75,8 @@ public class TrucksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving truck with ID {TruckId}", id);
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "An error occurred while retrieving the truck",
-                Status = 500,
-                Detail = ex.Message
-            });
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while retrieving the truck"));
         }
     }
 
@@ -128,12 +120,8 @@ public class TrucksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating truck");
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "An error occurred while creating the truck",
-                Status = 500,
-                Detail = ex.Message
-            });
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while creating the truck"));
         }
     }
 
@@ -190,12 +178,8 @@ public class TrucksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating truck with ID {TruckId}", id);
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "An error occurred while updating the truck",
-                Status = 500,
-                Detail = ex.Message
-            });
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while updating the truck"));
         }
     }
 
@@ -230,12 +214,22 @@ public class TrucksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error archiving truck with ID {TruckId}", id);
-            return StatusCode(500, new ProblemDetails
-            {
-                Title = "An error occurred while archiving the truck",
-                Status = 500,
-                Detail = ex.Message
-            });
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while archiving the truck"));
         }
+    }
+
+    private ProblemDetails CreateServerErrorProblemDetails(string title)
+    {
+        var problemDetails = new ProblemDetails
+        {
+            Title = title,
+            Status = StatusCodes.Status500InternalServerError,
+            Detail = "An unexpected error occurred.",
+            Instance = HttpContext.Request.Path
+        };
+
+        problemDetails.Extensions["traceId"] = HttpContext.TraceIdentifier;
+        return problemDetails;
     }
 }

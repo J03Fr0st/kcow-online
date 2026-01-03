@@ -1,0 +1,145 @@
+<div class="h-full flex flex-col">
+  <!-- Header -->
+  <div class="flex items-center justify-between p-6 border-b border-base-300 bg-base-100">
+    <h2 class="text-xl font-semibold text-base-content">{{ title() }}</h2>
+    <button
+      class="btn btn-ghost btn-sm btn-circle"
+      (click)="onCancel()"
+      aria-label="Close form">
+      ✕
+    </button>
+  </div>
+
+  <!-- Error State -->
+  @if (error(); as err) {
+  <div role="alert" class="mx-6 mt-4 alert alert-error shadow-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <h3 class="font-bold">Error</h3>
+      <div class="text-xs">{{ err }}</div>
+    </div>
+  </div>
+  }
+
+  <!-- Form -->
+  <form [formGroup]="form" (ngSubmit)="submitForm()" class="flex-1 overflow-y-auto p-6 space-y-6">
+    <!-- Loading State -->
+    @if (isLoading()) {
+    <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading truck data">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+    } @else {
+    <!-- Name Field -->
+    <div class="form-control">
+      <label for="name" class="label">
+        <span class="label-text font-medium">Truck Name</span>
+        <span class="label-text-alt text-error">*</span>
+      </label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        class="input input-bordered w-full"
+        [class.input-error]="hasError('name')"
+        placeholder="e.g., Truck 1"
+        aria-describedby="name-error"
+        [disabled]="isSaving()" />
+      @if (hasError('name')) {
+      <span id="name-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('name') }}
+      </span>
+      }
+    </div>
+
+    <!-- Registration Number Field -->
+    <div class="form-control">
+      <label for="registrationNumber" class="label">
+        <span class="label-text font-medium">Registration Number</span>
+        <span class="label-text-alt text-error">*</span>
+      </label>
+      <input
+        id="registrationNumber"
+        type="text"
+        formControlName="registrationNumber"
+        class="input input-bordered w-full font-mono"
+        [class.input-error]="hasError('registrationNumber')"
+        placeholder="e.g., CA 123 456"
+        aria-describedby="registrationNumber-error"
+        [disabled]="isSaving()" />
+      @if (hasError('registrationNumber')) {
+      <span id="registrationNumber-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('registrationNumber') }}
+      </span>
+      }
+    </div>
+
+    <!-- Status Field -->
+    <div class="form-control">
+      <label for="status" class="label">
+        <span class="label-text font-medium">Status</span>
+        <span class="label-text-alt text-error">*</span>
+      </label>
+      <select
+        id="status"
+        formControlName="status"
+        class="select select-bordered w-full"
+        [class.select-error]="hasError('status')"
+        aria-describedby="status-error"
+        [disabled]="isSaving()">
+        @for (statusOption of statusOptions; track statusOption) {
+        <option [value]="statusOption">{{ statusOption }}</option>
+        }
+      </select>
+      @if (hasError('status')) {
+      <span id="status-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('status') }}
+      </span>
+      }
+    </div>
+
+    <!-- Notes Field -->
+    <div class="form-control">
+      <label for="notes" class="label">
+        <span class="label-text font-medium">Notes</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <textarea
+        id="notes"
+        formControlName="notes"
+        class="textarea textarea-bordered w-full h-24"
+        [class.textarea-error]="hasError('notes')"
+        placeholder="Additional notes about this truck..."
+        aria-describedby="notes-error"
+        [disabled]="isSaving()"></textarea>
+      @if (hasError('notes')) {
+      <span id="notes-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('notes') }}
+      </span>
+      }
+    </div>
+    }
+  </form>
+
+  <!-- Footer Actions -->
+  <div class="flex justify-end space-x-2 p-6 border-t border-base-300 bg-base-100">
+    <button
+      type="button"
+      class="btn btn-ghost"
+      (click)="onCancel()"
+      [disabled]="isSaving()">
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="submitForm()"
+      [disabled]="form.invalid || isLoading() || isSaving()"
+      [attr.aria-busy]="isSaving()">
+      <span @if="isSaving()" class="loading loading-spinner loading-sm mr-2"></span>
+      {{ submitButtonText() }}
+    </button>
+  </div>
+</div>

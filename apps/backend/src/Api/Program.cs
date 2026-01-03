@@ -2,10 +2,13 @@ using Kcow.Api.Middleware;
 using Kcow.Application;
 using Kcow.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
+using System.Text.Json;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -68,7 +71,7 @@ try
             ClockSkew = TimeSpan.Zero
         };
 
-        // Ensure proper 401 responses in test environment
+        // Ensure consistent ProblemDetails on auth failures.
         options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
@@ -78,6 +81,51 @@ try
                     context.Response.Headers.Append("Token-Expired", "true");
                 }
                 return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                if (context.Response.HasStarted)
+                {
+                    return Task.CompletedTask;
+                }
+
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/problem+json";
+
+                var problemDetails = new ProblemDetails
+                {
+                    Title = "Unauthorized",
+                    Status = StatusCodes.Status401Unauthorized,
+                    Detail = "Authentication is required to access this resource.",
+                    Instance = context.HttpContext.Request.Path
+                };
+                problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                var payload = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                return context.Response.WriteAsync(payload);
+            },
+            OnForbidden = context =>
+            {
+                if (context.Response.HasStarted)
+                {
+                    return Task.CompletedTask;
+                }
+
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/problem+json";
+
+                var problemDetails = new ProblemDetails
+                {
+                    Title = "Forbidden",
+                    Status = StatusCodes.Status403Forbidden,
+                    Detail = "You do not have permission to access this resource.",
+                    Instance = context.HttpContext.Request.Path
+                };
+                problemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                var payload = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+                return context.Response.WriteAsync(payload);
             }
         };
     });

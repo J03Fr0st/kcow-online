@@ -148,6 +148,18 @@ export const routes: Routes = [
           import('@features/students/students.routes').then((m) => m.routes),
       },
       {
+        path: 'trucks',
+        loadComponent: () =>
+          import('@features/trucks/trucks-list/trucks-list.component').then((m) => m.TrucksListComponent),
+        data: {
+          breadcrumb: 'Trucks',
+          breadcrumbIcon: '🚚',
+          title: 'Trucks Management',
+          description: 'Manage and view all fleet trucks',
+          keywords: 'trucks, fleet, vehicles, management',
+        },
+      },
+      {
         path: 'families',
         loadChildren: () =>
           import('@features/families/families.routes').then((m) => m.routes),
