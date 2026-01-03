@@ -2,7 +2,8 @@ import { Component, inject, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AuthService, LoginRequest } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth.service';
+import { LoginRequest } from './models/login-request.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 /**

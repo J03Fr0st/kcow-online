@@ -5,45 +5,32 @@ import {
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
 } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Authentication Guard
  *
- * Protects routes by checking if user is authenticated.
- * If not authenticated, redirects to login page with return URL.
- *
- * @example
- * ```typescript
- * export const appRoutes: Routes = [
- *   {
- *     path: 'dashboard',
- *     canActivate: [authGuard],
- *     loadComponent: () => import('./dashboard.component')
- *   }
- * ];
- * ```
+ * Protects routes by checking if user is authenticated via AuthService.
+ * If not authenticated, redirects to login page.
  */
 export const authGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot
 ) => {
   const router = inject(Router);
+  const authService = inject(AuthService);
 
-  // Check if user has auth token in session storage
-  // This is a simple check - the AuthService will validate with the server
-  const hasAuthToken = sessionStorage.getItem('auth_token') !== null;
+  const token = authService.getToken();
 
-  if (hasAuthToken) {
+  if (token) {
     return true;
   }
 
   // Not authenticated - store return URL and redirect to login
   const returnUrl = state.url;
-  sessionStorage.setItem('returnUrl', returnUrl);
+  authService.setReturnUrl(returnUrl);
 
-  router.navigate(['/login'], {
-    queryParams: { returnUrl },
-  });
+  router.navigate(['/login']);
 
   return false;
 };

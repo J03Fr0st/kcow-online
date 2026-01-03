@@ -1,6 +1,6 @@
 # Story 1.3: Frontend Auth Service & Login Page
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -33,43 +33,43 @@ so that **I can securely access the admin system**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create AuthService with Signals (AC: #4)
-  - [ ] Create AuthService in `core/services/`
-  - [ ] Implement `isAuthenticated$` signal
-  - [ ] Implement `currentUser$` signal
-  - [ ] Implement login method (calls API, stores token)
-  - [ ] Implement logout method (clears token, resets state)
-- [ ] Task 2: Create HTTP interceptor for auth tokens (AC: #5)
-  - [ ] Create AuthInterceptor in `core/interceptors/`
-  - [ ] Attach Authorization header to API requests
-  - [ ] Handle 401 responses (redirect to login)
-  - [ ] Register interceptor in app.config.ts
-- [ ] Task 3: Create auth guard (AC: #6)
-  - [ ] Create AuthGuard in `core/guards/`
-  - [ ] Check authentication state
-  - [ ] Redirect to `/login` if not authenticated
-  - [ ] Apply guard to protected routes
-- [ ] Task 4: Create login page component (AC: #1, #2)
-  - [ ] Create login component in `features/auth/`
-  - [ ] Create reactive form with email/password fields
-  - [ ] Style with DaisyUI dark theme
-  - [ ] Add loading state during submission
-  - [ ] Display inline error messages
-- [ ] Task 5: Handle login flow (AC: #1)
-  - [ ] Call AuthService.login() on form submit
-  - [ ] Store token on success
-  - [ ] Navigate to dashboard on success
-- [ ] Task 6: Handle error states (AC: #2)
-  - [ ] Display server error messages inline
-  - [ ] Keep user on login page on failure
-  - [ ] Clear password field on failure
-- [ ] Task 7: Implement logout (AC: #3)
-  - [ ] Add logout button (will be in layout later)
-  - [ ] Call AuthService.logout() on click
-  - [ ] Navigate to login page
-- [ ] Task 8: Configure routing (AC: #6)
-  - [ ] Add `/login` route
-  - [ ] Configure AuthGuard on protected routes
+- [x] Task 1: Create AuthService with Signals (AC: #4)
+  - [x] Create AuthService in `core/services/`
+  - [x] Implement `isAuthenticated$` signal
+  - [x] Implement `currentUser$` signal
+  - [x] Implement login method (calls API, stores token)
+  - [x] Implement logout method (clears token, resets state)
+- [x] Task 2: Create HTTP interceptor for auth tokens (AC: #5)
+  - [x] Create AuthInterceptor in `core/interceptors/`
+  - [x] Attach Authorization header to API requests
+  - [x] Handle 401 responses (redirect to login)
+  - [x] Register interceptor in app.config.ts
+- [x] Task 3: Create auth guard (AC: #6)
+  - [x] Create AuthGuard in `core/guards/`
+  - [x] Check authentication state
+  - [x] Redirect to `/login` if not authenticated
+  - [x] Apply guard to protected routes
+- [x] Task 4: Create login page component (AC: #1, #2)
+  - [x] Create login component in `features/auth/`
+  - [x] Create reactive form with email/password fields
+  - [x] Style with DaisyUI dark theme
+  - [x] Add loading state during submission
+  - [x] Display inline error messages
+- [x] Task 5: Handle login flow (AC: #1)
+  - [x] Call AuthService.login() on form submit
+  - [x] Store token on success
+  - [x] Navigate to dashboard on success
+- [x] Task 6: Handle error states (AC: #2)
+  - [x] Display server error messages inline
+  - [x] Keep user on login page on failure
+  - [x] Clear password field on failure
+- [x] Task 7: Implement logout (AC: #3)
+  - [x] Add logout button (will be in layout later)
+  - [x] Call AuthService.logout() on click
+  - [x] Navigate to login page
+- [x] Task 8: Configure routing (AC: #6)
+  - [x] Add `/login` route
+  - [x] Configure AuthGuard on protected routes
 
 ## Dev Notes
 
@@ -189,10 +189,35 @@ apps/frontend/src/app/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- ✅ Implemented `AuthService` with Signals, token storage (localStorage), and API integration
+- ✅ Created `authInterceptor` to attach Bearer tokens and handle 401 errors automatically
+- ✅ Implemented `authGuard` using `AuthService` logic for route protection
+- ✅ Built `LoginComponent` with Reactive Forms, validation, and DaisyUI styling
+- ✅ Configured proper routing with guard protection for main admin area
+- ✅ Added comprehensive unit tests for Service, Interceptor, Guard, and Component
+
 ### File List
+
+- apps/frontend/src/app/core/services/auth.service.ts
+- apps/frontend/src/app/core/services/auth.service.spec.ts
+- apps/frontend/src/app/core/interceptors/auth.interceptor.ts
+- apps/frontend/src/app/core/interceptors/auth.interceptor.spec.ts
+- apps/frontend/src/app/core/guards/auth.guard.ts
+- apps/frontend/src/app/core/guards/auth.guard.spec.ts
+- apps/frontend/src/app/features/auth/login.component.ts
+- apps/frontend/src/app/features/auth/login.component.html
+- apps/frontend/src/app/features/auth/login.component.spec.ts
+- apps/frontend/src/app/features/auth/models/user.model.ts
+- apps/frontend/src/app/features/auth/models/login-request.model.ts
+- apps/frontend/src/app/features/auth/models/login-response.model.ts
+- apps/frontend/src/app/app.config.ts
+
+### Change Log
+
+- 2026-01-03: Implemented frontend authentication system with AuthService, Interceptor, Guard, and Login Page (Story 1.3)

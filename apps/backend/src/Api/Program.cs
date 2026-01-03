@@ -90,7 +90,8 @@ try
         options.CustomizeProblemDetails = context =>
         {
             context.ProblemDetails.Instance = context.HttpContext.Request.Path;
-            context.ProblemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+            // Some ASP.NET versions include a traceId by default; set (don't Add) to avoid duplicate-key exceptions.
+            context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
         };
     });
 
@@ -129,9 +130,17 @@ try
 
     app.MapControllers();
 
-    // Health check endpoint
-    app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
+    // Health check endpoints
+    // - /health is the canonical endpoint
+    // - /api/health is a compatibility alias used by frontend tooling/scripts
+    var healthPayload = () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow });
+
+    app.MapGet("/health", healthPayload)
         .WithName("HealthCheck")
+        .WithTags("Health");
+
+    app.MapGet("/api/health", healthPayload)
+        .WithName("ApiHealthCheck")
         .WithTags("Health");
 
     app.Run();

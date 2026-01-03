@@ -6,6 +6,7 @@ import {
 import { type ApplicationConfig, ErrorHandler } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
+import { authInterceptor } from '@core/interceptors/auth.interceptor';
 import { errorInterceptor } from '@core/interceptors/error.interceptor';
 import { httpMonitoringInterceptor } from '@core/interceptors/http-monitoring.interceptor';
 import { GlobalErrorHandler } from '@core/services/global-error-handler.service';
@@ -16,6 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(
       withInterceptors([
+        authInterceptor,
         httpMonitoringInterceptor,
         errorInterceptor, // Global error interceptor
       ]),

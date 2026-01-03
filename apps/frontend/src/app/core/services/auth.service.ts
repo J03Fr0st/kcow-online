@@ -1,60 +1,17 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
+import { Observable, tap, catchError, of, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-/**
- * User interface matching backend User model
- */
-export interface User {
-  id: string;
-  email: string;
-  createdAt: string;
-}
-
-/**
- * Login request payload
- */
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-/**
- * Login response from backend
- */
-export interface LoginResponse {
-  user: User;
-  message: string;
-}
-
-/**
- * Auth state for signals
- */
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
+import { LoginRequest } from '../../features/auth/models/login-request.model';
+import { LoginResponse } from '../../features/auth/models/login-response.model';
+import { User } from '../../features/auth/models/user.model';
 
 /**
  * Authentication Service
  *
  * Handles user authentication, session management, and auth state.
  * Uses Angular Signals for reactive state management.
- *
- * @example
- * ```typescript
- * constructor(private authService: AuthService) {
- *   // Subscribe to auth state changes
- *   effect(() => {
- *     if (this.authService.isAuthenticated()) {
- *       console.log('User logged in:', this.authService.currentUser());
- *     }
- *   });
- * }
- * ```
  */
 @Injectable({
   providedIn: 'root',
@@ -64,6 +21,8 @@ export class AuthService {
   private router = inject(Router);
 
   private readonly apiUrl = environment.apiUrl;
+  private readonly tokenKey = 'auth_token';
+  private readonly returnUrlKey = 'returnUrl';
 
   // Signals for auth state
   private userSignal = signal<User | null>(null);
@@ -88,13 +47,11 @@ export class AuthService {
     this.isLoadingSignal.set(true);
 
     return this.http
-      .post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials, {
-        withCredentials: true, // Send/receive cookies
-      })
+      .post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
         tap((response) => {
-          // Store auth token in session storage
-          sessionStorage.setItem('auth_token', 'authenticated');
+          // Store auth token
+          localStorage.setItem(this.tokenKey, response.token);
 
           // Update user state
           this.userSignal.set(response.user);
@@ -115,27 +72,30 @@ export class AuthService {
   logout(): Observable<void> {
     this.isLoadingSignal.set(true);
 
-    return this.http.post<void>(`${this.apiUrl}/auth/logout`, {}, {
-      withCredentials: true,
-    }).pipe(
+    return this.http.post<void>(`${this.apiUrl}/auth/logout`, {}).pipe(
       tap(() => {
-        // Clear session
-        this.clearSession();
-
-        // Redirect to login
-        this.router.navigate(['/login']);
-
+        this.doLogoutCleanup();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
         // Even if API call fails, clear local session
-        this.clearSession();
-        this.router.navigate(['/login']);
-
+        this.doLogoutCleanup();
         this.isLoadingSignal.set(false);
         throw error;
       })
     );
+  }
+
+  private doLogoutCleanup(): void {
+    this.clearSession();
+    this.router.navigate(['/login']);
+  }
+
+  /**
+   * Get authentication token
+   */
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
   }
 
   /**
@@ -143,14 +103,18 @@ export class AuthService {
    * @returns Observable<User | null>
    */
   getCurrentUser(): Observable<User | null> {
-    return this.http.get<User>(`${this.apiUrl}/auth/me`, {
-      withCredentials: true,
-    }).pipe(
+    return this.http.get<UserDto>(`${this.apiUrl}/auth/me`).pipe(
+      map(userDto => {
+        // Map backend UserDto to User model if needed, or if they match:
+        // Backend UserDto has: Id (int), Email, Name, Role
+        // Our model User has: id (number), email, name, role
+        // Need to ensure casing matches or map it.
+        // Assuming backend returns camelCase JSON.
+        return userDto as unknown as User;
+      }),
       tap((user) => {
-        sessionStorage.setItem('auth_token', 'authenticated');
         this.userSignal.set(user);
       }),
-      map((user) => user),
       catchError(() => {
         // User not authenticated or error occurred
         this.clearSession();
@@ -163,10 +127,10 @@ export class AuthService {
    * Check for existing session on service initialization
    */
   private checkSession(): void {
-    const hasToken = sessionStorage.getItem('auth_token') !== null;
+    const token = this.getToken();
 
-    if (hasToken) {
-      // Validate session with server
+    if (token) {
+      // Validate session with server and get user details
       this.getCurrentUser().subscribe();
     }
   }
@@ -175,25 +139,34 @@ export class AuthService {
    * Clear session data
    */
   private clearSession(): void {
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('returnUrl');
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.returnUrlKey);
     this.userSignal.set(null);
+  }
+
+  /**
+   * Store return URL for post-login redirect
+   * @param url URL to return to
+   */
+  setReturnUrl(url: string): void {
+    localStorage.setItem(this.returnUrlKey, url);
   }
 
   /**
    * Get stored return URL for post-login redirect
    */
   getReturnUrl(): string {
-    const returnUrl = sessionStorage.getItem('returnUrl');
-    sessionStorage.removeItem('returnUrl');
+    const returnUrl = localStorage.getItem(this.returnUrlKey);
+    localStorage.removeItem(this.returnUrlKey);
     return returnUrl || '/dashboard';
   }
+}
 
-  /**
-   * Manual method to refresh auth state from server
-   * Useful after page refresh or when怀疑 session state is stale
-   */
-  refreshAuthState(): Observable<User | null> {
-    return this.getCurrentUser();
-  }
+// Temporary internal interface for backend response if it differs significantly, 
+// but we cast to User model.
+interface UserDto {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
 }

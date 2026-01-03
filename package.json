@@ -1,0 +1,37 @@
+{
+  "name": "kcow",
+  "version": "1.0.0",
+  "description": "KCOW - Full-stack application with .NET backend and Angular frontend",
+  "private": true,
+  "scripts": {
+    "start": "concurrently -k -n \"frontend,backend\" -c \"magenta,cyan\" \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:backend": "cd apps/backend/src/Api && dotnet run",
+    "start:frontend": "cd apps/frontend && npm run dev",
+    "start:frontend:wait": "wait-on http://localhost:5039/api/health && npm run start:frontend",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd apps/backend/src/Api && dotnet build",
+    "build:frontend": "cd apps/frontend && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd apps/backend && dotnet test",
+    "test:frontend": "cd apps/frontend && npm test",
+    "test:e2e": "cd apps/frontend && npm run test:e2e",
+    "install:all": "npm install && cd apps/frontend && npm install",
+    "clean": "npm run clean:backend && npm run clean:frontend",
+    "clean:backend": "cd apps/backend && dotnet clean",
+    "clean:frontend": "cd apps/frontend && rm -rf node_modules dist",
+    "kill": "powershell -NoProfile -ExecutionPolicy Bypass -File ./kill-processes.ps1"
+  },
+  "keywords": [
+    "kcow",
+    "angular",
+    "dotnet",
+    "fullstack"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "wait-on": "^8.0.2"
+  }
+}
+
