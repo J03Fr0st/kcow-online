@@ -75,6 +75,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         }
     }
 
+    private string GenerateUniqueRegistrationNumber(string prefix = "TEST")
+    {
+        return $"{prefix}-{Guid.NewGuid():N}";
+    }
+
     [Fact]
     public async Task GetAll_WithAuthentication_ReturnsTrucksList()
     {
@@ -114,10 +119,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("TEST");
         var request = new CreateTruckRequest
         {
             Name = "Test Truck",
-            RegistrationNumber = "TEST-001",
+            RegistrationNumber = registrationNumber,
             Status = "Active",
             Notes = "Test truck notes"
         };
@@ -131,7 +137,7 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         var truck = await response.Content.ReadFromJsonAsync<TruckDto>();
         Assert.NotNull(truck);
         Assert.Equal("Test Truck", truck.Name);
-        Assert.Equal("TEST-001", truck.RegistrationNumber);
+        Assert.Equal(registrationNumber, truck.RegistrationNumber);
         Assert.Equal("Active", truck.Status);
         Assert.True(truck.IsActive);
     }
@@ -143,10 +149,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("DUP");
         var request = new CreateTruckRequest
         {
             Name = "Test Truck",
-            RegistrationNumber = "DUP-001",
+            RegistrationNumber = registrationNumber,
             Status = "Active"
         };
 
@@ -167,10 +174,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("GET");
         var request = new CreateTruckRequest
         {
             Name = "Test Truck",
-            RegistrationNumber = "GET-001",
+            RegistrationNumber = registrationNumber,
             Status = "Active"
         };
 
@@ -211,10 +219,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("UPD");
         var createRequest = new CreateTruckRequest
         {
             Name = "Original Name",
-            RegistrationNumber = "UPD-001",
+            RegistrationNumber = registrationNumber,
             Status = "Active"
         };
 
@@ -225,7 +234,7 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         var updateRequest = new UpdateTruckRequest
         {
             Name = "Updated Name",
-            RegistrationNumber = "UPD-001",
+            RegistrationNumber = registrationNumber,
             Status = "Maintenance",
             Notes = "Updated notes"
         };
@@ -250,10 +259,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("UPD");
         var updateRequest = new UpdateTruckRequest
         {
             Name = "Updated Name",
-            RegistrationNumber = "UPD-999",
+            RegistrationNumber = registrationNumber,
             Status = "Active"
         };
 
@@ -271,10 +281,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("ARC");
         var createRequest = new CreateTruckRequest
         {
             Name = "To Archive",
-            RegistrationNumber = "ARC-001",
+            RegistrationNumber = registrationNumber,
             Status = "Active"
         };
 
@@ -337,10 +348,11 @@ public class TrucksControllerTests : IClassFixture<CustomWebApplicationFactory>
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
+        var registrationNumber = GenerateUniqueRegistrationNumber("SOFT");
         var createRequest = new CreateTruckRequest
         {
             Name = "Test Truck",
-            RegistrationNumber = "SOFT-001",
+            RegistrationNumber = registrationNumber,
             Status = "Active"
         };
 
