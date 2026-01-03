@@ -1,20 +1,20 @@
-# Story 1.2: Better Auth Server Integration
+# Story 1.2: ASP.NET Core Authentication Integration
 
 Status: ready-for-dev
 
 ## Story
 
 As a **developer**,
-I want **Better Auth configured on the backend API**,
+I want **JWT authentication configured on the backend API**,
 so that **the system can authenticate admin users securely**.
 
 ## Acceptance Criteria
 
 1. **Given** the backend scaffold from Story 1.1
-   **When** Better Auth is integrated
+   **When** authentication is integrated
    **Then** the Admin role and user are seeded in the database
 
-2. **And** `/api/auth/login` endpoint accepts credentials and returns a token
+2. **And** `/api/auth/login` endpoint accepts credentials and returns a JWT token
 
 3. **And** `/api/auth/logout` endpoint invalidates the session
 
@@ -24,13 +24,14 @@ so that **the system can authenticate admin users securely**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Research Better Auth .NET integration (AC: #1-5)
-  - [ ] Review Better Auth documentation for .NET backend
-  - [ ] Determine session vs JWT strategy
+- [ ] Task 1: Plan authentication strategy (AC: #1-5)
+  - [ ] Design JWT token structure with claims
+  - [ ] Plan refresh token strategy (optional)
   - [ ] Plan database schema for auth tables
-- [ ] Task 2: Add Better Auth NuGet packages (AC: #1)
-  - [ ] Add authentication packages to Api project
-  - [ ] Configure services in Program.cs
+- [ ] Task 2: Add authentication NuGet packages (AC: #1)
+  - [ ] Add Microsoft.AspNetCore.Authentication.JwtBearer to Api
+  - [ ] Add BCrypt.Net-Next for password hashing
+  - [ ] Configure JWT services in Program.cs
 - [ ] Task 3: Create auth database tables (AC: #1)
   - [ ] Create User entity in Domain
   - [ ] Create Role entity in Domain
@@ -44,14 +45,15 @@ so that **the system can authenticate admin users securely**.
 - [ ] Task 5: Implement login endpoint (AC: #2)
   - [ ] Create AuthController in Api
   - [ ] Create LoginRequest/LoginResponse DTOs
-  - [ ] Implement credential validation
-  - [ ] Return auth token on success
+  - [ ] Implement credential validation with BCrypt
+  - [ ] Generate and return JWT token on success
 - [ ] Task 6: Implement logout endpoint (AC: #3)
   - [ ] Add logout action to AuthController
-  - [ ] Invalidate session/token
+  - [ ] Client-side token removal (stateless JWT)
+  - [ ] Optional: Add token to blacklist for revocation
 - [ ] Task 7: Configure authorization middleware (AC: #4, #5)
-  - [ ] Add authentication middleware
-  - [ ] Add authorization middleware
+  - [ ] Add JWT authentication middleware
+  - [ ] Add authorization middleware with policies
   - [ ] Configure [Authorize] attribute defaults
   - [ ] Test 401/403 responses
 
@@ -59,7 +61,7 @@ so that **the system can authenticate admin users securely**.
 
 ### Architecture Compliance
 
-- **Auth integration in Infrastructure layer** - Better Auth setup in `Infrastructure/Auth/`
+- **Auth services in Infrastructure layer** - JwtService, PasswordHasher in `Infrastructure/Auth/`
 - **Controllers in Api layer** - AuthController in `Api/Controllers/`
 - **DTOs in Application layer** - LoginRequest, LoginResponse in `Application/Auth/`
 - **Entities in Domain layer** - User, Role in `Domain/Entities/`
@@ -68,30 +70,40 @@ so that **the system can authenticate admin users securely**.
 
 | Technology | Version | Notes |
 |------------|---------|-------|
-| Better Auth | Latest | TypeScript auth framework adapted for .NET |
+| JWT Bearer | Built-in | Microsoft.AspNetCore.Authentication.JwtBearer |
+| BCrypt.Net | Latest | Password hashing |
 | HTTPS | Required | All auth endpoints must be HTTPS |
 
-### Better Auth Configuration
+### JWT Configuration
 
-Better Auth is a TypeScript-first authentication framework. For .NET integration:
-- May need to use JWT tokens for cross-platform compatibility
-- Consider session-based auth if frontend and backend on same domain
-- Implement email/password authentication with Admin role
+```json
+// appsettings.json
+{
+  "Jwt": {
+    "Key": "your-256-bit-secret-key-here-minimum-32-chars",
+    "Issuer": "kcow-api",
+    "Audience": "kcow-frontend",
+    "ExpirationMinutes": 60
+  }
+}
+```
 
 ### Security Requirements
 
-- **Password hashing**: Use BCrypt or Argon2
+- **Password hashing**: BCrypt with work factor 12
+- **JWT signing**: HMAC-SHA256 minimum
+- **Token expiration**: 1 hour access token
 - **HTTPS only**: No HTTP endpoints for auth
-- **Secure token storage**: HttpOnly cookies or secure storage
+- **Secure token storage**: HttpOnly cookies or localStorage with XSS protection
 - **PII protection**: POPIA compliance for user data
 
 ### API Endpoints
 
 | Endpoint | Method | Auth Required | Description |
 |----------|--------|---------------|-------------|
-| `/api/auth/login` | POST | No | Authenticate user |
-| `/api/auth/logout` | POST | Yes | Invalidate session |
-| `/api/auth/me` | GET | Yes | Get current user info |
+| `/api/auth/login` | POST | No | Authenticate user, return JWT |
+| `/api/auth/logout` | POST | Yes | Invalidate session (client-side) |
+| `/api/auth/me` | GET | Yes | Get current user info from token |
 
 ### File Structure
 
@@ -105,6 +117,7 @@ apps/backend/
 │   │   └── Auth/
 │   │       ├── LoginRequest.cs
 │   │       ├── LoginResponse.cs
+│   │       ├── UserDto.cs
 │   │       └── IAuthService.cs
 │   ├── Domain/
 │   │   └── Entities/
@@ -113,6 +126,7 @@ apps/backend/
 │   └── Infrastructure/
 │       ├── Auth/
 │       │   ├── AuthService.cs
+│       │   ├── JwtService.cs
 │       │   └── PasswordHasher.cs
 │       └── Data/
 │           ├── Configurations/
@@ -122,15 +136,24 @@ apps/backend/
 │               └── AuthSeeder.cs
 ```
 
+### Default Admin Credentials (Dev Only)
+
+```
+Email: admin@kcow.local
+Password: Admin123!
+Role: Admin
+```
+
 ### Previous Story Dependencies
 
 - **Story 1.1** provides: Backend scaffold with EF Core + SQLite configured
 
 ### Testing Requirements
 
-- Unit test: Password hashing, token generation
+- Unit test: Password hashing, JWT generation/validation
 - Integration test: Login/logout flows with valid/invalid credentials
-- Test 401/403 responses for protected endpoints
+- Test 401 response for unauthenticated requests
+- Test 403 response for unauthorized roles
 
 ### References
 

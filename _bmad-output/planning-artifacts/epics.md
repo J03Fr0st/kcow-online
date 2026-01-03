@@ -85,17 +85,16 @@ These setup tasks are prerequisites for all feature development and must be comp
 1. **Backend Base Setup**: Create ASP.NET Core Web API project (net10.0) in `apps/backend/` with:
    - Clean Architecture folder structure (Api, Application, Domain, Infrastructure)
    - EF Core + SQLite database configuration
-   - Better Auth server-side integration
+   - ASP.NET Core JWT Bearer Authentication
    - ProblemDetails error handling middleware
    - Serilog logging configuration
    - CORS configuration for frontend
 
-2. **Frontend Better Auth Integration**: Add Better Auth client to the existing Angular 21 frontend:
-   - Install and configure Better Auth client library
+2. **Frontend Auth Integration**: Connect to backend JWT authentication:
    - Create AuthService wrapper using Angular Signals
-   - Implement login/logout flows
+   - Implement login/logout flows against API endpoints
    - Add auth guard for protected routes
-   - Add HTTP interceptor for auth tokens
+   - Add HTTP interceptor for JWT tokens
 
 ---
 
@@ -113,8 +112,8 @@ These setup tasks are prerequisites for all feature development and must be comp
 - **Legacy Import**: XML/XSD import workflow with preview, exception handling, and audit log.
 
 **Implementation Sequence (Updated):**
-1. **Backend base setup** + EF Core + Better Auth server-side.
-2. **Frontend Better Auth integration** (login/logout, guards, interceptors).
+1. **Backend base setup** + EF Core + JWT Authentication server-side.
+2. **Frontend Auth integration** (login/logout, guards, interceptors).
 3. Legacy import workflow + audit log.
 4. Core API endpoints (students, families, class groups, schools).
 5. Frontend shell + student profile + search flow.
@@ -162,7 +161,7 @@ Admin can securely log in to the system and access a protected dashboard with th
 
 **Implementation Notes:**
 - Backend scaffold (ASP.NET Core + EF Core + SQLite)
-- Better Auth integration (server + client)
+- JWT Bearer Authentication (server + client)
 - AdminLayout shell with sidebar navigation
 - Basic dashboard placeholder
 - Auth guards, interceptors, theme system
@@ -282,16 +281,16 @@ Admin can securely log in to the system and access a protected dashboard with th
 
 ---
 
-### Story 1.2: Better Auth Server Integration
+### Story 1.2: JWT Authentication Integration
 
 **As a** developer,
-**I want** Better Auth configured on the backend API,
+**I want** JWT authentication configured on the backend API,
 **So that** the system can authenticate admin users securely.
 
 **Acceptance Criteria:**
 
 **Given** the backend scaffold from Story 1.1
-**When** Better Auth is integrated
+**When** JWT authentication is integrated
 **Then** the Admin role and user are seeded in the database
 **And** `/api/auth/login` endpoint accepts credentials and returns a token
 **And** `/api/auth/logout` endpoint invalidates the session

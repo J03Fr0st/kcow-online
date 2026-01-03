@@ -108,7 +108,7 @@ Web application (SPA + planned API) based on project requirements and existing c
 
 **Critical Decisions (Block Implementation):**
 - SQLite for v1 with EF Core and migration path.
-- Better Auth (TypeScript auth framework, Admin role).
+- ASP.NET Core JWT Bearer Authentication (Admin role).
 - RESTful API with ProblemDetails error handling.
 - Angular Signals + RxJS; Reactive Forms only.
 
@@ -133,7 +133,7 @@ Web application (SPA + planned API) based on project requirements and existing c
 
 ### Authentication & Security
 
-- **Auth:** Better Auth (TypeScript authentication framework, Admin role).
+- **Auth:** ASP.NET Core JWT Bearer Authentication (Admin role, BCrypt password hashing).
 - **Authorization:** Role-based checks at API endpoints.
 - **Security middleware:** HTTPS enforced, ProblemDetails errors, input validation.
 - **PII handling:** POPIA compliance; audit logging for sensitive actions.
@@ -162,7 +162,7 @@ Web application (SPA + planned API) based on project requirements and existing c
 ### Decision Impact Analysis
 
 **Implementation Sequence:**
-1. Backend scaffold + EF Core + Better Auth baseline.
+1. Backend scaffold + EF Core + JWT Authentication baseline.
 2. Legacy import workflow + audit log.
 3. Core API endpoints (students, families, class groups, schools).
 4. Frontend shell + student profile + search flow.
@@ -323,7 +323,7 @@ kcow-online/
 │       │   │   └── ValueObjects/
 │       │   └── Infrastructure/
 │       │       ├── Data/               # EF Core configs, DbContext
-│       │       ├── Auth/               # Better Auth integration
+│       │       ├── Auth/               # JWT Authentication (JwtService, PasswordHasher)
 │       │       └── Migrations/
 │       └── tests/
 │           ├── Unit/
@@ -354,7 +354,7 @@ kcow-online/
 
 **API Boundaries:**
 - REST endpoints per domain (`/trucks`, `/schools`, `/class-groups`, `/students`, `/families`, `/attendance`, `/evaluations`, `/billing`, `/import`)
-- Better Auth middleware + Admin role checks at API boundary
+- JWT Bearer middleware + Admin role checks at API boundary
 - ProblemDetails error contract
 
 **Component Boundaries:**
@@ -387,7 +387,7 @@ kcow-online/
 - Billing -> `features/billing`, `Application/Billing`
 
 **Cross-Cutting Concerns:**
-- Auth -> `Infrastructure/Auth` (Better Auth integration), API middleware
+- Auth -> `Infrastructure/Auth` (JWT Authentication), API middleware
 - Validation -> `shared/validators` (FE) + Application validators (BE)
 - Audit Trail -> API middleware for FR14 compliance
 - Logging -> API middleware + client error interceptor
@@ -459,7 +459,7 @@ All 14 functional requirements have corresponding architectural components:
 
 **Non-Functional Requirements Coverage:**
 - Performance: OnPush change detection, lazy-loaded routes, <2s targets
-- Security: POPIA-compliant PII handling, Better Auth authentication, role-based auth (Admin role)
+- Security: POPIA-compliant PII handling, JWT Bearer authentication, role-based auth (Admin role)
 - Reliability: Serilog logging, audit trails, standard dev/prod separation
 - Accessibility: Keyboard operability, visible focus states, readable typography
 
@@ -540,7 +540,7 @@ All potential conflict points addressed through naming, structure, format, commu
 - When in doubt, prefer the simpler approach that aligns with patterns
 
 **First Implementation Priority:**
-1. Backend scaffold: Create ASP.NET Core API project with EF Core + SQLite + Better Auth baseline
+1. Backend scaffold: Create ASP.NET Core API project with EF Core + SQLite + JWT Authentication baseline
 2. Domain entities: Define core entities (Student, Family, ClassGroup, School)
 3. API endpoints: Implement Students CRUD as reference implementation
 4. Frontend integration: Connect student feature to new API
@@ -589,7 +589,7 @@ dotnet new webapi -n Kcow.Api -o apps/backend
 **Development Sequence:**
 1. Initialize backend project using documented architecture
 2. Set up development environment per architecture
-3. Implement core architectural foundations (Better Auth, EF Core, domain entities)
+3. Implement core architectural foundations (JWT Authentication, EF Core, domain entities)
 4. Build features following established patterns
 5. Maintain consistency with documented rules
 
