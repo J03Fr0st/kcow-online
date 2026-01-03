@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, type WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SchoolService, type School } from '@core/services/school.service';
@@ -8,7 +8,7 @@ import { NotificationService } from '@core/services/notification.service';
 interface ColumnConfig {
     key: keyof School;
     label: string;
-    visible: signal<boolean>;
+    visible: WritableSignal<boolean>;
 }
 
 @Component({
@@ -71,7 +71,7 @@ export class SchoolListComponent implements OnInit {
     }
 
     protected toggleColumnVisibility(column: ColumnConfig): void {
-        column.visible.update(v => !v);
+        column.visible.update((v: boolean) => !v);
     }
 
     protected getCellValue(school: School, key: keyof School): string {

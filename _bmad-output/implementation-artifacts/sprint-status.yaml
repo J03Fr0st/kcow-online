@@ -48,7 +48,7 @@ development_status:
   1-2-jwt-authentication-integration: done
   1-3-frontend-auth-service-login-page: done
   1-4-admin-layout-shell-dashboard: review
-  1-5-theme-system-accessibility-baseline: ready-for-dev
+  1-5-theme-system-accessibility-baseline: review
   epic-1-retrospective: optional
 
   # ========================

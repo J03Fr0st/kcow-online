@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CreateStudentPage } from './create-student.page';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { StudentService, type Student } from '@core/services/student.service';
 import { of } from 'rxjs';
@@ -37,6 +37,7 @@ describe('CreateStudentPage', () => {
             imports: [CreateStudentPage],
             providers: [
                 { provide: Router, useValue: mockRouter },
+                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
                 { provide: StudentService, useValue: mockStudentService },
             ],
         }).compileComponents();

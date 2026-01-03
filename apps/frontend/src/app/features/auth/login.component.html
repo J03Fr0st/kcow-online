@@ -28,13 +28,15 @@
             formControlName="email"
             class="input input-bordered w-full"
             [class.input-error]="getEmailErrorMessage()"
+            [attr.aria-invalid]="getEmailErrorMessage() ? 'true' : null"
+            [attr.aria-describedby]="getEmailErrorMessage() ? 'email-error' : null"
             placeholder="admin@kcow.test"
             autocomplete="email"
             required
           />
           @if (getEmailErrorMessage()) {
             <label class="label">
-              <span class="label-text-alt text-error">{{ getEmailErrorMessage() }}</span>
+              <span id="email-error" class="label-text-alt text-error" role="alert">{{ getEmailErrorMessage() }}</span>
             </label>
           }
         </div>
@@ -50,13 +52,15 @@
             formControlName="password"
             class="input input-bordered w-full"
             [class.input-error]="getPasswordErrorMessage()"
+            [attr.aria-invalid]="getPasswordErrorMessage() ? 'true' : null"
+            [attr.aria-describedby]="getPasswordErrorMessage() ? 'password-error' : null"
             placeholder="Enter your password"
             autocomplete="current-password"
             required
           />
           @if (getPasswordErrorMessage()) {
             <label class="label">
-              <span class="label-text-alt text-error">{{ getPasswordErrorMessage() }}</span>
+              <span id="password-error" class="label-text-alt text-error" role="alert">{{ getPasswordErrorMessage() }}</span>
             </label>
           }
         </div>

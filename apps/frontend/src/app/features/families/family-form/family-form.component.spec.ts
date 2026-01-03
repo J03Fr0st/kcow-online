@@ -74,7 +74,6 @@ describe('FamilyFormComponent', () => {
                 { provide: NotificationService, useValue: mockNotificationService },
                 { provide: Router, useValue: mockRouter },
                 { provide: ActivatedRoute, useValue: mockActivatedRoute },
-                provideRouter([]),
             ],
         }).compileComponents();
 

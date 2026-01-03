@@ -88,8 +88,8 @@ describe('FamilyListComponent', () => {
 
         const rows = fixture.debugElement.queryAll(By.css('tbody tr'));
         expect(rows.length).toBe(2);
-        expect(rows[0].nativeElement.textContent).toContain('Smith Family');
-        expect(rows[1].nativeElement.textContent).toContain('Johnson Family');
+        expect(rows[0].nativeElement.textContent).toContain('Johnson Family');
+        expect(rows[1].nativeElement.textContent).toContain('Smith Family');
     });
 
     it('should render empty state when no families', () => {
@@ -131,14 +131,13 @@ describe('FamilyListComponent', () => {
         mockFamilyService.families.set(mockFamilies);
         fixture.detectChanges();
 
-        const nameHeader = fixture.debugElement.query(By.css('thead th'));
-
         // Initial state: Ascending (Johnson Family, then Smith Family alphabetically)
         let firstRowName = fixture.debugElement.query(By.css('tbody tr td')).nativeElement.textContent;
         expect(firstRowName).toContain('Johnson Family');
 
-        // Click to toggle to Descending
-        nameHeader.triggerEventHandler('click', null);
+        // Click to toggle to Descending - the click handler is on the div inside the th
+        const sortButton = fixture.debugElement.query(By.css('thead th div[role="button"]'));
+        sortButton.triggerEventHandler('click', null);
         fixture.detectChanges();
 
         firstRowName = fixture.debugElement.query(By.css('tbody tr td')).nativeElement.textContent;
@@ -160,18 +159,32 @@ describe('FamilyListComponent', () => {
         mockFamilyService.families.set(mockFamilies);
         fixture.detectChanges();
 
+        const rows = fixture.debugElement.queryAll(By.css('tbody tr'));
+        
+        // Find Smith Family row (active family)
+        const smithFamilyRow = rows.find(row => {
+            const nameCell = row.query(By.css('td'));
+            return nameCell && nameCell.nativeElement.textContent.includes('Smith Family');
+        });
+        expect(smithFamilyRow).toBeTruthy();
+
         // Smith Family is active - should have deactivate button
-        const familyARow = fixture.debugElement.queryAll(By.css('tbody tr'))[0];
-        const deactivateButtonA = familyARow.query(By.css('button[aria-label="Deactivate family"]'));
+        const deactivateButtonA = smithFamilyRow!.query(By.css('button[aria-label="Deactivate family"]'));
         expect(deactivateButtonA).toBeTruthy();
 
         // Smith Family should NOT have reactivate button
-        const reactivateButtonA = familyARow.query(By.css('button[aria-label="Reactivate family"]'));
+        const reactivateButtonA = smithFamilyRow!.query(By.css('button[aria-label="Reactivate family"]'));
         expect(reactivateButtonA).toBeFalsy();
 
+        // Find Johnson Family row (inactive family)
+        const johnsonFamilyRow = rows.find(row => {
+            const nameCell = row.query(By.css('td'));
+            return nameCell && nameCell.nativeElement.textContent.includes('Johnson Family');
+        });
+        expect(johnsonFamilyRow).toBeTruthy();
+
         // Johnson Family is inactive - should have reactivate button
-        const familyBRow = fixture.debugElement.queryAll(By.css('tbody tr'))[1];
-        const reactivateButtonB = familyBRow.query(By.css('button[aria-label="Reactivate family"]'));
+        const reactivateButtonB = johnsonFamilyRow!.query(By.css('button[aria-label="Reactivate family"]'));
         expect(reactivateButtonB).toBeTruthy();
     });
 

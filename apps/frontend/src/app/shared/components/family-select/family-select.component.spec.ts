@@ -138,6 +138,9 @@ describe('FamilySelectComponent', () => {
         });
 
         it('should filter families based on family name search query with debounce', fakeAsync(() => {
+            // Clear the initial call from ngOnInit
+            mockFamilyService.getActiveFamilies.mockClear();
+            
             const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
             input.nativeElement.value = 'Smith';
@@ -154,6 +157,9 @@ describe('FamilySelectComponent', () => {
         }));
 
         it('should filter families based on guardian name search query with debounce', fakeAsync(() => {
+            // Clear the initial call from ngOnInit
+            mockFamilyService.getActiveFamilies.mockClear();
+            
             const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
             input.nativeElement.value = 'John';

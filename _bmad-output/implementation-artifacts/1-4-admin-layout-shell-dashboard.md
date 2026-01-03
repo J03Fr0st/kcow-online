@@ -1,6 +1,6 @@
 # Story 1.4: Admin Layout Shell & Dashboard
 
-Status: review
+Status: done
 
 ## Story
 
@@ -62,6 +62,11 @@ so that **I can navigate to different modules of the system**.
 - [x] Task 7: Wire logout functionality (AC: #1)
   - [x] Call AuthService.logout() on button click
   - [x] Navigate to login page
+- [x] Review Follow-ups (AI)
+  - [x] [AI-Review][Critical] Add component tests for AdminLayout, Sidebar, Navbar, Dashboard
+  - [x] [AI-Review][Medium] Refactor hardcoded dashboard data to MockDataService
+  - [x] [AI-Review][Medium] Refactor hardcoded sidebar icons to constant
+  - [x] [AI-Review][Low] Refactor hardcoded themes to ThemeService constant
 
 ## Dev Notes
 
@@ -207,6 +212,15 @@ All story acceptance criteria have been successfully met:
 - Routing configured with AuthGuard protection
 - Build succeeds with no errors
 
+**Code Review Fixes:**
+- Added component tests for `AdminLayoutComponent`, `SidebarComponent`, `NavbarComponent`, and `DashboardComponent`
+- Refactored `DashboardComponent` to use `MockDataService` for recent activities
+- Moved hardcoded icons to `MENU_ICONS` constant
+- Exposed `AVAILABLE_THEMES` in `ThemeService`
+- Fixed `SidebarService` injection issue
+- Fixed `NavbarComponent` template property access
+- Updated `PageMetadataService` expectations
+
 ### File List
 
 **Modified Files:**
@@ -215,12 +229,22 @@ All story acceptance criteria have been successfully met:
 - `apps/frontend/src/app/layouts/navbar/navbar.component.html` - Wired logout click handler, dynamic user display
 - `apps/frontend/src/app/models/menu-item.model.ts` - Added Trucks menu item
 - `apps/frontend/src/app/layouts/sidebar/sidebar.component.ts` - Added truck icon mapping
+- `apps/frontend/src/app/core/services/mock-data.service.ts` - Added getRecentActivities
+- `apps/frontend/src/app/features/dashboard/dashboard.component.ts` - Used MockDataService
+- `apps/frontend/src/app/features/dashboard/dashboard.component.html` - Updated loop
+- `apps/frontend/src/app/core/services/theme.service.ts` - Added AVAILABLE_THEMES
+- `apps/frontend/src/app/core/services/sidebar.service.ts` - Fixed injection
+- `apps/frontend/src/app/features/schools/school-list.component.ts` - Fixed type error
+
+**Created Files:**
+- `apps/frontend/src/app/core/constants/icons.constants.ts`
+- `apps/frontend/src/app/layouts/admin-layout/admin-layout.component.spec.ts`
+- `apps/frontend/src/app/layouts/sidebar/sidebar.component.spec.ts`
+- `apps/frontend/src/app/layouts/navbar/navbar.component.spec.ts`
+- `apps/frontend/src/app/features/dashboard/dashboard.component.spec.ts`
 
 **Existing Files (Verified):**
 - `apps/frontend/src/app/layouts/admin-layout/admin-layout.component.ts`
 - `apps/frontend/src/app/layouts/admin-layout/admin-layout.component.html`
-- `apps/frontend/src/app/layouts/sidebar/sidebar.component.ts`
 - `apps/frontend/src/app/layouts/sidebar/sidebar.component.html`
-- `apps/frontend/src/app/features/dashboard/dashboard.component.ts`
-- `apps/frontend/src/app/features/dashboard/dashboard.component.html`
 - `apps/frontend/src/app/app.routes.ts`

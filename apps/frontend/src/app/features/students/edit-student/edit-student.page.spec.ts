@@ -90,8 +90,8 @@ describe('EditStudentPage', () => {
         it('should pass studentId to form component', () => {
             fixture.detectChanges();
             const form = fixture.debugElement.query(By.css('app-student-form'));
-            // The studentId should be passed as input to the form
-            expect(form.properties['studentId']).toBe(1);
+            // The studentId should be passed as input to the form (converted to number)
+            expect(form.componentInstance.studentId).toBe(1);
         });
     });
 

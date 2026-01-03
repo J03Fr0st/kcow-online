@@ -53,6 +53,31 @@
   }
 }
 
+/* Accessibility: Focus ring styles (Story 1.5) */
+@layer base {
+  /* Global focus ring for keyboard navigation */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100;
+  }
+
+  /* Ensure focus rings are visible on interactive elements */
+  [role="button"],
+  [tabindex="0"] {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100;
+  }
+}
+
+/* Accessibility: Focus ring utility class for custom usage */
+@layer utilities {
+  .focus-visible-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100;
+  }
+}
+
 /* Base styles */
 html,
 body {

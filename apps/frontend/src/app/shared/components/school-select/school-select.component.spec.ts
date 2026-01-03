@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
 import { SchoolSelectComponent } from './school-select.component';
 import { SchoolService, type School } from '@core/services/school.service';
-import { of } from 'rxjs';
-import { signal } from '@angular/core';
+import { of, Subject } from 'rxjs';
+import { signal, ChangeDetectionStrategy } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
@@ -13,6 +13,7 @@ describe('SchoolSelectComponent', () => {
         schools: ReturnType<typeof signal<School[]>>;
         getActiveSchools: jest.Mock;
     };
+    let schoolsSubject: Subject<School[]>;
 
     const mockSchools: School[] = [
         {
@@ -42,9 +43,10 @@ describe('SchoolSelectComponent', () => {
     ];
 
     beforeEach(async () => {
+        schoolsSubject = new Subject<School[]>();
         mockSchoolService = {
-            schools: signal<School[]>([]),
-            getActiveSchools: jest.fn().mockReturnValue(of(mockSchools)),
+            schools: signal<School[]>(mockSchools),
+            getActiveSchools: jest.fn().mockReturnValue(schoolsSubject.asObservable()),
         };
 
         await TestBed.configureTestingModule({
@@ -52,6 +54,8 @@ describe('SchoolSelectComponent', () => {
             providers: [
                 { provide: SchoolService, useValue: mockSchoolService },
             ],
+        }).overrideComponent(SchoolSelectComponent, {
+            set: { changeDetection: ChangeDetectionStrategy.Default }
         }).compileComponents();
 
         fixture = TestBed.createComponent(SchoolSelectComponent);
@@ -88,12 +92,13 @@ describe('SchoolSelectComponent', () => {
 
     describe('Search Functionality', () => {
         beforeEach(() => {
-            mockSchoolService.schools.set(mockSchools);
+            fixture.detectChanges();
+            schoolsSubject.next(mockSchools);
             fixture.detectChanges();
         });
 
         it('should display all schools when no search query', () => {
-            const items = fixture.debugElement.queryAll(By.css('.dropdown-content li a'));
+            const items = fixture.debugElement.queryAll(By.css('.dropdown-content li a:not(.disabled)'));
             expect(items.length).toBe(3);
         });
 
@@ -103,9 +108,6 @@ describe('SchoolSelectComponent', () => {
             // Simulate typing
             input.nativeElement.value = 'Primary';
             input.nativeElement.dispatchEvent(new Event('input'));
-
-            // Before debounce completes
-            fixture.detectChanges();
 
             // After 300ms debounce
             tick(300);
@@ -140,13 +142,15 @@ describe('SchoolSelectComponent', () => {
             fixture.detectChanges();
 
             const noResults = fixture.debugElement.query(By.css('.disabled'));
+            expect(noResults).toBeTruthy();
             expect(noResults.nativeElement.textContent).toContain('No schools found');
         }));
     });
 
     describe('Selection Functionality', () => {
         beforeEach(() => {
-            mockSchoolService.schools.set(mockSchools);
+            fixture.detectChanges();
+            schoolsSubject.next(mockSchools);
             fixture.detectChanges();
         });
 
@@ -179,7 +183,8 @@ describe('SchoolSelectComponent', () => {
 
     describe('ControlValueAccessor', () => {
         beforeEach(() => {
-            mockSchoolService.schools.set(mockSchools);
+            fixture.detectChanges();
+            schoolsSubject.next(mockSchools);
             fixture.detectChanges();
         });
 
@@ -229,7 +234,12 @@ describe('SchoolSelectComponent', () => {
 
     describe('Loading State', () => {
         it('should show loading message while fetching schools', () => {
-            component['isLoading'] = true;
+            // override the mock for this specific test to not return immediately
+            mockSchoolService.getActiveSchools.mockReturnValue(new Subject().asObservable());
+            
+            // Re-create component to trigger ngOnInit with new mock
+            fixture = TestBed.createComponent(SchoolSelectComponent);
+            component = fixture.componentInstance;
             fixture.detectChanges();
 
             const loadingItem = fixture.debugElement.query(By.css('.disabled'));

@@ -1,6 +1,6 @@
 # Story 1.5: Theme System & Accessibility Baseline
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,34 +24,34 @@ so that **the UI is readable and keyboard-navigable**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Configure DaisyUI dark theme (AC: #1)
-  - [ ] Set dark theme as default in tailwind.config.js
-  - [ ] Apply theme attribute to html element
-  - [ ] Create ThemeService if theme switching needed later
-  - [ ] Verify theme consistency across all existing components
-- [ ] Task 2: Create global focus ring styles (AC: #2)
-  - [ ] Define focus ring utility classes in styles.css
-  - [ ] Apply focus:ring styles to buttons
-  - [ ] Apply focus:ring styles to inputs
-  - [ ] Apply focus:ring styles to links
-  - [ ] Use visible, high-contrast focus rings
-- [ ] Task 3: Audit and fix form accessibility (AC: #3)
-  - [ ] Review login form labels
-  - [ ] Add aria-labels where needed
-  - [ ] Ensure error messages are associated with fields
-  - [ ] Add aria-invalid for invalid states
-- [ ] Task 4: Check contrast ratios (AC: #4)
-  - [ ] Verify text contrast on dark backgrounds
-  - [ ] Verify button text contrast
-  - [ ] Adjust colors if needed for readability
-  - [ ] Document color palette decisions
-- [ ] Task 5: Create shared form components (AC: #3)
-  - [ ] Create form-field wrapper component
-  - [ ] Create input component with label and error
-  - [ ] Ensure consistent styling and accessibility
-- [ ] Task 6: Document accessibility patterns
-  - [ ] Add accessibility notes to project context
-  - [ ] Create component patterns for future development
+- [x] Task 1: Configure DaisyUI dark theme (AC: #1)
+  - [x] Set dark theme as default in tailwind.config.js
+  - [x] Apply theme attribute to html element
+  - [x] Create ThemeService if theme switching needed later
+  - [x] Verify theme consistency across all existing components
+- [x] Task 2: Create global focus ring styles (AC: #2)
+  - [x] Define focus ring utility classes in styles.css
+  - [x] Apply focus:ring styles to buttons
+  - [x] Apply focus:ring styles to inputs
+  - [x] Apply focus:ring styles to links
+  - [x] Use visible, high-contrast focus rings
+- [x] Task 3: Audit and fix form accessibility (AC: #3)
+  - [x] Review login form labels
+  - [x] Add aria-labels where needed
+  - [x] Ensure error messages are associated with fields
+  - [x] Add aria-invalid for invalid states
+- [x] Task 4: Check contrast ratios (AC: #4)
+  - [x] Verify text contrast on dark backgrounds
+  - [x] Verify button text contrast
+  - [x] Adjust colors if needed for readability
+  - [x] Document color palette decisions
+- [x] Task 5: Create shared form components (AC: #3)
+  - [x] Create form-field wrapper component
+  - [x] Create input component with label and error
+  - [x] Ensure consistent styling and accessibility
+- [x] Task 6: Document accessibility patterns
+  - [x] Add accessibility notes to project context
+  - [x] Create component patterns for future development
 
 ## Dev Notes
 
@@ -195,10 +195,36 @@ apps/frontend/src/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Sonnet 4.5 (claude-sonnet-4-5-20250929)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- ✅ Configured DaisyUI dark theme as the default and only theme in tailwind.config.js
+- ✅ Set `data-theme="dark"` attribute on html element in index.html
+- ✅ Removed theme switcher script (dark theme is now permanent as per requirements)
+- ✅ Created global focus ring styles in styles.css using Tailwind's `focus-visible:ring` utilities
+- ✅ Applied focus rings to all interactive elements (button, a, input, select, textarea)
+- ✅ Enhanced login form with `aria-invalid` and `aria-describedby` attributes for accessibility
+- ✅ Verified DaisyUI dark theme color contrast meets WCAG 2.1 Level AA standards (4.5:1 minimum)
+- ✅ Created FormFieldComponent for reusable accessible form fields with proper label association
+- ✅ Created InputComponent with ControlValueAccessor integration and automatic ARIA attributes
+- ✅ Documented all accessibility patterns in docs/accessibility-patterns.md for future development
+- ✅ All new components use OnPush change detection strategy as required by architecture
+
 ### File List
+
+- apps/frontend/tailwind.config.js
+- apps/frontend/index.html
+- apps/frontend/src/styles.css
+- apps/frontend/src/app/features/auth/login.component.html
+- apps/frontend/src/app/shared/components/form-field/form-field.component.ts
+- apps/frontend/src/app/shared/components/form-field/form-field.component.spec.ts
+- apps/frontend/src/app/shared/components/input/input.component.ts
+- apps/frontend/src/app/shared/components/input/input.component.spec.ts
+- docs/accessibility-patterns.md
+
+### Change Log
+
+- 2026-01-03: Implemented theme system and accessibility baseline (Story 1.5) - DaisyUI dark theme configured, global focus rings added, form accessibility enhanced, shared accessible components created
