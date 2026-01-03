@@ -29,7 +29,7 @@ workflow_status:
   prd: "_bmad-output/planning-artifacts/prd.md"
   create-ux-design: "_bmad-output/planning-artifacts/ux-design-specification.md"
   create-architecture: "_bmad-output/planning-artifacts/architecture.md"
-  create-epics-and-stories: required
+  create-epics-and-stories: "_bmad-output/planning-artifacts/epics.md"
   test-design: optional
   implementation-readiness: required
   sprint-planning: required
