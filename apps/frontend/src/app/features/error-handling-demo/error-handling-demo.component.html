@@ -1,0 +1,287 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-2">Error Handling Framework</h1>
+    <p class="text-base-content/70">
+      Comprehensive error handling with logging, user notifications, and error pages
+    </p>
+  </div>
+
+  <!-- Features Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-figure text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="stat-title">Global Interceptor</div>
+      <div class="stat-value text-primary text-2xl">HTTP</div>
+      <div class="stat-desc">Automatic error catching</div>
+    </div>
+
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-figure text-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <div class="stat-title">Error Logging</div>
+      <div class="stat-value text-secondary text-2xl">{{ errorStats.total }}</div>
+      <div class="stat-desc">Total errors logged</div>
+    </div>
+
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-figure text-accent">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div class="stat-title">Error Boundary</div>
+      <div class="stat-value text-accent text-2xl">UI</div>
+      <div class="stat-desc">Graceful degradation</div>
+    </div>
+
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-figure text-info">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div class="stat-title">Error Pages</div>
+      <div class="stat-value text-info text-2xl">3</div>
+      <div class="stat-desc">404, 403, 500</div>
+    </div>
+  </div>
+
+  <!-- Error Simulation Section -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Test Error Handling</h2>
+      <p class="text-base-content/70 mb-4">
+        Click the buttons below to simulate different types of errors and see how they're handled
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- HTTP Errors -->
+        <div class="border border-base-300 rounded-lg p-4">
+          <h3 class="font-semibold mb-3 flex items-center gap-2">
+            <span class="text-error">🌐</span>
+            HTTP Errors
+          </h3>
+          <div class="space-y-2">
+            <button class="btn btn-sm btn-error btn-block" (click)="simulateHttpError(404)">
+              404 Not Found
+            </button>
+            <button class="btn btn-sm btn-warning btn-block" (click)="simulateHttpError(403)">
+              403 Forbidden
+            </button>
+            <button class="btn btn-sm btn-error btn-block" (click)="simulateHttpError(500)">
+              500 Server Error
+            </button>
+            <button class="btn btn-sm btn-info btn-block" (click)="simulateHttpError(0)">
+              Network Error
+            </button>
+          </div>
+        </div>
+
+        <!-- Runtime Errors -->
+        <div class="border border-base-300 rounded-lg p-4">
+          <h3 class="font-semibold mb-3 flex items-center gap-2">
+            <span class="text-warning">⚠️</span>
+            Runtime Errors
+          </h3>
+          <div class="space-y-2">
+            <button class="btn btn-sm btn-warning btn-block" (click)="simulateRuntimeError()">
+              Runtime Error
+            </button>
+            <button class="btn btn-sm btn-warning btn-block" (click)="simulateTypeError()">
+              Type Error
+            </button>
+            <button class="btn btn-sm btn-warning btn-block" (click)="simulateValidationError()">
+              Validation Error
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Errors -->
+        <div class="border border-base-300 rounded-lg p-4">
+          <h3 class="font-semibold mb-3 flex items-center gap-2">
+            <span class="text-info">📝</span>
+            Custom Errors
+          </h3>
+          <div class="space-y-2">
+            <button class="btn btn-sm btn-info btn-block" (click)="logCustomError('info')">
+              Info Message
+            </button>
+            <button class="btn btn-sm btn-warning btn-block" (click)="logCustomError('warning')">
+              Warning Message
+            </button>
+            <button class="btn btn-sm btn-error btn-block" (click)="logCustomError('error')">
+              Error Message
+            </button>
+            <button class="btn btn-sm btn-error btn-block" (click)="logCustomError('critical')">
+              Critical Error
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Pages Navigation -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Error Pages</h2>
+      <p class="text-base-content/70 mb-4">
+        Navigate to custom error pages to see user-friendly error displays
+      </p>
+
+      <div class="flex flex-wrap gap-4">
+        <button class="btn btn-outline" (click)="navigateToErrorPage('404')">
+          View 404 Page
+        </button>
+        <button class="btn btn-outline" (click)="navigateToErrorPage('403')">
+          View 403 Page
+        </button>
+        <button class="btn btn-outline" (click)="navigateToErrorPage('500')">
+          View 500 Page
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Boundary Demo -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Error Boundary Component</h2>
+      <p class="text-base-content/70 mb-4">
+        The error boundary component wraps content and provides graceful error handling
+      </p>
+
+      <app-error-boundary
+        [fallbackMessage]="'This section encountered an error'"
+        [errorTitle]="'Section Error'"
+        [showRetry]="true"
+        [showErrorDetails]="true">
+        <div class="bg-base-200 p-6 rounded-lg">
+          <h3 class="font-semibold mb-2">Protected Content</h3>
+          <p class="text-sm text-base-content/70">
+            This content is wrapped in an error boundary. If an error occurs in this section,
+            it will be caught and displayed gracefully without breaking the entire page.
+          </p>
+        </div>
+      </app-error-boundary>
+    </div>
+  </div>
+
+  <!-- Error Statistics -->
+  @if (errorStats.total > 0) {
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Error Statistics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- By Severity -->
+          <div>
+            <h3 class="font-semibold mb-3">By Severity</h3>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="badge badge-info">Info</span>
+                <span class="font-mono">{{ errorStats.bySeverity.info }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="badge badge-warning">Warning</span>
+                <span class="font-mono">{{ errorStats.bySeverity.warning }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="badge badge-error">Error</span>
+                <span class="font-mono">{{ errorStats.bySeverity.error }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="badge badge-error">Critical</span>
+                <span class="font-mono">{{ errorStats.bySeverity.critical }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- By Type -->
+          <div>
+            <h3 class="font-semibold mb-3">By Type</h3>
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+              @for (type of getErrorTypes(); track type) {
+                <div class="flex justify-between items-center">
+                  <span class="text-sm">{{ type }}</span>
+                  <span class="font-mono">{{ errorStats.byType[type] }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="card-actions justify-end mt-4">
+          <button class="btn btn-sm btn-ghost" (click)="clearErrorHistory()">
+            Clear History
+          </button>
+          <button class="btn btn-sm btn-primary" (click)="refreshStats()">
+            Refresh Stats
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Documentation -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <h2 class="card-title">Usage Examples</h2>
+
+      <div class="space-y-6">
+        <!-- Example 1: Error Logging Service -->
+        <div>
+          <h3 class="font-semibold mb-2">1. Error Logging Service</h3>
+          <div class="mockup-code text-xs">
+            <pre><code>import {{ '{' }} ErrorLoggingService } from '@core/services/error-logging.service';
+
+constructor(private errorLogger: ErrorLoggingService) {{ '{' }}}
+
+handleError(error: any) {{ '{' }}
+  this.errorLogger.logError(error, {{ '{' }}
+    showUserNotification: true,
+    logToServer: true
+  });
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- Example 2: Error Boundary -->
+        <div>
+          <h3 class="font-semibold mb-2">2. Error Boundary Component</h3>
+          <div class="mockup-code text-xs">
+            <pre><code>&lt;app-error-boundary
+  [fallbackMessage]="'Failed to load data'"
+  [showRetry]="true">
+  &lt;app-data-component>&lt;/app-data-component>
+&lt;/app-error-boundary></code></pre>
+          </div>
+        </div>
+
+        <!-- Example 3: HTTP Error Handling -->
+        <div>
+          <h3 class="font-semibold mb-2">3. HTTP Error Handling (Automatic)</h3>
+          <div class="mockup-code text-xs">
+            <pre><code>// Errors are automatically caught by the error interceptor
+this.http.get('/api/data').subscribe({{ '{' }}
+  next: (data) => this.processData(data),
+  error: (error) => {
+    '{ }'}
+    // Error is already logged and user is notified
+    // Just handle component-specific cleanup here
+  }
+});</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.family-select {
+  .dropdown {
+    position: relative;
+
+    .dropdown-content {
+      width: 100%;
+      min-width: 280px; // Increased for better display of contact info
+    }
+
+    // Ensure proper text wrapping in dropdown items
+    .menu li a {
+      white-space: normal;
+      padding: 0.5rem 1rem;
+    }
+  }
+
+  .active {
+    @apply bg-primary text-primary-content;
+  }
+
+  // Badge styling for student count
+  .badge {
+    @apply whitespace-nowrap;
+  }
+}

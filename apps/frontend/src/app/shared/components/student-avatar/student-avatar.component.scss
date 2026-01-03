@@ -1,0 +1,15 @@
+:host {
+  display: inline-block;
+}
+
+.student-avatar {
+  @apply rounded-full overflow-hidden flex items-center justify-center;
+
+  &.avatar {
+    @apply inline-flex;
+  }
+
+  img {
+    @apply w-full h-full object-cover;
+  }
+}

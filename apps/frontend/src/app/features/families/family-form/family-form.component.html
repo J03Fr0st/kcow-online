@@ -1,0 +1,186 @@
+<div class="p-6 max-w-4xl mx-auto">
+  @if (isLoading()) {
+  <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading family">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  } @else {
+  <!-- Page Header -->
+  <div class="mb-6">
+    @if (isEditMode()) {
+    <h1 class="text-2xl font-bold text-base-content">Edit Family</h1>
+    <p class="text-base-content/60">Update family information and guardians</p>
+    } @else {
+    <h1 class="text-2xl font-bold text-base-content">Add New Family</h1>
+    <p class="text-base-content/60">Create a new family with at least one guardian</p>
+    }
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+    <!-- Family Information Section -->
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+      <div class="card-body p-6">
+        <h2 class="card-title text-lg mb-4">Family Information</h2>
+
+        <!-- Family Name -->
+        <div class="form-control">
+          <label for="familyName" class="label">
+            <span class="label-text">Family Name <span class="text-error">*</span></span>
+          </label>
+          <input
+            id="familyName"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="familyName"
+            placeholder="e.g., Smith Family"
+            [class.input-error]="getErrorMessage('familyName')"
+            aria-describedby="familyName-error" />
+          @if (getErrorMessage('familyName')) {
+          <span id="familyName-error" class="text-error text-xs mt-1" role="alert">
+            {{ getErrorMessage('familyName') }}
+          </span>
+          }
+        </div>
+
+        <!-- Notes -->
+        <div class="form-control">
+          <label for="notes" class="label">
+            <span class="label-text">Notes</span>
+          </label>
+          <textarea
+            id="notes"
+            class="textarea textarea-bordered w-full"
+            formControlName="notes"
+            placeholder="Additional notes about this family..."
+            rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guardians Section -->
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+      <div class="card-body p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title text-lg">Guardians</h2>
+          @if (!isAddingFirstGuardian()) {
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            (click)="onAddGuardian()"
+            [disabled]="isGuardianFormVisible()">
+            <span class="mr-1" aria-hidden="true">➕</span> Add Guardian
+          </button>
+          }
+        </div>
+
+        <p class="text-sm text-base-content/60 mb-4">
+          Each family must have at least one guardian. The primary billing contact will receive billing notifications.
+        </p>
+
+        <!-- Existing Guardians List -->
+        @if (guardians().length > 0) {
+        <div class="space-y-3 mb-4">
+          @for (guardian of guardians(); track guardian; let i = $index) {
+          <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg border border-base-300">
+            <div class="flex items-center space-x-3">
+              <div class="avatar placeholder">
+                <div class="bg-primary text-primary-content rounded-full w-10">
+                  <span class="text-sm">{{ guardian.firstName.charAt(0) }}{{ guardian.lastName.charAt(0) }}</span>
+                </div>
+              </div>
+              <div>
+                <div class="font-medium">
+                  {{ guardian.firstName }} {{ guardian.lastName }}
+                  @if (guardian.isPrimaryContact) {
+                  <span class="badge badge-success badge-sm ml-2">Primary</span>
+                  }
+                </div>
+                <div class="text-sm text-base-content/60">
+                  @if (guardian.relationship) {
+                  <span>{{ guardian.relationship }}</span>
+                  }
+                  @if (guardian.phone || guardian.email) {
+                  <span class="mx-1">•</span>
+                  }
+                  @if (guardian.phone) {
+                  <span>{{ guardian.phone }}</span>
+                  }
+                  @if (guardian.email) {
+                  <span>{{ guardian.email }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+            <div class="flex space-x-1">
+              @if (!isGuardianFormVisible() || editingGuardianIndex() !== i) {
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs"
+                (click)="onEditGuardian(i)"
+                [disabled]="isGuardianFormVisible()"
+                aria-label="Edit guardian">
+                ✏️
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-xs text-error"
+                (click)="onRemoveGuardian(i)"
+                [disabled]="isGuardianFormVisible() || guardians().length === 1"
+                aria-label="Remove guardian">
+                🗑️
+              </button>
+              }
+            </div>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Guardian Form -->
+        @if (isGuardianFormVisible()) {
+        <div class="border-t border-base-300 pt-4">
+          <h3 class="text-md font-semibold mb-3">
+            @if (isEditingGuardian()) {
+            Edit Guardian
+            } @else {
+            Add Guardian
+            }
+          </h3>
+          <app-guardian-form
+            [guardian]="getEditingGuardian()"
+            (guardianSubmit)="onGuardianSubmit($event)"
+            (cancel)="cancelGuardianForm()"></app-guardian-form>
+
+          <!-- Note: Guardian form buttons are handled by the app-guardian-form component's own submit -->
+          <!-- The form emits (guardianSubmit) which is handled by onGuardianSubmit() -->
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-2">
+      <button
+        type="button"
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        [disabled]="isSubmitting()">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="isSubmitting() || guardians().length === 0">
+        @if (isSubmitting()) {
+        <span class="loading loading-spinner loading-xs"></span>
+        } @else {
+        @if (isEditMode()) {
+        Update Family
+        } @else {
+        Create Family
+        }
+        }
+      </button>
+    </div>
+  </form>
+  }
+</div>

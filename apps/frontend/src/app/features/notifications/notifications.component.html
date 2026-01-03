@@ -1,0 +1,356 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <h1 class="page-title">Notification System</h1>
+    <p class="page-description">
+      Interactive toast notifications with customizable duration, types, and
+      auto-dismiss functionality
+    </p>
+  </div>
+
+  <div class="content-grid">
+    <!-- Quick Actions -->
+    <app-card [title]="'Quick Actions'" [description]="'Test different notification types'">
+      <div class="button-grid">
+        <button class="btn btn-success" (click)="showSuccess()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+          Success
+        </button>
+
+        <button class="btn btn-error" (click)="showError()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+          Error
+        </button>
+
+        <button class="btn btn-warning" (click)="showWarning()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
+            ></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          Warning
+        </button>
+
+        <button class="btn btn-info" (click)="showInfo()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          Info
+        </button>
+      </div>
+    </app-card>
+
+    <!-- Advanced Examples -->
+    <app-card [title]="'Advanced Examples'" [description]="'Test special notification scenarios'">
+      <div class="button-grid">
+        <button class="btn btn-secondary" (click)="showMultiple()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M16 3h5v5"></path>
+            <path d="M8 3H3v5"></path>
+            <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"></path>
+            <path d="m15 9 6-6"></path>
+          </svg>
+          Multiple Notifications
+        </button>
+
+        <button class="btn btn-secondary" (click)="showPersistent()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Persistent (No Auto-dismiss)
+        </button>
+
+        <button class="btn btn-danger" (click)="clearAll()">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          Clear All
+        </button>
+      </div>
+    </app-card>
+
+    <!-- Custom Notification -->
+    <app-card
+      [title]="'Custom Notification'"
+      [description]="'Create a notification with custom parameters'"
+      class="full-width"
+    >
+      <form class="custom-form" (ngSubmit)="showCustom()">
+        <div class="form-group">
+          <label for="customTitle">Title</label>
+          <input
+            type="text"
+            id="customTitle"
+            [(ngModel)]="customTitle"
+            name="customTitle"
+            placeholder="Enter notification title"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="customMessage">Message</label>
+          <textarea
+            id="customMessage"
+            [(ngModel)]="customMessage"
+            name="customMessage"
+            rows="3"
+            placeholder="Enter notification message"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="customDuration">Duration (ms)</label>
+          <input
+            type="number"
+            id="customDuration"
+            [(ngModel)]="customDuration"
+            name="customDuration"
+            min="0"
+            step="1000"
+            placeholder="5000"
+          />
+          <small>Set to 0 for persistent notification</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Show Custom Notification</button>
+      </form>
+    </app-card>
+
+    <!-- Features -->
+    <app-card
+      [title]="'Features'"
+      [description]="'Key features of the notification system'"
+      class="full-width"
+    >
+      <ul class="features-list">
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Multiple Types:</strong> Success, Error, Warning, and Info notifications</span>
+        </li>
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Auto-dismiss:</strong> Configurable duration for automatic dismissal</span>
+        </li>
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Stack Management:</strong> Display multiple notifications simultaneously</span>
+        </li>
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Smooth Animations:</strong> Slide-in and slide-out transitions</span>
+        </li>
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Icon Integration:</strong> Type-specific icons for better recognition</span>
+        </li>
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Accessibility:</strong> ARIA attributes for screen reader support</span>
+        </li>
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span><strong>Responsive Design:</strong> Adapts to mobile and desktop screens</span>
+        </li>
+      </ul>
+    </app-card>
+
+    <!-- Usage Example -->
+    <app-card
+      [title]="'Usage Example'"
+      [description]="'How to use the notification service in your components'"
+      class="full-width"
+    >
+      <pre class="code-block"><code>import {{ '{' }} Component, inject {{ '}' }} from '@angular/core';
+import {{ '{' }} NotificationService {{ '}' }} from '@core/services/notification.service';
+
+@Component({{ '{' }}...{{ '}' }})
+export class MyComponent {{ '{' }}
+  private readonly notificationService = inject(NotificationService);
+
+  saveData(): void {{ '{' }}
+    // Show success notification
+    this.notificationService.success('Data saved successfully!', 'Success');
+
+    // Show error notification with custom duration
+    this.notificationService.error('Failed to save', 'Error', 8000);
+
+    // Show custom notification
+    this.notificationService.show({{ '{' }}
+      type: 'warning',
+      message: 'Custom message',
+      title: 'Custom Title',
+      duration: 5000,
+      dismissible: true
+    {{ '}' }});
+  {{ '}' }}
+{{ '}' }}</code></pre>
+    </app-card>
+  </div>
+</div>

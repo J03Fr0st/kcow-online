@@ -1,0 +1,106 @@
+<header class="bg-base-100 shadow-sm border-b border-base-300 relative z-50">
+  <div class="flex items-center justify-between h-16 px-4 lg:px-6">
+    <!-- Left section -->
+    <div class="flex items-center gap-4">
+      <button
+        class="btn btn-ghost btn-sm"
+        (click)="sidebarService.toggle()"
+        aria-label="Toggle sidebar">
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+
+      <!-- Breadcrumbs -->
+      <div class="hidden md:flex items-center text-sm breadcrumbs">
+        <ul>
+          @for (crumb of breadcrumbService.getBreadcrumbs(); track crumb.url) {
+            <li>
+              <a
+                (click)="navigateToBreadcrumb(crumb); $event.preventDefault()"
+                [class.cursor-pointer]="true"
+                class="hover:text-primary transition-colors">
+                @if (crumb.icon) {
+                  <span class="mr-1">{{ crumb.icon }}</span>
+                }
+                {{ crumb.label }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <!-- Right section -->
+    <div class="flex items-center gap-2 relative z-50">
+      <!-- Theme Toggle -->
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost btn-sm gap-2">
+          <span class="text-lg">
+            @if (themeService.currentTheme() === 'light') {
+              ☀️
+            } @else if (themeService.currentTheme() === 'dark') {
+              🌙
+            } @else {
+              🎨
+            }
+          </span>
+          <span class="hidden sm:inline">Theme</span>
+        </label>
+        <ul
+          tabindex="0"
+          class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 max-h-96 overflow-y-auto overflow-x-hidden scrollbar-thin z-50"
+          style="display: flex; flex-direction: column; flex-wrap: nowrap;">
+          @for (theme of themes; track theme) {
+            <li style="width: 100%; flex: 0 0 auto;">
+              <a
+                (click)="setTheme(theme); $event.preventDefault()"
+                [class.active]="themeService.currentTheme() === theme"
+                style="width: 100%; display: block;">
+                {{ theme }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Notifications -->
+      <button class="btn btn-ghost btn-sm btn-circle" aria-label="Notifications">
+        <div class="indicator">
+          <span class="text-lg">🔔</span>
+          <span class="badge badge-xs badge-primary indicator-item">3</span>
+        </div>
+      </button>
+
+      <!-- User Menu -->
+      <div class="dropdown dropdown-end">
+        <label tabindex="0" class="btn btn-ghost btn-sm gap-2">
+          <div class="avatar placeholder">
+            <div class="bg-primary text-primary-content rounded-full w-8">
+              <span class="text-sm">JD</span>
+            </div>
+          </div>
+          <span class="hidden md:inline">John Doe</span>
+        </label>
+        <ul
+          tabindex="0"
+          class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 z-50">
+          <li><a>Profile</a></li>
+          <li><a>Settings</a></li>
+          <li><hr class="my-1" /></li>
+          <li><a>Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+

@@ -1,0 +1,144 @@
+<div class="modals-page">
+  <div class="page-header">
+    <h1>Modal & Dialog System</h1>
+    <p class="subtitle">Comprehensive modal dialogs with dynamic content and flexible configurations</p>
+  </div>
+
+  <div class="grid">
+    <!-- Basic Modals -->
+    <app-card>
+      <div class="card-header">
+        <h3>Basic Modals</h3>
+        <p>Simple modals with dynamic content injection</p>
+      </div>
+      <div class="demo-section">
+        <button class="btn btn-primary" (click)="openSimpleModal()">
+          Open Simple Modal
+        </button>
+        <button class="btn btn-secondary" (click)="openFormModal()">
+          Open Form Modal
+        </button>
+      </div>
+    </app-card>
+
+    <!-- Modal Sizes -->
+    <app-card>
+      <div class="card-header">
+        <h3>Modal Sizes</h3>
+        <p>Different modal sizes for various use cases</p>
+      </div>
+      <div class="demo-section size-buttons">
+        <button class="btn btn-outline" (click)="openSmallModal()">
+          Small
+        </button>
+        <button class="btn btn-outline" (click)="openSimpleModal()">
+          Medium
+        </button>
+        <button class="btn btn-outline" (click)="openLargeModal()">
+          Large
+        </button>
+        <button class="btn btn-outline" (click)="openXLModal()">
+          Extra Large
+        </button>
+        <button class="btn btn-outline" (click)="openFullScreenModal()">
+          Full Screen
+        </button>
+      </div>
+    </app-card>
+
+    <!-- Confirmation Dialogs -->
+    <app-card>
+      <div class="card-header">
+        <h3>Confirmation Dialogs</h3>
+        <p>Pre-built confirmation dialogs with Promise-based API</p>
+      </div>
+      <div class="demo-section">
+        <button class="btn btn-primary" (click)="openConfirmation()">
+          Confirm Action
+        </button>
+        <button class="btn btn-danger" (click)="openDangerConfirmation()">
+          Delete Confirmation
+        </button>
+        <button class="btn btn-secondary" (click)="openAlert()">
+          Show Alert
+        </button>
+      </div>
+    </app-card>
+
+    <!-- Advanced Features -->
+    <app-card>
+      <div class="card-header">
+        <h3>Advanced Features</h3>
+        <p>Keyboard shortcuts, backdrop control, and nested modals</p>
+      </div>
+      <div class="demo-section">
+        <button class="btn btn-outline" (click)="openNoDismissModal()">
+          No Dismiss Modal
+        </button>
+        <button class="btn btn-outline" (click)="openNestedModal()">
+          Nested Modals
+        </button>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon">⌨️</span>
+          <span>ESC key to close</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🎯</span>
+          <span>Backdrop click dismiss</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">🎨</span>
+          <span>Dynamic content injection</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon">📱</span>
+          <span>Responsive design</span>
+        </div>
+      </div>
+    </app-card>
+
+    <!-- Usage Example -->
+    <app-card class="full-width">
+      <div class="card-header">
+        <h3>Usage Examples</h3>
+        <p>Code examples for common modal patterns</p>
+      </div>
+      <div class="code-examples">
+        <div class="code-example">
+          <h4>Simple Modal</h4>
+          <pre><code>this.modalService.open(MyComponent, &#123;
+  title: 'Modal Title',
+  size: 'md',
+  data: &#123; message: 'Hello!' &#125;
+&#125;).then(result => &#123;
+  console.log('Modal closed:', result);
+&#125;);</code></pre>
+        </div>
+
+        <div class="code-example">
+          <h4>Confirmation Dialog</h4>
+          <pre><code>const confirmed = await this.modalService.confirm(&#123;
+  title: 'Confirm',
+  message: 'Are you sure?',
+  confirmText: 'Yes',
+  cancelText: 'No'
+&#125;);
+
+if (confirmed) &#123;
+  // User confirmed
+&#125;</code></pre>
+        </div>
+
+        <div class="code-example">
+          <h4>Alert Dialog</h4>
+          <pre><code>await this.modalService.alert(
+  'This is an important message',
+  'Alert'
+);</code></pre>
+        </div>
+      </div>
+    </app-card>
+  </div>
+</div>

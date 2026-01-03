@@ -1,0 +1,279 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-3xl font-bold">Forms</h1>
+    <p class="text-base-content/70 mt-1">
+      Reactive forms with validation and various input types
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- User Registration Form -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">User Registration</h2>
+        <form [formGroup]="registrationForm" (ngSubmit)="onRegisterSubmit()" class="space-y-4">
+        <!-- Name -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Full Name *</span>
+          </label>
+          <input
+            type="text"
+            formControlName="name"
+            class="input input-bordered"
+            [class.input-error]="isFieldInvalid('name')"
+            placeholder="John Doe" />
+          @if (isFieldInvalid('name')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getFieldError('name') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- Email -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Email *</span>
+          </label>
+          <input
+            type="email"
+            formControlName="email"
+            class="input input-bordered"
+            [class.input-error]="isFieldInvalid('email')"
+            placeholder="john@example.com" />
+          @if (isFieldInvalid('email')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getFieldError('email') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Password *</span>
+          </label>
+          <input
+            type="password"
+            formControlName="password"
+            class="input input-bordered"
+            [class.input-error]="isFieldInvalid('password')"
+            placeholder="••••••••" />
+          @if (isFieldInvalid('password')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getFieldError('password') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Confirm Password *</span>
+          </label>
+          <input
+            type="password"
+            formControlName="confirmPassword"
+            class="input input-bordered"
+            [class.input-error]="isFieldInvalid('confirmPassword')"
+            placeholder="••••••••" />
+          @if (isFieldInvalid('confirmPassword')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getFieldError('confirmPassword') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- Role -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Role *</span>
+          </label>
+          <select
+            formControlName="role"
+            class="select select-bordered"
+            [class.select-error]="isFieldInvalid('role')">
+            <option value="">Select a role</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+            <option value="editor">Editor</option>
+          </select>
+          @if (isFieldInvalid('role')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getFieldError('role') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- Terms -->
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" formControlName="terms" class="checkbox" />
+            <span class="label-text">I agree to the terms and conditions *</span>
+          </label>
+          @if (isFieldInvalid('terms')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getFieldError('terms') }}
+              </span>
+            </label>
+          }
+        </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary w-full"
+            [disabled]="registrationForm.invalid">
+            Register
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Contact Us</h2>
+        <form [formGroup]="contactForm" (ngSubmit)="onContactSubmit()" class="space-y-4">
+        <!-- Subject -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Subject *</span>
+          </label>
+          <input
+            type="text"
+            formControlName="subject"
+            class="input input-bordered"
+            [class.input-error]="isContactFieldInvalid('subject')"
+            placeholder="How can we help?" />
+          @if (isContactFieldInvalid('subject')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getContactFieldError('subject') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- Priority -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Priority</span>
+          </label>
+          <div class="flex gap-4">
+            <label class="label cursor-pointer gap-2">
+              <input
+                type="radio"
+                formControlName="priority"
+                value="low"
+                class="radio radio-sm" />
+              <span class="label-text">Low</span>
+            </label>
+            <label class="label cursor-pointer gap-2">
+              <input
+                type="radio"
+                formControlName="priority"
+                value="medium"
+                class="radio radio-sm" />
+              <span class="label-text">Medium</span>
+            </label>
+            <label class="label cursor-pointer gap-2">
+              <input
+                type="radio"
+                formControlName="priority"
+                value="high"
+                class="radio radio-sm" />
+              <span class="label-text">High</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Category</span>
+          </label>
+          <div class="flex flex-wrap gap-2" formArrayName="categories">
+            @for (category of categoryOptions; track category.value; let i = $index) {
+              <label class="label cursor-pointer gap-2">
+                <input
+                  type="checkbox"
+                  [formControlName]="i"
+                  class="checkbox checkbox-sm" />
+                <span class="label-text">{{ category.label }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Message -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Message *</span>
+          </label>
+          <textarea
+            formControlName="message"
+            class="textarea textarea-bordered h-32"
+            [class.textarea-error]="isContactFieldInvalid('message')"
+            placeholder="Your message..."></textarea>
+          @if (isContactFieldInvalid('message')) {
+            <label class="label">
+              <span class="label-text-alt text-error">
+                {{ getContactFieldError('message') }}
+              </span>
+            </label>
+          }
+        </div>
+
+        <!-- File Upload -->
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Attachment (optional)</span>
+          </label>
+          <input
+            type="file"
+            class="file-input file-input-bordered w-full"
+            (change)="onFileChange($event)" />
+        </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary w-full"
+            [disabled]="contactForm.invalid">
+            Send Message
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Messages -->
+  @if (showRegistrationSuccess()) {
+    <div class="alert alert-success">
+      <span>✅ Registration successful!</span>
+      <button class="btn btn-sm btn-ghost" (click)="showRegistrationSuccess.set(false)">
+        ✕
+      </button>
+    </div>
+  }
+
+  @if (showContactSuccess()) {
+    <div class="alert alert-success">
+      <span>✅ Message sent successfully!</span>
+      <button class="btn btn-sm btn-ghost" (click)="showContactSuccess.set(false)">✕</button>
+    </div>
+  }
+</div>
+

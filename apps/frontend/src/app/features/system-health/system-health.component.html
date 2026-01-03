@@ -1,0 +1,757 @@
+<div class="system-health-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="icon">🏥</span>
+        System Health Monitor
+      </h1>
+      <p class="page-description">
+        Real-time monitoring of application performance, metrics, and system health
+      </p>
+    </div>
+    <div class="header-actions">
+      <button
+        class="btn btn-primary"
+        (click)="refreshData()"
+        [disabled]="!isMonitoring()"
+      >
+        <span class="icon">🔄</span>
+        Refresh
+      </button>
+      <button
+        class="btn btn-outline"
+        (click)="toggleMonitoring()"
+        [class.btn-success]="!isMonitoring()"
+        [class.btn-warning]="isMonitoring()"
+      >
+        <span class="icon">{{ isMonitoring() ? '⏸️' : '▶️' }}</span>
+        {{ isMonitoring() ? 'Stop' : 'Start' }} Monitoring
+      </button>
+      <button
+        class="btn btn-outline"
+        (click)="exportHealthData()"
+      >
+        <span class="icon">📊</span>
+        Export Data
+      </button>
+    </div>
+  </div>
+
+  <!-- Health Summary Cards -->
+  <div class="health-summary-grid">
+    <div class="summary-card" [class]="getStatusClass(systemStatus().overall)">
+      <div class="card-header">
+        <h3>System Status</h3>
+        <span class="status-indicator"></span>
+      </div>
+      <div class="card-content">
+        <div class="status-value">{{ systemStatus().overall.toUpperCase() }}</div>
+        <div class="status-detail">Uptime: {{ formatUptime(systemStatus().uptime) }}</div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-header">
+        <h3>Request Metrics</h3>
+        <span class="icon">📡</span>
+      </div>
+      <div class="card-content">
+        <div class="metric-value">{{ requestMetrics().totalRequests }}</div>
+        <div class="metric-detail">Total Requests</div>
+        <div class="metric-subdetail">
+          {{ requestMetrics().requestsPerMinute }}/min •
+          {{ requestMetrics().averageResponseTime.toFixed(0) }}ms avg
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-card" [class]="criticalMetrics().length > 0 ? 'status-critical' : warningMetrics().length > 0 ? 'status-warning' : 'status-healthy'">
+      <div class="card-header">
+        <h3>Health Metrics</h3>
+        <span class="icon">📈</span>
+      </div>
+      <div class="card-content">
+        <div class="metric-value">{{ healthyMetrics().length }}</div>
+        <div class="metric-detail">Healthy</div>
+        <div class="metric-subdetail">
+          @if (warningMetrics().length > 0) {
+            <span class="warning">{{ warningMetrics().length }} warnings</span>
+          }
+          @if (criticalMetrics().length > 0) {
+            <span class="critical">{{ criticalMetrics().length }} critical</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-card" [class]="unacknowledgedAlerts().length > 0 ? 'status-warning' : ''">
+      <div class="card-header">
+        <h3>Active Alerts</h3>
+        <span class="icon">🚨</span>
+      </div>
+      <div class="card-content">
+        <div class="metric-value">{{ unacknowledgedAlerts().length }}</div>
+        <div class="metric-detail">Unacknowledged</div>
+        @if (unacknowledgedAlerts().length > 0) {
+          <button
+            class="btn btn-sm btn-outline"
+            (click)="acknowledgeAllAlerts()"
+          >
+            Acknowledge All
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="main-content-grid">
+    <!-- Health Metrics Section -->
+    <div class="metrics-section">
+      <div class="section-header">
+        <h2>Performance Metrics</h2>
+        <div class="section-actions">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="autoRefresh"
+              (change)="toggleAutoRefresh()"
+            >
+            Auto-refresh
+          </label>
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="showDetails"
+            >
+            Show Details
+          </label>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        @for (metric of metrics(); track metric.id) {
+          <div class="metric-card" [class]="getStatusClass(metric.status)">
+            <div class="metric-header">
+              <h4>{{ metric.name }}</h4>
+              <span class="metric-value">{{ formatMetricValue(metric) }}</span>
+            </div>
+
+            <div class="metric-progress">
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  [style.width.%]="getProgressWidth(metric)"
+                  [class]="getStatusClass(metric.status)"
+                ></div>
+              </div>
+              <div class="progress-labels">
+                <span>0</span>
+                <span>{{ metric.unit === '%' ? '100' : metric.unit === 'ms' ? '2000' : metric.threshold.critical }}</span>
+              </div>
+            </div>
+
+            @if (showDetails) {
+              <div class="metric-details">
+                <div class="detail-row">
+                  <span>Status:</span>
+                  <span class="status-text">{{ metric.status }}</span>
+                </div>
+                <div class="detail-row">
+                  <span>Warning:</span>
+                  <span>{{ metric.threshold.warning }}{{ metric.unit }}</span>
+                </div>
+                <div class="detail-row">
+                  <span>Critical:</span>
+                  <span>{{ metric.threshold.critical }}{{ metric.unit }}</span>
+                </div>
+                <div class="detail-row">
+                  <span>Last Updated:</span>
+                  <span>{{ formatRelativeTime(metric.lastUpdated) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- System Services Section -->
+    <div class="services-section">
+      <div class="section-header">
+        <h2>External Services</h2>
+        <span class="last-checked">
+          Last checked: {{ formatRelativeTime(systemStatus().lastCheck) }}
+        </span>
+      </div>
+
+      <div class="services-list">
+        @for (service of systemStatus().services; track service.name) {
+          <div class="service-item" [class]="getStatusClass(service.status)">
+            <div class="service-info">
+              <div class="service-name">{{ service.name }}</div>
+              <div class="service-url">{{ service.url }}</div>
+            </div>
+            <div class="service-status">
+              <span class="status-indicator"></span>
+              <span class="status-text">{{ service.status.toUpperCase() }}</span>
+              @if (service.responseTime) {
+                <span class="response-time">{{ service.responseTime.toFixed(0) }}ms</span>
+              }
+            </div>
+          </div>
+        } @empty {
+          <div class="no-services">
+            <span class="icon">ℹ️</span>
+            No external services configured
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts Section -->
+  <div class="alerts-section">
+    <div class="section-header">
+      <h2>Recent Alerts</h2>
+      <div class="section-actions">
+        @if (alerts().some(a => a.acknowledged)) {
+          <button
+            class="btn btn-sm btn-outline"
+            (click)="clearAcknowledgedAlerts()"
+          >
+            Clear Acknowledged
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="alerts-list">
+      @for (alert of alerts().slice(0, 10); track alert.id) {
+        <div class="alert-item" [class]="getAlertTypeClass(alert.type)" [class.acknowledged]="alert.acknowledged">
+          <div class="alert-icon">
+            @switch (alert.type) {
+              @case ('error') { <span>❌</span> }
+              @case ('warning') { <span>⚠️</span> }
+              @case ('info') { <span>ℹ️</span> }
+            }
+          </div>
+          <div class="alert-content">
+            <div class="alert-header">
+              <h4>{{ alert.title }}</h4>
+              <span class="alert-time">{{ formatRelativeTime(alert.timestamp) }}</span>
+            </div>
+            <p class="alert-message">{{ alert.message }}</p>
+            <div class="alert-meta">
+              <span class="alert-source">Source: {{ alert.source }}</span>
+              @if (!alert.acknowledged) {
+                <button
+                  class="btn btn-xs btn-outline"
+                  (click)="acknowledgeAlert(alert.id)"
+                >
+                  Acknowledge
+                </button>
+              } @else {
+                <span class="acknowledged-badge">Acknowledged</span>
+              }
+            </div>
+          </div>
+        </div>
+      } @empty {
+        <div class="no-alerts">
+          <span class="icon">✅</span>
+          No recent alerts
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+/* System Health Page Styles */
+.system-health-page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-content h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page-description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Health Summary Grid */
+.health-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.summary-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--success-color);
+}
+
+.status-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.status-detail {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.metric-detail {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.metric-subdetail {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Main Content Grid */
+.main-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 1024px) {
+  .main-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.section-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.last-checked {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.metric-header h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.metric-progress {
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.metric-details {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.detail-row span:first-child {
+  color: var(--text-secondary);
+}
+
+/* Services List */
+.services-list {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.service-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.service-item:last-child {
+  border-bottom: none;
+}
+
+.service-info {
+  flex: 1;
+}
+
+.service-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.service-url {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.service-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.response-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.no-services,
+.no-alerts {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+
+/* Alerts Section */
+.alerts-section {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.alerts-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.alert-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.alert-item:hover {
+  background: var(--background-secondary);
+}
+
+.alert-item.acknowledged {
+  opacity: 0.6;
+}
+
+.alert-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.alert-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.alert-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.alert-message {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.alert-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.alert-source {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.acknowledged-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+/* Status Classes */
+.status-healthy {
+  border-color: var(--success-color);
+}
+
+.status-healthy .status-indicator,
+.status-healthy .progress-fill {
+  background: var(--success-color);
+}
+
+.status-warning {
+  border-color: var(--warning-color);
+}
+
+.status-warning .status-indicator,
+.status-warning .progress-fill {
+  background: var(--warning-color);
+}
+
+.status-critical {
+  border-color: var(--error-color);
+}
+
+.status-critical .status-indicator,
+.status-critical .progress-fill {
+  background: var(--error-color);
+}
+
+.status-unknown {
+  border-color: var(--text-muted);
+}
+
+.status-unknown .status-indicator,
+.status-unknown .progress-fill {
+  background: var(--text-muted);
+}
+
+/* Alert Type Classes */
+.alert-error {
+  border-left: 4px solid var(--error-color);
+}
+
+.alert-warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+.alert-info {
+  border-left: 4px solid var(--info-color);
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  background: var(--background-secondary);
+}
+
+.btn-success {
+  background: var(--success-color);
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Utility Classes */
+.warning {
+  color: var(--warning-color);
+  font-weight: 500;
+}
+
+.critical {
+  color: var(--error-color);
+  font-weight: 500;
+}
+
+.icon {
+  font-size: 1em;
+}
+</style>

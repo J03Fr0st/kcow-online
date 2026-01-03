@@ -1,0 +1,268 @@
+<div class="modal-box max-w-2xl">
+  <h3 class="font-bold text-lg mb-4">Merge Duplicate Families</h3>
+
+  <!-- Progress Steps -->
+  <ul class="steps w-full mb-6">
+    <li class="step" [class.step-primary]="isStepActive('select') || isStepCompleted('select')">
+      <span class="text-xs">Select</span>
+    </li>
+    <li class="step" [class.step-primary]="isStepActive('choose-primary') || isStepCompleted('choose-primary')">
+      <span class="text-xs">Primary</span>
+    </li>
+    <li class="step" [class.step-primary]="isStepActive('resolve-conflict') || isStepCompleted('resolve-conflict')">
+      <span class="text-xs">Conflict</span>
+    </li>
+    <li class="step" [class.step-primary]="isStepActive('preview') || isStepCompleted('preview')">
+      <span class="text-xs">Preview</span>
+    </li>
+    <li class="step" [class.step-primary]="isStepActive('confirm') || isStepCompleted('confirm')">
+      <span class="text-xs">Confirm</span>
+    </li>
+  </ul>
+
+  <!-- Step 1: Select Family to Merge -->
+  @if (currentStep === 'select') {
+  <div class="space-y-4">
+    <p class="text-sm text-base-content/70">
+      Select the family you want to merge with the current family.
+    </p>
+
+    <div class="form-control">
+      <input
+        type="text"
+        [formControl]="searchForm.get('searchQuery')"
+        placeholder="Search families..."
+        class="input input-bordered w-full"
+      />
+    </div>
+
+    @if (isLoadingFamilies) {
+    <div class="flex justify-center py-8">
+      <span class="loading loading-spinner"></span>
+    </div>
+    } @else if (filteredFamilies.length === 0) {
+    <div class="text-center py-8 text-base-content/60">
+      No families found matching your search.
+    </div>
+    } @else {
+    <div class="max-h-64 overflow-y-auto border border-base-300 rounded-lg">
+      @for (family of filteredFamilies; track family.id) {
+      <div
+        class="p-3 hover:bg-base-200 cursor-pointer flex justify-between items-center border-b border-base-300 last:border-0"
+        [class.bg-primary!=='bg-primary text-primary-content'](selectedFamilyForMerge?.id === family.id)
+        (click)="onSelectFamilyToMerge(family)"
+      >
+        <div>
+          <div class="font-medium">{{ family.familyName }}</div>
+          @if (family.notes) {
+          <div class="text-xs opacity-70 truncate max-w-xs">{{ family.notes }}</div>
+          }
+        </div>
+        @if (selectedFamilyForMerge?.id === family.id) {
+        <span class="text-xl">✓</span>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="onCancel()">Cancel</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="!selectedFamilyForMerge"
+        (click)="onProceedToChoosePrimary()"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Step 2: Choose Primary Family -->
+  @if (currentStep === 'choose-primary') {
+  <div class="space-y-4">
+    <p class="text-sm text-base-content/70">
+      Which family should be kept as the primary record?
+    </p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Current/Primary Family -->
+      @if (hasStartingFamily) {
+      <div
+        class="border border-base-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-colors"
+        [class.border-primary]='mergeState.primaryFamily?.id === startingFamilyId()'
+        (click)="onChooseAsPrimary({ id: startingFamilyId()!, familyName: 'Current Family' } as Family)"
+      >
+        <div class="text-center">
+          <div class="text-4xl mb-2">🏠</div>
+          <div class="font-bold">Current Family</div>
+          <div class="text-xs text-base-content/60 mt-1">This will be the primary family</div>
+        </div>
+      </div>
+      }
+
+      <!-- Selected Family -->
+      @if (selectedFamilyForMerge) {
+      <div
+        class="border border-base-300 rounded-lg p-4 cursor-pointer hover:border-primary transition-colors"
+        [class.border-primary]='mergeState.primaryFamily?.id === selectedFamilyForMerge.id'
+        (click)="onChooseAsPrimary(selectedFamilyForMerge)"
+      >
+        <div class="text-center">
+          <div class="text-4xl mb-2">👨‍👩‍👧‍👦</div>
+          <div class="font-bold">{{ selectedFamilyForMerge.familyName }}</div>
+          <div class="text-xs text-base-content/60 mt-1">Will be merged into primary</div>
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="alert alert-info text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>The primary family will be retained. The secondary family will be deactivated after the merge.</span>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="onBack()">Back</button>
+      <button class="btn btn-ghost" (click)="onCancel()">Cancel</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="!mergeState.primaryFamily"
+        (click)="onChooseAsPrimary(mergeState.primaryFamily!)"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Step 3: Resolve Billing Contact Conflict -->
+  @if (currentStep === 'resolve-conflict') {
+  <div class="space-y-4">
+    <p class="text-sm text-base-content/70">
+      Both families have a primary billing contact. Which one should be kept?
+    </p>
+
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text font-medium">Primary Billing Contact</span>
+      </label>
+      <select class="select select-bordered w-full" [formControl]="primaryForm.get('keepPrimaryBillingContactId')">
+        <option value="">-- Select billing contact to keep --</option>
+        @if (mergeState.primaryFamily?.primaryBillingContactId) {
+        <option [value]="mergeState.primaryFamily.primaryBillingContactId">
+          {{ mergeState.primaryFamily.familyName }}'s billing contact
+        </option>
+        }
+        @if (mergeState.secondaryFamily?.primaryBillingContactId) {
+        <option [value]="mergeState.secondaryFamily.primaryBillingContactId">
+          {{ mergeState.secondaryFamily.familyName }}'s billing contact
+        </option>
+        }
+      </select>
+    </div>
+
+    <div class="alert alert-warning text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+      <span>The selected billing contact will be set as the primary for the merged family.</span>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="onBack()">Back</button>
+      <button class="btn btn-ghost" (click)="onCancel()">Cancel</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="!primaryForm.value.keepPrimaryBillingContactId"
+        (click)="onResolveConflict()"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Step 4: Preview Merge -->
+  @if (currentStep === 'preview') {
+  <div class="space-y-4">
+    <p class="text-sm text-base-content/70">
+      Review what will happen when you merge these families.
+    </p>
+
+    @if (isLoadingPreview) {
+    <div class="flex justify-center py-8">
+      <span class="loading loading-spinner"></span>
+    </div>
+    } @else if (preview) {
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="text-primary">{{ preview.primaryFamilyName }}</th>
+            <th class="text-error">{{ preview.secondaryFamilyName }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-medium">Students</td>
+            <td>{{ preview.primaryStudentCount }}</td>
+            <td>{{ preview.secondaryStudentCount }}</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Guardians</td>
+            <td>{{ preview.primaryGuardianCount }}</td>
+            <td>{{ preview.secondaryGuardianCount }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert alert-success text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>
+        <strong>{{ preview.secondaryStudentCount }}</strong> students will be moved to
+        <strong>{{ preview.primaryFamilyName }}</strong>.
+        <strong>{{ preview.secondaryGuardianCount - preview.duplicateGuardianCount }}</strong> guardians will be moved
+        (<strong>{{ preview.duplicateGuardianCount }}</strong> duplicates merged).
+        <strong>{{ preview.secondaryFamilyName }}</strong> will be deactivated.
+      </span>
+    </div>
+
+    <div class="alert alert-warning text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+      </svg>
+      <span>This action cannot be undone. The secondary family will be permanently deactivated.</span>
+    </div>
+    }
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="onBack()">Back</button>
+      <button class="btn btn-ghost" (click)="onReset()">Start Over</button>
+      <button class="btn btn-ghost" (click)="onCancel()">Cancel</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="isLoadingPreview"
+        (click)="onConfirmMerge()"
+      >
+        Confirm Merge
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- Step 5: Executing Merge -->
+  @if (currentStep === 'confirm' && isExecutingMerge) {
+  <div class="text-center py-12">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+    <p class="mt-4 text-base-content/70">Merging families...</p>
+  </div>
+  }
+</div>

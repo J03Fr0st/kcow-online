@@ -1,0 +1,52 @@
+<aside
+  class="fixed lg:static inset-y-0 left-0 z-50 w-64 h-full lg:h-auto bg-base-100 shadow-xl transition-transform duration-300 ease-in-out transform"
+  [class.-translate-x-full]="!sidebarService.isOpen()"
+  [class.translate-x-0]="sidebarService.isOpen()">
+  <!-- Logo -->
+  <div class="flex items-center justify-between h-16 px-6 border-b border-base-300">
+    <h1 class="text-2xl font-bold text-primary">Admin</h1>
+    <button
+      class="btn btn-ghost btn-sm lg:hidden"
+      (click)="sidebarService.toggle()"
+      aria-label="Close sidebar">
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="p-4 space-y-2 overflow-y-auto h-[calc(100vh-4rem)] scrollbar-thin">
+    @for (item of menuItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="bg-primary text-primary-content"
+        class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors hover:bg-base-200"
+        (click)="onMobileClick()">
+        <span class="text-xl">{{ getIcon(item.icon) }}</span>
+        <span class="font-medium">{{ item.label }}</span>
+        @if (item.badge) {
+          <span class="ml-auto badge badge-primary">{{ item.badge }}</span>
+        }
+      </a>
+    }
+  </nav>
+</aside>
+
+<!-- Mobile overlay -->
+@if (sidebarService.isOpen() && sidebarService.isMobile()) {
+  <div
+    class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+    (click)="sidebarService.close()"
+    aria-hidden="true"></div>
+}
+

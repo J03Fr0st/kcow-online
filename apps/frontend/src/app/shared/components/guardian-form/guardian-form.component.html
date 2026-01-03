@@ -1,0 +1,135 @@
+<form [formGroup]="guardianForm" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- First Name -->
+        <div class="form-control">
+            <label for="firstName" class="label">
+                <span class="label-text">First Name <span class="text-error">*</span></span>
+            </label>
+            <input
+                id="firstName"
+                type="text"
+                class="input input-bordered input-sm w-full"
+                formControlName="firstName"
+                placeholder="Jane"
+                [class.input-error]="hasError('firstName')"
+                aria-describedby="firstName-error" />
+            @if (hasError('firstName')) {
+            <span id="firstName-error" class="text-error text-xs mt-1" role="alert">
+                {{ getErrorMessage('firstName') }}
+            </span>
+            }
+        </div>
+
+        <!-- Last Name -->
+        <div class="form-control">
+            <label for="lastName" class="label">
+                <span class="label-text">Last Name <span class="text-error">*</span></span>
+            </label>
+            <input
+                id="lastName"
+                type="text"
+                class="input input-bordered input-sm w-full"
+                formControlName="lastName"
+                placeholder="Doe"
+                [class.input-error]="hasError('lastName')"
+                aria-describedby="lastName-error" />
+            @if (hasError('lastName')) {
+            <span id="lastName-error" class="text-error text-xs mt-1" role="alert">
+                {{ getErrorMessage('lastName') }}
+            </span>
+            }
+        </div>
+
+        <!-- Relationship -->
+        <div class="form-control">
+            <label for="relationship" class="label">
+                <span class="label-text">Relationship</span>
+            </label>
+            <input
+                id="relationship"
+                type="text"
+                class="input input-bordered input-sm w-full"
+                formControlName="relationship"
+                placeholder="Mother, Father, Guardian, etc."
+                list="relationship-options" />
+            <datalist id="relationship-options">
+                <option value="Mother"></option>
+                <option value="Father"></option>
+                <option value="Guardian"></option>
+                <option value="Grandmother"></option>
+                <option value="Grandfather"></option>
+                <option value="Aunt"></option>
+                <option value="Uncle"></option>
+                <option value="Stepmother"></option>
+                <option value="Stepfather"></option>
+                <option value="Other"></option>
+            </datalist>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-control">
+            <label for="phone" class="label">
+                <span class="label-text">Phone</span>
+            </label>
+            <input
+                id="phone"
+                type="tel"
+                class="input input-bordered input-sm w-full"
+                formControlName="phone"
+                placeholder="(555) 123-4567" />
+        </div>
+
+        <!-- Email -->
+        <div class="form-control md:col-span-2">
+            <label for="email" class="label">
+                <span class="label-text">Email</span>
+            </label>
+            <input
+                id="email"
+                type="email"
+                class="input input-bordered input-sm w-full"
+                formControlName="email"
+                placeholder="jane.doe@example.com"
+                [class.input-error]="hasError('email')"
+                aria-describedby="email-error" />
+            @if (hasError('email')) {
+            <span id="email-error" class="text-error text-xs mt-1" role="alert">
+                {{ getErrorMessage('email') }}
+            </span>
+            }
+        </div>
+
+        <!-- Primary Contact Checkbox -->
+        <div class="form-control md:col-span-2">
+            <label class="label cursor-pointer justify-start gap-3">
+                <input
+                    type="checkbox"
+                    class="checkbox checkbox-sm checkbox-primary"
+                    formControlName="isPrimaryContact" />
+                <span class="label-text">Set as Primary Billing Contact</span>
+            </label>
+            <span class="text-xs text-base-content/60 ml-9">
+                The primary billing contact will receive billing notifications and invoices.
+            </span>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="md:col-span-2 flex justify-end space-x-2 pt-2">
+            <button
+                type="button"
+                class="btn btn-sm btn-ghost"
+                (click)="onCancel()">
+                Cancel
+            </button>
+            <button
+                type="submit"
+                class="btn btn-sm btn-primary">
+                @if (guardian()) {
+                Update Guardian
+                } @else {
+                Add Guardian
+                }
+            </button>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,78 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">Admin Login</h1>
+      <p class="login-subtitle">Sign in to access the admin dashboard</p>
+    </div>
+
+    <!-- Error Alert -->
+    @if (errorMessage) {
+      <div class="alert alert-error" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email Field -->
+      <div class="form-field">
+        <label for="email" class="form-label">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-input"
+          [class.input-error]="getEmailErrorMessage()"
+          placeholder="admin@kcow.test"
+          autocomplete="email"
+          required
+        />
+        @if (getEmailErrorMessage()) {
+          <span class="form-error">{{ getEmailErrorMessage() }}</span>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-field">
+        <label for="password" class="form-label">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="form-input"
+          [class.input-error]="getPasswordErrorMessage()"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          required
+        />
+        @if (getPasswordErrorMessage()) {
+          <span class="form-error">{{ getPasswordErrorMessage() }}</span>
+        }
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-block"
+        [disabled]="loginForm.invalid || isLoading"
+      >
+        @if (isLoading) {
+          <span class="spinner"></span>
+          <span>Signing in...</span>
+        } @else {
+          <span>Sign In</span>
+        }
+      </button>
+    </form>
+
+    <!-- Footer Info -->
+    <div class="login-footer">
+      <p class="text-sm text-gray-500">
+        Protected by authentication. Unauthorized access is prohibited.
+      </p>
+    </div>
+  </div>
+</div>

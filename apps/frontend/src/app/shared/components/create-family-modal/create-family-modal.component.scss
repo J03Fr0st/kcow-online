@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+.create-family-modal {
+  min-width: 400px;
+  max-width: 600px;
+
+  .card {
+    @apply transition-all;
+  }
+
+  .badge {
+    @apply whitespace-nowrap;
+  }
+}

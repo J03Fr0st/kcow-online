@@ -1,0 +1,44 @@
+<div class="school-select">
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text">School</span>
+      <span class="label-text-alt text-error">*</span>
+    </label>
+    <div class="dropdown dropdown-end w-full">
+      <input
+        type="text"
+        placeholder="Search schools..."
+        class="input input-bordered input-sm w-full"
+        [value]="displaySchoolName || searchQuery"
+        [disabled]="isDisabled"
+        (input)="onSearchInput($event)"
+        (focus)="searchQuery = ''; filterSchools()"
+        aria-required="true"
+      />
+      <ul
+        tabindex="0"
+        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box max-h-60 overflow-auto"
+      >
+        @if (isLoading) {
+          <li><a class="disabled">Loading schools...</a></li>
+        } @else if (filteredSchools.length === 0) {
+          <li><a class="disabled">No schools found</a></li>
+        } @else {
+          @for (school of filteredSchools; track school.id) {
+            <li>
+              <a
+                (click)="selectSchool(school.id)"
+                [class.active]="schoolId() === school.id"
+              >
+                {{ school.name }}
+                @if (school.shortName) {
+                  <span class="text-xs opacity-70">({{ school.shortName }})</span>
+                }
+              </a>
+            </li>
+          }
+        }
+      </ul>
+    </div>
+  </div>
+</div>

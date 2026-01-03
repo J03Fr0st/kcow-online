@@ -1,0 +1,194 @@
+<div class="family-detail p-6">
+    <!-- Loading State -->
+    @if (isLoading) {
+    <div class="flex justify-center items-center py-12">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+    } @else if (error) {
+    <!-- Error State -->
+    <div role="alert" class="alert alert-error shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ error }}</span>
+    </div>
+    } @else if (family) {
+    <!-- Family Detail Content -->
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex justify-between items-start">
+            <div>
+                <button class="btn btn-ghost btn-sm mb-2" (click)="goBack()">
+                    ← Back to Families
+                </button>
+                <h1 class="text-3xl font-bold text-base-content">{{ family.familyName }}</h1>
+                <div class="flex items-center gap-3 mt-2">
+                    @if (family.isActive) {
+                    <span class="badge badge-success text-white">Active</span>
+                    } @else {
+                    <span class="badge badge-ghost border-base-300 bg-base-200">Inactive</span>
+                    }
+                    <span class="text-base-content/60">ID: {{ family.id }}</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button class="btn btn-outline" (click)="editFamily()">
+                    ✏️ Edit
+                </button>
+                <button class="btn btn-warning btn-outline" (click)="onMergeFamilies()">
+                    🔀 Merge with...
+                </button>
+                @if (family.isActive) {
+                <button class="btn btn-error btn-outline" (click)="onDeactivate()">
+                    🔴 Deactivate
+                </button>
+                } @else {
+                <button class="btn btn-success btn-outline" (click)="onReactivate()">
+                    🟢 Reactivate
+                </button>
+                }
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Family Information -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Details Card -->
+                <div class="card bg-base-100 shadow-sm border border-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title">Family Information</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="label">
+                                    <span class="label-text-alt text-base-content/60">Primary Contact</span>
+                                </label>
+                                <div class="font-medium">{{ getPrimaryGuardianName() }}</div>
+                            </div>
+                            @if (family.notes) {
+                            <div>
+                                <label class="label">
+                                    <span class="label-text-alt text-base-content/60">Notes</span>
+                                </label>
+                                <div class="text-sm">{{ family.notes }}</div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Card -->
+                <div class="card bg-base-100 shadow-sm border border-base-200">
+                    <div class="card-body">
+                        <h2 class="card-title">
+                            Students
+                            <span class="badge badge-ghost badge-sm ml-2">{{ students.length }}</span>
+                        </h2>
+                        @if (isLoadingStudents) {
+                        <div class="flex justify-center py-8">
+                            <span class="loading loading-spinner text-primary"></span>
+                        </div>
+                        } @else if (students.length === 0) {
+                        <div class="text-center py-8 text-base-content/60">
+                            <div class="text-4xl mb-2">👨‍🎓</div>
+                            <p>No students assigned to this family</p>
+                        </div>
+                        } @else {
+                        <div class="overflow-x-auto mt-4">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Grade</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (student of students; track student.id) {
+                                    <tr class="hover">
+                                        <td class="font-medium">{{ student.firstName }} {{ student.lastName }}</td>
+                                        <td>{{ student.grade || '-' }}</td>
+                                        <td>
+                                            @if (student.isActive) {
+                                            <span class="badge badge-success badge-xs text-white">Active</span>
+                                            } @else {
+                                            <span class="badge badge-ghost badge-xs border-base-300 bg-base-200">Inactive</span>
+                                            }
+                                        </td>
+                                        <td class="text-right">
+                                            <button class="btn btn-ghost btn-xs text-primary" (click)="viewStudent(student.id)">
+                                                View →
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guardians Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="card bg-base-100 shadow-sm border border-base-200">
+                    <div class="card-body">
+                        <div class="flex justify-between items-center mb-2">
+                            <div class="flex items-center gap-2">
+                                <h2 class="card-title">Guardians</h2>
+                                <span class="badge badge-ghost badge-sm">{{ guardians.length }}</span>
+                            </div>
+                            <button class="btn btn-sm btn-primary" (click)="onAddGuardian()" aria-label="Add guardian">
+                                ➕ Add
+                            </button>
+                        </div>
+                        @if (guardians.length === 0) {
+                        <div class="text-center py-8 text-base-content/60">
+                            <div class="text-4xl mb-2">👤</div>
+                            <p>No guardians found</p>
+                        </div>
+                        } @else {
+                        <div class="space-y-3 mt-4">
+                            @for (guardian of guardians; track guardian.id) {
+                            <div class="p-3 bg-base-200 rounded-lg">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <div class="font-medium">{{ guardian.firstName }} {{ guardian.lastName }}</div>
+                                        @if (guardian.relationship) {
+                                        <div class="text-xs text-base-content/60">{{ guardian.relationship }}</div>
+                                        }
+                                        @if (guardian.isPrimaryContact) {
+                                        <span class="badge badge-primary badge-xs mt-1">Primary</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (guardian.phone || guardian.email) {
+                                <div class="mt-2 text-xs space-y-1">
+                                    @if (guardian.phone) {
+                                    <div class="flex items-center gap-2">
+                                        <span>📞</span>
+                                        <span>{{ guardian.phone }}</span>
+                                    </div>
+                                    }
+                                    @if (guardian.email) {
+                                    <div class="flex items-center gap-2">
+                                        <span>✉️</span>
+                                        <span>{{ guardian.email }}</span>
+                                    </div>
+                                    }
+                                </div>
+                                }
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>

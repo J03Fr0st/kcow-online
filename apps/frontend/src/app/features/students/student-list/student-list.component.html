@@ -1,0 +1,148 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">Students</h1>
+      <p class="text-base-content/60">Manage and view all enrolled students</p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button class="btn btn-primary" routerLink="create">
+        <span class="mr-2" aria-hidden="true">➕</span> Add Student
+      </button>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  @if (studentService.error(); as error) {
+  <div role="alert" class="alert alert-error shadow-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <h3 class="font-bold">{{ error.title || 'Error' }}</h3>
+      <div class="text-xs">{{ error.detail || 'Failed to load students. Please try again later.' }}</div>
+    </div>
+    <button class="btn btn-sm btn-ghost" (click)="loadStudents()">Retry</button>
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (studentService.isLoading()) {
+  <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading students">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  } @else {
+  <!-- Empty State -->
+  @if (students().length === 0 && !studentService.error()) {
+  <div
+    class="empty-state flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+    <div class="text-6xl mb-4" aria-hidden="true">👥</div>
+    <h3 class="text-xl font-semibold">No students found</h3>
+    <p class="text-base-content/60 mb-6 text-center max-w-sm">
+      It looks like you haven't added any students yet. Start by creating your first student record.
+    </p>
+    <button class="btn btn-primary" routerLink="create">
+      Add Your First Student
+    </button>
+  </div>
+  } @else if (students().length > 0) {
+  <!-- Table -->
+  <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+    <table class="table table-zebra table-sm" aria-label="Students Registry">
+      <thead>
+        <tr>
+          <th>Photo</th>
+          @for (col of sortableColumns; track col.key) {
+          <th class="cursor-pointer hover:bg-base-200"
+            [class.pointer-events-none]="studentService.isLoading()"
+            [class.opacity-50]="studentService.isLoading()"
+            [attr.aria-sort]="col.direction() === 'asc' ? 'ascending' : col.direction() === 'desc' ? 'descending' : undefined"
+            [attr.aria-disabled]="studentService.isLoading()"
+            (click)="!studentService.isLoading() && onSort(col.key)"
+            (keydown.enter)="!studentService.isLoading() && onSort(col.key)"
+            (keydown.space)="!studentService.isLoading() && onSort(col.key)"
+            role="columnheader" tabindex="0">
+            <div class="flex items-center space-x-2">
+              <span>{{ col.label }}</span>
+              @if (col.direction()) {
+              <span class="text-xs" aria-hidden="true">
+                {{ col.direction() === 'asc' ? '↑' : '↓' }}
+              </span>
+              }
+            </div>
+          </th>
+          }
+          <th>Grade</th>
+          <th>Family</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (student of students(); track student.id) {
+        <tr class="hover">
+          <td>
+            <app-student-avatar
+              [firstName]="student.firstName"
+              [lastName]="student.lastName"
+              [photoUrl]="student.photoUrl"
+              size="sm"
+            />
+          </td>
+          <td class="font-medium">{{ getStudentName(student) }}</td>
+          <td>{{ student.schoolName }}</td>
+          <td>{{ getDisplayValue(student.grade) }}</td>
+          <td>{{ getDisplayValue(student.familyName) }}</td>
+          <td>
+            @if (student.isActive) {
+            <span class="badge badge-success badge-sm text-white">Active</span>
+            } @else {
+            <span class="badge badge-ghost badge-sm border-base-300 bg-base-200">Inactive</span>
+            }
+          </td>
+          <td>
+            <button
+              class="btn btn-ghost btn-xs"
+              [routerLink]="['/students', student.id, 'edit']"
+              [attr.aria-label]="'Edit ' + getStudentName(student)"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (totalPages() > 1) {
+  <div class="flex justify-between items-center mt-4">
+    <div class="text-sm text-base-content/60">
+      Showing {{ pageStart() }} to {{ pageEnd() }} of {{ studentService.totalCount() }} students
+    </div>
+    <div class="join">
+      <button class="join-item btn btn-sm" [disabled]="currentPage() === 1 || studentService.isLoading()" (click)="onPageChange(currentPage() - 1)">
+        «
+      </button>
+      @for (page of [currentPage() - 1, currentPage(), currentPage() + 1]; track page) {
+      @if (page >= 1 && page <= totalPages()) { <button class="join-item btn btn-sm"
+        [class.btn-primary]="page === currentPage()" [disabled]="studentService.isLoading()" (click)="onPageChange(page)">
+        {{ page }}
+        </button>
+        }
+        }
+        <button class="join-item btn btn-sm" [disabled]="currentPage() === totalPages() || studentService.isLoading()"
+          (click)="onPageChange(currentPage() + 1)">
+          »
+        </button>
+    </div>
+  </div>
+  }
+  }
+  }
+</div>

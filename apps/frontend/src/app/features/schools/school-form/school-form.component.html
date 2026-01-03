@@ -1,0 +1,427 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-base-content">
+      {{ isEditMode() ? 'Edit School' : 'Add School' }}
+    </h1>
+    <p class="text-base-content/60">
+      {{ isEditMode() ? 'Update school information' : 'Create a new school registry entry' }}
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+  <div class="flex flex-col space-y-4">
+    <div class="skeleton h-12 w-full"></div>
+    <div class="skeleton h-12 w-full"></div>
+    <div class="skeleton h-12 w-full"></div>
+    <div class="skeleton h-32 w-full"></div>
+  </div>
+  } @else {
+  <!-- Form -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Basic Info Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Basic Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+          <!-- Name (Required) -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Name <span class="text-error">*</span></span>
+            </label>
+            <input type="text" formControlName="name" placeholder="Enter school name"
+              class="input input-bordered input-sm w-full"
+              [class.input-error]="form.get('name')?.invalid && form.get('name')?.touched" />
+            @if (form.get('name')?.invalid && form.get('name')?.touched) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('name') }}</span>
+            </label>
+            }
+          </div>
+
+          <!-- Short Name -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Short Name / Abbreviation</span>
+            </label>
+            <input type="text" formControlName="shortName" placeholder="e.g. PSJS"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Truck ID -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Truck ID</span>
+            </label>
+            <input type="number" formControlName="truckId" placeholder="Truck identifier"
+              class="input input-bordered input-sm w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Pricing</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+          <!-- Price -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Price</span>
+            </label>
+            <input type="number" step="0.01" formControlName="price" placeholder="0.00"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Fee Description -->
+          <div class="form-control md:col-span-2">
+            <label class="label">
+              <span class="label-text font-medium">Fee Description</span>
+            </label>
+            <input type="text" formControlName="feeDescription" placeholder="e.g. Monthly fee per learner"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Formula -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Formula</span>
+            </label>
+            <input type="number" step="0.01" formControlName="formula" placeholder="Calculation formula"
+              class="input input-bordered input-sm w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Schedule</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <!-- Visit Day -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Visit Day</span>
+            </label>
+            <input type="text" formControlName="visitDay" placeholder="e.g. Monday"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Visit Sequence -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Visit Sequence</span>
+            </label>
+            <input type="text" formControlName="visitSequence" placeholder="e.g. 1, 2, 3"
+              class="input input-bordered input-sm w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Contact Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+          <!-- Contact Person -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Contact Person</span>
+            </label>
+            <input type="text" formControlName="contactPerson" placeholder="Primary contact name"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Contact Cell -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Contact Cell</span>
+            </label>
+            <input type="tel" formControlName="contactCell" placeholder="Mobile number"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Phone -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Phone</span>
+            </label>
+            <input type="tel" formControlName="phone" placeholder="Phone number"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Telephone -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Telephone</span>
+            </label>
+            <input type="tel" formControlName="telephone" placeholder="Alternative phone"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Fax -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Fax</span>
+            </label>
+            <input type="tel" formControlName="fax" placeholder="Fax number"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Email -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Email</span>
+            </label>
+            <input type="email" formControlName="email" placeholder="Email address"
+              class="input input-bordered input-sm w-full"
+              [class.input-error]="form.get('email')?.invalid && form.get('email')?.touched" />
+            @if (form.get('email')?.invalid && form.get('email')?.touched) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('email') }}</span>
+            </label>
+            }
+          </div>
+
+          <!-- Circulars Email -->
+          <div class="form-control md:col-span-3">
+            <label class="label">
+              <span class="label-text font-medium">Circulars Email</span>
+            </label>
+            <input type="email" formControlName="circularsEmail" placeholder="Email for circulars and notices"
+              class="input input-bordered input-sm w-full"
+              [class.input-error]="form.get('circularsEmail')?.invalid && form.get('circularsEmail')?.touched" />
+            @if (form.get('circularsEmail')?.invalid && form.get('circularsEmail')?.touched) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('circularsEmail') }}</span>
+            </label>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Address</h2>
+        <div class="space-y-4 mt-2">
+          <!-- Address Line 1 -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Address Line 1</span>
+            </label>
+            <input type="text" formControlName="address" placeholder="Street address"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Address Line 2 -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Address Line 2</span>
+            </label>
+            <input type="text" formControlName="address2" placeholder="Suburb, area, or suite"
+              class="input input-bordered input-sm w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Headmaster Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Headmaster / Principal</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <!-- Headmaster Name -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Headmaster Name</span>
+            </label>
+            <input type="text" formControlName="headmaster" placeholder="Headmaster or principal name"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- Headmaster Cell -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Headmaster Cell</span>
+            </label>
+            <input type="tel" formControlName="headmasterCell" placeholder="Mobile number"
+              class="input input-bordered input-sm w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Settings</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+          <!-- Language Preference -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Language Preference</span>
+            </label>
+            <select formControlName="language" class="select select-bordered select-sm w-full">
+              @for (lang of languageOptions; track lang.value) {
+              <option [value]="lang.value">{{ lang.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Print Invoice -->
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-4">
+              <span class="label-text font-medium">Print Invoice</span>
+              <input type="checkbox" formControlName="printInvoice" class="checkbox checkbox-sm" />
+            </label>
+          </div>
+
+          <!-- Import Flag -->
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-4">
+              <span class="label-text font-medium">Import Flag</span>
+              <input type="checkbox" formControlName="importFlag" class="checkbox checkbox-sm" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Afterschool Programs Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">After-School Programs</h2>
+
+        <!-- Program 1 -->
+        <div class="mt-4">
+          <h3 class="text-xs font-semibold text-base-content/70 mb-2">Program 1</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Afterschool 1 Name -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium text-sm">Program Name</span>
+              </label>
+              <input type="text" formControlName="afterschool1Name" placeholder="After-school program name"
+                class="input input-bordered input-sm w-full" />
+            </div>
+
+            <!-- Afterschool 1 Contact -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium text-sm">Contact</span>
+              </label>
+              <input type="text" formControlName="afterschool1Contact" placeholder="Contact information"
+                class="input input-bordered input-sm w-full" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Program 2 -->
+        <div class="mt-4">
+          <h3 class="text-xs font-semibold text-base-content/70 mb-2">Program 2</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Afterschool 2 Name -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium text-sm">Program Name</span>
+              </label>
+              <input type="text" formControlName="afterschool2Name" placeholder="After-school program name"
+                class="input input-bordered input-sm w-full" />
+            </div>
+
+            <!-- Afterschool 2 Contact -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium text-sm">Contact</span>
+              </label>
+              <input type="text" formControlName="afterschool2Contact" placeholder="Contact information"
+                class="input input-bordered input-sm w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Notes</h2>
+        <div class="space-y-4 mt-2">
+          <!-- Scheduling Notes -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Scheduling Notes</span>
+            </label>
+            <textarea formControlName="schedulingNotes" placeholder="Special scheduling instructions or notes"
+              class="textarea textarea-bordered textarea-sm w-full" rows="2"></textarea>
+          </div>
+
+          <!-- Money Message -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Payment Notes</span>
+            </label>
+            <textarea formControlName="moneyMessage" placeholder="Payment terms or instructions"
+              class="textarea textarea-bordered textarea-sm w-full" rows="2"></textarea>
+          </div>
+
+          <!-- Safe Notes -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Safe/Security Notes</span>
+            </label>
+            <textarea formControlName="safeNotes" placeholder="Security or safe-related information"
+              class="textarea textarea-bordered textarea-sm w-full" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Links Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-4">
+        <h2 class="card-title text-sm font-semibold">Links & Web</h2>
+        <div class="space-y-4 mt-2">
+          <!-- Web Page -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Website</span>
+            </label>
+            <input type="url" formControlName="webPage" placeholder="https://school-website.com"
+              class="input input-bordered input-sm w-full" />
+          </div>
+
+          <!-- KCOW Web Page Link -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">KCOW Profile Link</span>
+            </label>
+            <input type="url" formControlName="kcowWebPageLink" placeholder="KCOW system profile URL"
+              class="input input-bordered input-sm w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="flex justify-end space-x-2 pt-4">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="onCancel()">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="form.invalid || isSubmitting()">
+        @if (isSubmitting()) {
+        <span class="loading loading-spinner loading-xs"></span>
+        }
+        Save School
+      </button>
+    </div>
+  </form>
+  }
+</div>

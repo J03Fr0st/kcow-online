@@ -1,0 +1,163 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">Families</h1>
+      <p class="text-base-content/60">Manage families and guardians</p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <!-- Column Visibility Toggle -->
+      <div class="dropdown dropdown-end">
+        <button class="btn btn-ghost btn-sm" tabindex="0" (click)="toggleColumnMenu()">
+          <span class="mr-1" aria-hidden="true">📊</span> Columns
+          <span class="text-xs" aria-hidden="true">▼</span>
+        </button>
+        @if (showColumnMenu()) {
+        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-48">
+          @for (column of columns; track column.key) {
+          <li>
+            <label class="label cursor-pointer justify-start gap-2">
+              <input type="checkbox" class="checkbox checkbox-xs"
+                [checked]="column.visible()"
+                (change)="toggleColumnVisibility(column)" />
+              <span class="label-text">{{ column.label }}</span>
+            </label>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+      <button class="btn btn-primary" routerLink="create">
+        <span class="mr-2" aria-hidden="true">➕</span> Add Family
+      </button>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  @if (familyService.error(); as error) {
+  <div role="alert" class="alert alert-error shadow-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <h3 class="font-bold">{{ error.title || 'Error' }}</h3>
+      <div class="text-xs">{{ error.detail || 'Failed to load families. Please try again later.' }}</div>
+    </div>
+    <button class="btn btn-sm btn-ghost" (click)="familyService.getFamilies().subscribe()">Retry</button>
+  </div>
+  }
+
+  <!-- Loading State -->
+  @if (familyService.isLoading()) {
+  <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading families">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  } @else {
+  <!-- Empty State -->
+  @if (sortedFamilies().length === 0 && !familyService.error()) {
+  <div
+    class="empty-state flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+    <div class="text-6xl mb-4" aria-hidden="true">👨‍👩‍👧‍👦</div>
+    <h3 class="text-xl font-semibold">No families found</h3>
+    <p class="text-base-content/60 mb-6 text-center max-w-sm">
+      It looks like you haven't added any families yet. Start by creating your first family registry.
+    </p>
+    <button class="btn btn-primary" routerLink="create">
+      Add Your First Family
+    </button>
+  </div>
+  } @else if (sortedFamilies().length > 0) {
+  <!-- Table -->
+  <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+    <table class="table table-zebra table-sm" aria-label="Families Registry">
+      <thead>
+        <tr>
+          @for (column of visibleColumns(); track column.key) {
+          <th [class.cursor-pointer]="column.key === 'familyName'"
+            [class.hover:bg-base-200]="column.key === 'familyName'"
+            [attr.aria-sort]="column.key === 'familyName' ? (sortAsc() ? 'ascending' : 'descending') : undefined">
+            @if (column.key === 'familyName') {
+            <div class="flex items-center space-x-2" (click)="toggleSort()"
+              (keydown.enter)="toggleSort()" (keydown.space)="toggleSort()"
+              role="button" tabindex="0">
+              <span>{{ column.label }}</span>
+              <span class="text-xs" aria-hidden="true">
+                {{ sortAsc() ? '↑' : '↓' }}
+              </span>
+            </div>
+            } @else {
+            <span>{{ column.label }}</span>
+            }
+          </th>
+          }
+          <th>Status</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (family of sortedFamilies(); track family.id) {
+        <tr class="hover">
+          @for (column of visibleColumns(); track column.key) {
+          <td [class.font-medium]="column.key === 'familyName'">
+            @switch (column.key) {
+              @case ('notes') {
+                <span class="text-xs text-base-content/60" [title]="getCellValue(family, 'notes')">
+                  {{ getCellValue(family, 'notes').substring(0, 50) }}{{ getCellValue(family, 'notes').length > 50 ? '...' : '' }}
+                </span>
+              }
+              @case ('studentCount') {
+                <span class="badge badge-ghost badge-sm">{{ getCellValue(family, 'studentCount') }}</span>
+              }
+              @default {
+                {{ getCellValue(family, column.key) }}
+              }
+            }
+          </td>
+          }
+          <td>
+            @if (family.isActive) {
+            <span class="badge badge-success badge-sm text-white">Active</span>
+            } @else {
+            <span class="badge badge-ghost badge-sm border-base-300 bg-base-200">Inactive</span>
+            }
+          </td>
+          <td class="text-right">
+            <div class="flex justify-end space-x-1">
+              <button class="btn btn-ghost btn-xs text-primary" [routerLink]="[family.id]"
+                aria-label="View family">
+                <span aria-hidden="true">👁️</span>
+              </button>
+              <button class="btn btn-ghost btn-xs text-primary" [routerLink]="['edit', family.id]"
+                aria-label="Edit family" [disabled]="processingIds().has(family.id)">
+                <span aria-hidden="true">✏️</span>
+              </button>
+              @if (family.isActive) {
+              <button class="btn btn-ghost btn-xs text-error" (click)="onDeactivateFamily(family)"
+                aria-label="Deactivate family" [disabled]="processingIds().has(family.id)">
+                @if (processingIds().has(family.id)) {
+                <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                <span aria-hidden="true">🔴</span>
+                }
+              </button>
+              } @else {
+              <button class="btn btn-ghost btn-xs text-success" (click)="onReactivateFamily(family)"
+                aria-label="Reactivate family" [disabled]="processingIds().has(family.id)">
+                @if (processingIds().has(family.id)) {
+                <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                <span aria-hidden="true">🟢</span>
+                }
+              </button>
+              }
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+</div>

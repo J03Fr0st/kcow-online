@@ -1,0 +1,110 @@
+<div class="student-profile">
+  @if (isLoading) {
+    <div class="flex justify-center items-center py-12">
+      <span class="loading loading-spinner loading-lg"></span>
+    </div>
+  } @else if (error) {
+    <div class="alert alert-error" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m7 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error.detail || 'Failed to load student profile' }}</span>
+    </div>
+  } @else if (student) {
+    <div class="card bg-base-100 shadow-sm">
+      <div class="card-body">
+        <!-- Header -->
+        <div class="flex items-start gap-6">
+          <!-- Avatar -->
+          <div class="flex-shrink-0">
+            <app-student-avatar
+              [firstName]="student.firstName"
+              [lastName]="student.lastName"
+              [photoUrl]="student.photoUrl"
+              size="lg"
+            />
+          </div>
+
+          <!-- Student Info -->
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2">
+              <button class="btn btn-ghost btn-sm" (click)="goBack()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
+              <h1 class="text-2xl font-bold">
+                {{ student.firstName }} {{ student.lastName }}
+              </h1>
+              @if (student.isActive) {
+                <span class="badge badge-success badge-sm">Active</span>
+              } @else {
+                <span class="badge badge-ghost badge-sm">Inactive</span>
+              }
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <!-- School -->
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <div>
+                  <div class="text-xs text-base-content/60">School</div>
+                  <div class="font-medium">{{ student.schoolName }}</div>
+                </div>
+              </div>
+
+              <!-- Grade -->
+              @if (student.grade) {
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M12 14l9-5-9H5l9 5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9H5l9 5zM12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9H5l9 5z" />
+                  </svg>
+                  <div>
+                    <div class="text-xs text-base-content/60">Grade</div>
+                    <div class="font-medium">{{ student.grade }}</div>
+                  </div>
+                </div>
+              }
+
+              <!-- Language -->
+              @if (student.language) {
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.23 5 12 5c.067 0 .133.001.2.003 4.003" />
+                  </svg>
+                  <div>
+                    <div class="text-xs text-base-content/60">Language</div>
+                    <div class="font-medium">{{ student.language }}</div>
+                  </div>
+                </div>
+              }
+
+              <!-- Reference Number -->
+              @if (student.referenceNumber) {
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-4M4 4l16-4" />
+                  </svg>
+                  <div>
+                    <div class="text-xs text-base-content/60">Ref Number</div>
+                    <div class="font-medium">{{ student.referenceNumber }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 mt-6 pt-6 border-t border-base-300">
+          <button class="btn btn-ghost btn-sm" (click)="goBack()">Back</button>
+          <button class="btn btn-primary btn-sm" routerLink="/students/{{ student.id }}/edit">Edit Student</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

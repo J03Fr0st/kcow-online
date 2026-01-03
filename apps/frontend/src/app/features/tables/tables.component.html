@@ -1,0 +1,318 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-3xl font-bold">Enterprise Data Tables</h1>
+    <p class="text-base-content/70 mt-1">
+      Advanced table with column visibility, row selection, bulk actions, server-side pagination,
+      and saved views
+    </p>
+  </div>
+
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <!-- Toolbar -->
+      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+        <h2 class="card-title">Users Table</h2>
+
+        <div class="flex flex-wrap gap-2">
+          <!-- Saved Views Dropdown -->
+          <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-sm btn-ghost gap-2">
+              <span>📁</span>
+              <span class="hidden sm:inline">Views</span>
+              <span class="badge badge-sm">{{ savedViews.length }}</span>
+            </label>
+            <ul
+              tabindex="0"
+              class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-64 mt-2 z-50 max-h-96 overflow-y-auto">
+              @for (view of savedViews; track view.id) {
+                <li>
+                  <a
+                    (click)="applyView(view)"
+                    [class.active]="currentView()?.id === view.id"
+                    class="flex justify-between">
+                    <div class="flex flex-col items-start">
+                      <span class="font-medium">{{ view.name }}</span>
+                      @if (view.description) {
+                        <span class="text-xs opacity-70">{{ view.description }}</span>
+                      }
+                    </div>
+                    @if (view.isDefault) {
+                      <span class="badge badge-xs badge-primary">Default</span>
+                    }
+                  </a>
+                </li>
+              }
+              <li><hr class="my-1" /></li>
+              <li>
+                <a (click)="saveCurrentView()" class="text-primary">
+                  <span>💾</span>
+                  Save Current View
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Column Visibility Dropdown -->
+          <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-sm btn-ghost gap-2">
+              <span>👁️</span>
+              <span class="hidden sm:inline">Columns</span>
+              <span class="badge badge-sm">{{ visibleColumnsCount() }}/{{ columns.length }}</span>
+            </label>
+            <ul
+              tabindex="0"
+              class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 z-50">
+              <li class="menu-title">
+                <span>Toggle Columns</span>
+              </li>
+              @for (column of columns; track column.key) {
+                <li>
+                  <label class="label cursor-pointer justify-start gap-2 p-2">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      [checked]="column.visible"
+                      (change)="toggleColumnVisibility(column.key)" />
+                    <span class="label-text">{{ column.label }}</span>
+                  </label>
+                </li>
+              }
+              <li><hr class="my-1" /></li>
+              <li>
+                <a (click)="resetColumns()">Reset to Default</a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Server-Side Toggle -->
+          <label class="btn btn-sm btn-ghost gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              class="toggle toggle-sm toggle-primary"
+              [checked]="serverSideMode()"
+              (change)="toggleServerSideMode()" />
+            <span class="hidden sm:inline">Server-Side</span>
+          </label>
+
+          <button class="btn btn-primary btn-sm gap-2" (click)="exportData()">
+            <span>📥</span>
+            <span class="hidden sm:inline">Export CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bulk Actions Bar -->
+      @if (selectedUsers().size > 0) {
+        <div class="alert alert-info mb-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 w-full">
+            <span class="font-medium">{{ selectedUsers().size }} row(s) selected</span>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-error gap-2" (click)="bulkDelete()">
+                <span>🗑️</span>
+                Delete
+              </button>
+              <button class="btn btn-sm btn-success gap-2" (click)="bulkExport()">
+                <span>📥</span>
+                Export Selected
+              </button>
+              <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-sm gap-2">
+                  <span>🔄</span>
+                  Change Status
+                </label>
+                <ul
+                  tabindex="0"
+                  class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-40 mt-2 z-50">
+                  <li><a (click)="bulkUpdateStatus('active')">Active</a></li>
+                  <li><a (click)="bulkUpdateStatus('inactive')">Inactive</a></li>
+                  <li><a (click)="bulkUpdateStatus('pending')">Pending</a></li>
+                </ul>
+              </div>
+              <button class="btn btn-sm btn-ghost" (click)="clearSelection()">Clear</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Table Controls -->
+      <div class="flex flex-col sm:flex-row gap-4 mb-4">
+        <!-- Search -->
+        <div class="form-control flex-1">
+          <input
+            type="text"
+            placeholder="Search users..."
+            class="input input-bordered w-full"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event); onSearchChange()" />
+        </div>
+
+        <!-- Status Filter -->
+        <div class="form-control">
+          <select
+            class="select select-bordered"
+            [ngModel]="statusFilter()"
+            (ngModelChange)="statusFilter.set($event); onFilterChange()">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+
+        <!-- Items per page -->
+        <div class="form-control">
+          <select
+            class="select select-bordered"
+            [ngModel]="itemsPerPage()"
+            (ngModelChange)="itemsPerPage.set(+$event); onItemsPerPageChange()">
+            <option [value]="5">5 per page</option>
+            <option [value]="10">10 per page</option>
+            <option [value]="20">20 per page</option>
+            <option [value]="50">50 per page</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Table -->
+      @if (loading()) {
+        <app-loading-spinner message="Loading users..." />
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <!-- Selection Column -->
+                <th class="w-12">
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isSomeSelected()"
+                      (change)="toggleAllSelection()" />
+                  </label>
+                </th>
+
+                @for (column of visibleColumns(); track column.key) {
+                  <th
+                    [class.cursor-pointer]="column.sortable"
+                    (click)="column.sortable ? onSort(column.key) : null">
+                    <div class="flex items-center gap-2">
+                      <span>{{ column.label }}</span>
+                      @if (column.sortable && sortColumn() === column.key) {
+                        <span class="text-xs">
+                          {{ sortDirection() === 'asc' ? '↑' : '↓' }}
+                        </span>
+                      }
+                    </div>
+                  </th>
+                }
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of displayedUsers(); track user.id) {
+                <tr class="hover" [class.bg-base-200]="selectedUsers().has(user.id)">
+                  <!-- Selection Checkbox -->
+                  <td>
+                    <label>
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-sm"
+                        [checked]="selectedUsers().has(user.id)"
+                        (change)="toggleUserSelection(user.id)" />
+                    </label>
+                  </td>
+
+                  @if (isColumnVisible('id')) {
+                    <td>{{ user.id }}</td>
+                  }
+                  @if (isColumnVisible('name')) {
+                    <td class="font-medium">{{ user.name }}</td>
+                  }
+                  @if (isColumnVisible('email')) {
+                    <td>{{ user.email }}</td>
+                  }
+                  @if (isColumnVisible('role')) {
+                    <td>
+                      <span class="badge badge-outline">{{ user.role }}</span>
+                    </td>
+                  }
+                  @if (isColumnVisible('status')) {
+                    <td>
+                      <span
+                        class="badge"
+                        [class.badge-success]="user.status === 'active'"
+                        [class.badge-error]="user.status === 'inactive'"
+                        [class.badge-warning]="user.status === 'pending'">
+                        {{ user.status }}
+                      </span>
+                    </td>
+                  }
+                  @if (isColumnVisible('joinDate')) {
+                    <td>{{ user.joinDate }}</td>
+                  }
+
+                  <td>
+                    <div class="flex gap-2">
+                      <button class="btn btn-ghost btn-xs" title="Edit">✏️</button>
+                      <button class="btn btn-ghost btn-xs" title="Delete" (click)="deleteUser(user.id)">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td [attr.colspan]="visibleColumnsCount() + 2" class="text-center py-8">
+                    <p class="text-base-content/70">No users found</p>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Info and Mode Badge -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+          <div class="flex items-center gap-4">
+            <div class="text-sm text-base-content/70">
+              Showing {{ startIndex() + 1 }} to {{ endIndex() }} of {{ totalItems() }} users
+            </div>
+            @if (serverSideMode()) {
+              <div class="badge badge-primary badge-sm gap-1">
+                <span>⚡</span>
+                Server-Side
+              </div>
+            }
+          </div>
+
+          <div class="join">
+            <button
+              class="join-item btn btn-sm"
+              [disabled]="currentPage() === 1"
+              (click)="goToPage(currentPage() - 1)">
+              «
+            </button>
+
+            @for (page of visiblePages(); track page) {
+              <button
+                class="join-item btn btn-sm"
+                [class.btn-active]="page === currentPage()"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            }
+
+            <button
+              class="join-item btn btn-sm"
+              [disabled]="currentPage() === totalPages()"
+              (click)="goToPage(currentPage() + 1)">
+              »
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+

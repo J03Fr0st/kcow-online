@@ -1,0 +1,63 @@
+<div class="family-select">
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text">Family</span>
+      <span class="label-text-alt">(Optional)</span>
+    </label>
+    <div class="dropdown dropdown-end w-full">
+      <input
+        type="text"
+        placeholder="Search families..."
+        class="input input-bordered input-sm w-full"
+        [value]="searchQuery"
+        [disabled]="isDisabled"
+        (input)="onSearchInput($event)"
+        (focus)="onFocus()"
+      />
+      <ul
+        tabindex="0"
+        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box max-h-60 overflow-auto"
+      >
+        @if (isLoading) {
+          <li><a class="disabled">Loading families...</a></li>
+        } @else if (filteredFamilies.length === 0) {
+          <li><a class="disabled">No families found</a></li>
+        } @else {
+          <!-- No Family option -->
+          <li>
+            <a
+              (click)="clearSelection()"
+              [class.active]="familyId() === null"
+            >
+              <div class="flex flex-col">
+                <span class="font-medium">No Family</span>
+                <span class="text-xs opacity-70">Unassigned student</span>
+              </div>
+            </a>
+          </li>
+          @for (family of filteredFamilies; track family.id) {
+            <li>
+              <a
+                (click)="selectFamily(family.id)"
+                [class.active]="familyId() === family.id"
+              >
+                <div class="flex flex-col">
+                  <span class="font-medium">{{ family.familyName }}</span>
+                  <div class="flex items-center gap-2 text-xs opacity-70">
+                    <span>{{ getPrimaryContactName(family) }}</span>
+                    <span class="badge badge-ghost badge-xs">{{ getStudentCountText(family) }}</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          }
+          <li>
+            <a (click)="onCreateNew()" class="text-primary">
+              <span class="font-semibold">+ Create New Family</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,114 @@
+<div class="create-family-modal">
+  <div class="space-y-4">
+    <!-- Family Information -->
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">Family Name</span>
+        <span class="label-text-alt text-error">*</span>
+      </label>
+      <input
+        type="text"
+        class="input input-bordered"
+        [class.input-error]="hasError('familyName')"
+        formControlName="familyName"
+        placeholder="e.g., Smith Family"
+      />
+      @if (hasError('familyName')) {
+        <label class="label">
+          <span class="label-text-alt text-error">{{ getErrorMessage('familyName') }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text">Notes</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <textarea
+        class="textarea textarea-bordered"
+        formControlName="notes"
+        placeholder="Additional notes about this family..."
+        rows="2"
+      ></textarea>
+    </div>
+
+    <!-- Guardian Section -->
+    <div class="divider">Guardians</div>
+
+    @if (showGuardianForm) {
+      <app-guardian-form
+        (guardianSubmit)="onGuardianSubmit($event)"
+        (cancel)="onGuardianCancel()"
+      />
+    }
+
+    <!-- Guardian List -->
+    @if (guardians.length > 0) {
+      <div class="space-y-2">
+        @for (guardian of guardians; track $index) {
+          <div class="card card-compact bg-base-200">
+            <div class="card-body">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium">{{ getGuardianDisplay(guardian) }}</div>
+                  <div class="text-xs opacity-70">
+                    @if (guardian.phone) {
+                      <span>{{ guardian.phone }}</span>
+                    }
+                    @if (guardian.email) {
+                      <span class="ml-2">{{ guardian.email }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  @if (isPrimaryContact(guardian)) {
+                    <span class="badge badge-primary badge-sm">Primary</span>
+                  }
+                  <button
+                    class="btn btn-ghost btn-xs"
+                    (click)="onEditGuardian($index)"
+                    type="button"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-xs text-error"
+                    (click)="onRemoveGuardian($index)"
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="modal-action">
+      <button
+        class="btn btn-ghost"
+        (click)="onCancel()"
+        type="button"
+        [disabled]="isSaving"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary"
+        (click)="onSubmit()"
+        type="button"
+        [disabled]="isSaving"
+        [class.loading]="isSaving"
+      >
+        @if (isSaving) {
+          <span class="loading loading-spinner"></span>
+        }
+        Create Family
+      </button>
+    </div>
+  </div>
+</div>

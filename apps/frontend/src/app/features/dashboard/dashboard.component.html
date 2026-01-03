@@ -1,0 +1,153 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-3xl font-bold">Dashboard</h1>
+    <p class="text-base-content/70 mt-1">Welcome back! Here's your overview.</p>
+  </div>
+
+  <!-- Stats Grid -->
+  @if (error()) {
+    <div class="alert alert-error" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <span>{{ error() }}</span>
+      <button class="btn btn-sm" (click)="retryLoad()" aria-label="Retry loading dashboard data">Retry</button>
+    </div>
+  } @else if (loading()) {
+    <app-loading-spinner message="Loading stats..." />
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      @for (stat of stats(); track stat.title) {
+        <app-stat-card [stat]="stat" />
+      }
+    </div>
+  }
+
+  <!-- Content Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Activity -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title">Recent Activity</h2>
+          <button class="btn btn-primary btn-sm" aria-label="View all recent activities">View All</button>
+        </div>
+        <div class="space-y-3">
+          @for (activity of recentActivities; track activity.id) {
+            <div class="flex items-center gap-3 p-3 hover:bg-base-200 rounded-lg transition">
+              <div class="avatar placeholder">
+                <div class="bg-primary text-primary-content rounded-full w-10">
+                  <span class="text-xs">{{ activity.user }}</span>
+                </div>
+              </div>
+              <div class="flex-1">
+                <p class="font-medium">{{ activity.action }}</p>
+                <p class="text-sm text-base-content/70">{{ activity.time }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Quick Actions</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <button class="btn btn-outline gap-2" aria-label="Create new user">
+            <span class="text-xl" aria-hidden="true">➕</span>
+            New User
+          </button>
+          <button class="btn btn-outline gap-2" aria-label="View reports">
+            <span class="text-xl" aria-hidden="true">📊</span>
+            Reports
+          </button>
+          <button class="btn btn-outline gap-2" aria-label="Open settings">
+            <span class="text-xl" aria-hidden="true">⚙️</span>
+            Settings
+          </button>
+          <button class="btn btn-outline gap-2" aria-label="View messages">
+            <span class="text-xl" aria-hidden="true">📧</span>
+            Messages
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Info Cards -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">System Status</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span>Server Status</span>
+            <span class="badge badge-success">Online</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>Database</span>
+            <span class="badge badge-success">Connected</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>API</span>
+            <span class="badge badge-success">Operational</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span>Cache</span>
+            <span class="badge badge-warning">Warming</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">Storage Usage</h2>
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span>Documents</span>
+              <span>45%</span>
+            </div>
+            <progress class="progress progress-primary" value="45" max="100"></progress>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span>Images</span>
+              <span>72%</span>
+            </div>
+            <progress class="progress progress-secondary" value="72" max="100"></progress>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span>Videos</span>
+              <span>28%</span>
+            </div>
+            <progress class="progress progress-accent" value="28" max="100"></progress>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title">
+          Notifications
+          <div class="badge badge-secondary">5</div>
+        </h2>
+        <div class="space-y-2">
+          <div class="alert alert-info">
+            <span class="text-sm">System update available</span>
+          </div>
+          <div class="alert alert-warning">
+            <span class="text-sm">Low disk space warning</span>
+          </div>
+          <div class="alert alert-success">
+            <span class="text-sm">Backup completed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

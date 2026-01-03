@@ -1,0 +1,383 @@
+<div class="workspace-settings-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        <span class="icon">⚙️</span>
+        Workspace Settings
+      </h1>
+      <p class="page-description">
+        Customize your workspace appearance, notifications, and preferences
+      </p>
+    </div>
+    <div class="header-actions">
+      @if (hasChanges) {
+        <button
+          class="btn btn-primary"
+          (click)="saveSettings()"
+          [disabled]="isSaving"
+        >
+          <span class="icon">{{ isSaving ? '⏳' : '💾' }}</span>
+          {{ isSaving ? 'Saving...' : 'Save Changes' }}
+        </button>
+      }
+      <button class="btn btn-outline" (click)="resetToDefaults()">
+        <span class="icon">🔄</span>
+        Reset to Defaults
+      </button>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  @if (saveSuccess) {
+    <div class="success-message">
+      <span class="icon">✅</span>
+      Settings saved successfully!
+    </div>
+  }
+
+  <!-- Settings Tabs -->
+  <div class="settings-tabs">
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'appearance'"
+      (click)="switchTab('appearance')"
+    >
+      <span class="icon">🎨</span>
+      Appearance
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'notifications'"
+      (click)="switchTab('notifications')"
+    >
+      <span class="icon">🔔</span>
+      Notifications
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'general'"
+      (click)="switchTab('general')"
+    >
+      <span class="icon">⚙️</span>
+      General
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab === 'advanced'"
+      (click)="switchTab('advanced')"
+    >
+      <span class="icon">🔧</span>
+      Advanced
+    </button>
+  </div>
+
+  <!-- Settings Form -->
+  <form [formGroup]="settingsForm" class="settings-form">
+    <!-- Appearance Tab -->
+    @if (activeTab === 'appearance') {
+      <div class="tab-panel">
+        <div class="settings-section">
+          <h2>Theme Selection</h2>
+          <div class="theme-grid">
+            @for (theme of themes; track theme) {
+              <div
+                class="theme-option"
+                [class.selected]="settingsForm.get('theme')?.value === theme"
+                (click)="previewTheme(theme)"
+              >
+                <div class="theme-preview" [attr.data-theme]="theme">
+                  <div class="preview-header"></div>
+                  <div class="preview-content">
+                    <div class="preview-sidebar"></div>
+                    <div class="preview-main">
+                      <div class="preview-card"></div>
+                      <div class="preview-button"></div>
+                    </div>
+                  </div>
+                </div>
+                <label class="theme-label">
+                  <input
+                    type="radio"
+                    formControlName="theme"
+                    [value]="theme"
+                  >
+                  <span class="theme-name">{{ getThemeDisplayName(theme) }}</span>
+                </label>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Layout Density</h2>
+          <div class="density-options">
+            @for (density of layoutDensities; track density) {
+              <label class="density-option">
+                <input
+                  type="radio"
+                  formControlName="layoutDensity"
+                  [value]="density"
+                >
+                <div class="density-preview">
+                  <div class="preview-item compact" [class.active]="density === 'compact'">Compact</div>
+                  <div class="preview-item comfortable" [class.active]="density === 'comfortable'">Comfortable</div>
+                  <div class="preview-item spacious" [class.active]="density === 'spacious'">Spacious</div>
+                </div>
+                <span class="density-name">{{ getLayoutDensityDisplayName(density) }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Layout Options</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" formControlName="sidebarCollapsed">
+              <span class="checkmark"></span>
+              <span class="label-text">Collapse sidebar by default</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" formControlName="showBreadcrumb">
+              <span class="checkmark"></span>
+              <span class="label-text">Show breadcrumb navigation</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" formControlName="animations">
+              <span class="checkmark"></span>
+              <span class="label-text">Enable interface animations</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Notifications Tab -->
+    @if (activeTab === 'notifications') {
+      <div class="tab-panel" formGroupName="notifications">
+        <div class="settings-section">
+          <h2>Notification Preferences</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" formControlName="enabled">
+              <span class="checkmark"></span>
+              <span class="label-text">Enable notifications</span>
+            </label>
+          </div>
+        </div>
+
+        @if (settingsForm.get('notifications.enabled')?.value) {
+          <div class="settings-section">
+            <h2>Notification Position</h2>
+            <div class="position-grid">
+              @for (position of notificationPositions; track position.value) {
+                <label class="position-option">
+                  <input
+                    type="radio"
+                    formControlName="position"
+                    [value]="position.value"
+                  >
+                  <div class="position-preview">
+                    <div class="preview-screen">
+                      <div class="notification" [attr.data-position]="position.value"></div>
+                    </div>
+                  </div>
+                  <span class="position-name">{{ position.label }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>Notification Duration</h2>
+            <div class="slider-control">
+              <label class="slider-label">
+                Duration: {{ settingsForm.get('notifications.duration')?.value }}ms
+              </label>
+              <input
+                type="range"
+                formControlName="duration"
+                min="1000"
+                max="30000"
+                step="1000"
+                class="slider"
+              >
+              <div class="slider-labels">
+                <span>1s</span>
+                <span>30s</span>
+              </div>
+              @if (hasError('notifications.duration', 'min') || hasError('notifications.duration', 'max')) {
+                <div class="error-message">Duration must be between 1000ms and 30000ms</div>
+              }
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>Notification Types</h2>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="types.success">
+                <span class="checkmark"></span>
+                <span class="label-text">Success notifications</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="types.error">
+                <span class="checkmark"></span>
+                <span class="label-text">Error notifications</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="types.warning">
+                <span class="checkmark"></span>
+                <span class="label-text">Warning notifications</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="types.info">
+                <span class="checkmark"></span>
+                <span class="label-text">Info notifications</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2>Additional Options</h2>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="showProgress">
+                <span class="checkmark"></span>
+                <span class="label-text">Show progress bar</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="sound">
+                <span class="checkmark"></span>
+                <span class="label-text">Play notification sound</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" formControlName="desktop">
+                <span class="checkmark"></span>
+                <span class="label-text">Enable desktop notifications</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="testNotifications()"
+              data-test-notification
+            >
+              <span class="icon">🔔</span>
+              Test Notifications
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- General Tab -->
+    @if (activeTab === 'general') {
+      <div class="tab-panel">
+        <div class="settings-section">
+          <h2>Language & Region</h2>
+          <div class="form-group">
+            <label for="language" class="form-label">Language</label>
+            <select
+              id="language"
+              formControlName="language"
+              class="form-select"
+            >
+              @for (lang of languages; track lang.code) {
+                <option [value]="lang.code">{{ lang.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="timezone" class="form-label">Timezone</label>
+            <select
+              id="timezone"
+              formControlName="timezone"
+              class="form-select"
+            >
+              @for (tz of timezones; track tz.value) {
+                <option [value]="tz.value">{{ tz.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Behavior</h2>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" formControlName="autoSave">
+              <span class="checkmark"></span>
+              <span class="label-text">Auto-save changes</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Advanced Tab -->
+    @if (activeTab === 'advanced') {
+      <div class="tab-panel">
+        <div class="settings-section">
+          <h2>Import/Export Settings</h2>
+          <div class="action-buttons">
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="exportSettings()"
+            >
+              <span class="icon">📤</span>
+              Export Settings
+            </button>
+            <label class="btn btn-outline">
+              <span class="icon">📥</span>
+              Import Settings
+              <input
+                type="file"
+                accept=".json"
+                (change)="importSettings($event)"
+                style="display: none;"
+                data-import-settings
+              >
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h2>Danger Zone</h2>
+          <div class="danger-zone">
+            <p class="warning-text">
+              These actions are irreversible. Please be careful before proceeding.
+            </p>
+            <button
+              type="button"
+              class="btn btn-danger"
+              (click)="resetToDefaults()"
+            >
+              <span class="icon">⚠️</span>
+              Reset All Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </form>
+
+  <!-- System Health Link -->
+  <div class="system-health-link">
+    <a routerLink="/system-health" class="link-card">
+      <div class="link-content">
+        <span class="icon">🏥</span>
+        <div class="link-text">
+          <h3>System Health Monitor</h3>
+          <p>View real-time system metrics, performance data, and health alerts</p>
+        </div>
+        <span class="link-arrow">→</span>
+      </div>
+    </a>
+  </div>
+</div>

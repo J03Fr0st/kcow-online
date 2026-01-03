@@ -1,0 +1,16 @@
+<div class="student-avatar" [class]="sizeClasses()">
+  @if (photoUrl() && !imageLoadFailed()) {
+    <img
+      [src]="photoUrl()!"
+      [alt]="firstName() + ' ' + lastName()"
+      class="avatar object-cover"
+      (error)="onImageError()"
+      (load)="resetError()"
+      loading="lazy"
+    />
+  } @else {
+    <div class="avatar placeholder" [class]="avatarColor()">
+      <span class="text-primary-content font-medium">{{ initials() }}</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,18 @@
+:host {
+  display: block;
+}
+
+.school-select {
+  .dropdown {
+    position: relative;
+
+    .dropdown-content {
+      width: 100%;
+      min-width: 200px;
+    }
+  }
+
+  .active {
+    @apply bg-primary text-primary-content;
+  }
+}

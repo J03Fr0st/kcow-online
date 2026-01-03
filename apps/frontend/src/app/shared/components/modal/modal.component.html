@@ -1,0 +1,74 @@
+<div
+  class="modal-backdrop"
+  (click)="onBackdropClick($event)"
+  @backdropAnimation
+>
+  <div
+    class="modal-dialog modal-{{ modal.config.size }}"
+    @modalAnimation
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="modal.config.title ? 'modal-title-' + modal.id : null"
+  >
+    <div class="modal-content">
+      <!-- Header -->
+      <div class="modal-header" *ngIf="modal.config.title || modal.config.showCloseButton">
+        <h5 class="modal-title" [id]="'modal-title-' + modal.id" *ngIf="modal.config.title">
+          {{ modal.config.title }}
+        </h5>
+        <button
+          *ngIf="modal.config.showCloseButton && modal.config.dismissible"
+          type="button"
+          class="close-button"
+          aria-label="Close"
+          (click)="onDismiss()"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Confirmation Dialog -->
+        <div *ngIf="isConfirmationDialog()" class="confirmation-content">
+          <p>{{ modal.config.data.message }}</p>
+          <div class="confirmation-actions">
+            <button
+              type="button"
+              [class]="'btn ' + modal.config.data.cancelClass"
+              (click)="onCancel()"
+            >
+              {{ modal.config.data.cancelText }}
+            </button>
+            <button
+              type="button"
+              [class]="'btn ' + modal.config.data.confirmClass"
+              (click)="onConfirm()"
+            >
+              {{ modal.config.data.confirmText }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Alert Dialog -->
+        <div *ngIf="isAlertDialog()" class="alert-content">
+          <p>{{ modal.config.data.message }}</p>
+          <div class="alert-actions">
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="onOk()"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Component Content -->
+        <ng-container *ngIf="!isConfirmationDialog() && !isAlertDialog()">
+          <ng-template #dynamicContent></ng-template>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

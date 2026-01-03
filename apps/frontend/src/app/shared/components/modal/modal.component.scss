@@ -1,0 +1,237 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.modal-dialog {
+  background: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: auto;
+
+  &.modal-sm {
+    max-width: 400px;
+  }
+
+  &.modal-md {
+    max-width: 600px;
+  }
+
+  &.modal-lg {
+    max-width: 800px;
+  }
+
+  &.modal-xl {
+    max-width: 1140px;
+  }
+
+  &.modal-full {
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+
+  .modal-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .close-button {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: var(--hover-background);
+      color: var(--text-color);
+    }
+
+    &:focus {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  color: var(--text-color);
+}
+
+// Confirmation dialog styles
+.confirmation-content {
+  text-align: center;
+
+  p {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+
+  .confirmation-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+}
+
+// Alert dialog styles
+.alert-content {
+  text-align: center;
+
+  p {
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    color: var(--text-color);
+  }
+
+  .alert-actions {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+// Button styles
+.btn {
+  padding: 0.5rem 1.5rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+
+  &:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  &.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+
+    &:hover {
+      background-color: var(--primary-hover);
+    }
+  }
+
+  &.btn-secondary {
+    background-color: var(--secondary-color, #6c757d);
+    color: white;
+
+    &:hover {
+      background-color: var(--secondary-hover, #5a6268);
+    }
+  }
+
+  &.btn-danger {
+    background-color: #dc3545;
+    color: white;
+
+    &:hover {
+      background-color: #c82333;
+    }
+  }
+
+  &.btn-success {
+    background-color: #28a745;
+    color: white;
+
+    &:hover {
+      background-color: #218838;
+    }
+  }
+
+  &.btn-outline {
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+
+    &:hover {
+      background-color: var(--hover-background);
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+
+  .modal-dialog {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .modal-backdrop {
+    padding: 0.5rem;
+  }
+
+  .modal-dialog {
+    max-height: calc(100vh - 1rem);
+
+    &.modal-sm,
+    &.modal-md,
+    &.modal-lg,
+    &.modal-xl {
+      max-width: calc(100vw - 1rem);
+    }
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+}
