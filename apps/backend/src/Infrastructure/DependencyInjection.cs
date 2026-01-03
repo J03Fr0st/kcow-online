@@ -1,7 +1,11 @@
+using Kcow.Application.Auth;
+using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.Data;
+using Kcow.Infrastructure.Data.Seeders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure;
 
@@ -21,6 +25,11 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite(connectionString));
 
+        // Register authentication services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddSingleton<JwtService>();
+        services.AddSingleton<PasswordHasher>();
+
         return services;
     }
 
@@ -33,5 +42,35 @@ public static class DependencyInjection
         using var scope = services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await dbContext.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Seeds authentication data (roles and admin user) on application startup.
+    /// Should only be called in development environment.
+    /// </summary>
+    public static async Task SeedAuthenticationDataAsync(this IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
+
+        await AuthSeeder.SeedAsync(dbContext, logger);
+    }
+
+    /// <summary>
+    /// Initializes the database (creates and seeds data) for development.
+    /// This method is designed to work with WebApplicationFactory in tests.
+    /// </summary>
+    public static async Task InitializeDatabaseAsync(this IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
+
+        // Ensure database is created
+        await dbContext.Database.EnsureCreatedAsync();
+
+        // Seed authentication data
+        await AuthSeeder.SeedAsync(dbContext, logger);
     }
 }
