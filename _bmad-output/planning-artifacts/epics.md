@@ -1,6 +1,9 @@
 ---
 stepsCompleted:
   - 'step-01-validate-prerequisites'
+  - 'step-02-design-epics'
+  - 'step-03-create-stories'
+  - 'step-04-final-validation'
 inputDocuments:
   - "_bmad-output/planning-artifacts/prd.md"
   - "_bmad-output/planning-artifacts/architecture.md"
@@ -9,6 +12,10 @@ workflowType: 'epics-and-stories'
 project_name: 'kcow-online'
 user_name: 'Joe'
 date: '2026-01-03'
+status: 'complete'
+completedAt: '2026-01-03'
+totalEpics: 7
+totalStories: 38
 ---
 
 # kcow-online - Epic Breakdown
@@ -129,8 +136,1123 @@ These setup tasks are prerequisites for all feature development and must be comp
 
 ### FR Coverage Map
 
-{{requirements_coverage_map}}
+| FR | Epic | Description |
+|----|------|-------------|
+| FR1 | Epic 2 | Truck management |
+| FR2 | Epic 2 | Schools CRUD |
+| FR3 | Epic 2 | School contacts and billing settings |
+| FR4 | Epic 3 | Class groups CRUD |
+| FR5 | Epic 3 | Class group schedules and truck assignment |
+| FR6 | Epic 3 | Scheduling conflict detection |
+| FR7 | Epic 4 | Student records CRUD |
+| FR8 | Epic 4 | Student assignment to school/class group/seat |
+| FR9 | Epic 4 | Family/guardian contact management |
+| FR10 | Epic 4 | Single-screen student profile |
+| FR11 | Epic 4 | Student search |
+| FR12 | Epic 7 | Legacy data migration |
+| FR13 | Epic 4 | Validation errors before save |
+| FR14 | Epic 5 & 6 | Audit trail for attendance and billing |
 
 ## Epic List
 
-{{epics_list}}
+### Epic 1: Project Foundation & Authentication
+Admin can securely log in to the system and access a protected dashboard with the core application shell.
+
+**FRs covered:** NFR4, NFR5, NFR6 (Security), NFR9 (Accessibility baseline)
+
+**Implementation Notes:**
+- Backend scaffold (ASP.NET Core + EF Core + SQLite)
+- Better Auth integration (server + client)
+- AdminLayout shell with sidebar navigation
+- Basic dashboard placeholder
+- Auth guards, interceptors, theme system
+
+---
+
+### Epic 2: Trucks & Schools Management
+Admin can manage the core reference data - schools and trucks - that underpin all scheduling and student operations.
+
+**FRs covered:** FR1, FR2, FR3
+
+**Implementation Notes:**
+- Trucks CRUD with fleet status
+- Schools CRUD with contacts and billing settings
+- API endpoints + frontend features
+- Validation and error handling patterns established
+
+---
+
+### Epic 3: Class Groups & Scheduling
+Admin can create and manage class group schedules, assign trucks to schools, and detect/resolve scheduling conflicts.
+
+**FRs covered:** FR4, FR5, FR6
+
+**Implementation Notes:**
+- Class groups CRUD
+- Schedule management (day/time/sequence)
+- Truck assignment to class groups
+- Conflict detection and resolution UI
+- Schedule Conflict Banner (UX requirement)
+
+---
+
+### Epic 4: Student & Family Management
+Admin can create, search, and manage student records with family/guardian relationships, and view the single-screen student profile.
+
+**FRs covered:** FR7, FR8, FR9, FR10, FR11, FR13
+
+**Implementation Notes:**
+- Students CRUD with assignment to school/class group/seat
+- Global Student Search with typeahead and disambiguation
+- Family/guardian contact management
+- Single-screen Student Profile (3-column layout, tabbed sections)
+- Family Grid component
+- Inline validation (FR13)
+
+---
+
+### Epic 5: Attendance & Evaluations
+Admin can track student attendance per class session, record progress evaluations, and make corrections with a visible audit trail.
+
+**FRs covered:** FR14 (audit trail for attendance)
+
+**Implementation Notes:**
+- Attendance tracking per class group session
+- Evaluation/progress recording (activity scores, speed/accuracy)
+- Inline editing in student profile tabs
+- Audit Trail Panel for corrections
+- Status chips for attendance/evaluation state
+
+---
+
+### Epic 6: Billing & Financials
+Admin can manage student billing records, track payments, and view financial status with audit trail.
+
+**FRs covered:** FR14 (audit trail for billing)
+
+**Implementation Notes:**
+- Billing tab in student profile
+- Invoice, receipt, payment tracking
+- Balance per student
+- Audit trail for billing changes
+- Inline edit for billing updates
+
+---
+
+### Epic 7: Legacy Data Migration
+Developer can import legacy XML/XSD data with preview, exception handling, and audit logging.
+
+**FRs covered:** FR12
+
+**Implementation Notes:**
+- XML/XSD import pipeline (dev-only CLI/tooling)
+- Preview imports before commit
+- Exception handling and rejected record tracking
+- Audit log for import operations
+- Re-run capability
+
+---
+
+## Epic 1: Project Foundation & Authentication
+
+Admin can securely log in to the system and access a protected dashboard with the core application shell.
+
+### Story 1.1: Backend Project Scaffold
+
+**As a** developer,
+**I want** an ASP.NET Core Web API project with Clean Architecture structure,
+**So that** I have a properly organized codebase to build features upon.
+
+**Acceptance Criteria:**
+
+**Given** the project root at `apps/backend/`
+**When** the scaffold is created
+**Then** the following structure exists:
+- `src/Api/` with Program.cs and Controllers folder
+- `src/Application/` for business logic
+- `src/Domain/` for entities
+- `src/Infrastructure/` for data access and external services
+- `tests/Unit/` and `tests/Integration/` for testing
+
+**And** EF Core with SQLite is configured with a DbContext
+**And** Serilog logging is configured
+**And** ProblemDetails error handling middleware is added
+**And** CORS is configured to allow the frontend origin
+**And** the API runs successfully with `dotnet run`
+
+---
+
+### Story 1.2: Better Auth Server Integration
+
+**As a** developer,
+**I want** Better Auth configured on the backend API,
+**So that** the system can authenticate admin users securely.
+
+**Acceptance Criteria:**
+
+**Given** the backend scaffold from Story 1.1
+**When** Better Auth is integrated
+**Then** the Admin role and user are seeded in the database
+**And** `/api/auth/login` endpoint accepts credentials and returns a token
+**And** `/api/auth/logout` endpoint invalidates the session
+**And** protected endpoints return 401 for unauthenticated requests
+**And** protected endpoints return 403 for unauthorized roles
+
+---
+
+### Story 1.3: Frontend Auth Service & Login Page
+
+**As an** admin,
+**I want** a login page to authenticate with my credentials,
+**So that** I can securely access the admin system.
+
+**Acceptance Criteria:**
+
+**Given** I am on the login page (`/login`)
+**When** I enter valid admin credentials and submit
+**Then** I am redirected to the dashboard
+**And** my session is persisted (token stored)
+
+**Given** I enter invalid credentials
+**When** I submit the form
+**Then** I see an inline error message
+**And** I remain on the login page
+
+**Given** I am authenticated
+**When** I click logout
+**Then** my session is cleared
+**And** I am redirected to the login page
+
+**And** AuthService uses Angular Signals for state
+**And** HTTP interceptor attaches auth token to API requests
+**And** Auth guard redirects unauthenticated users to login
+
+---
+
+### Story 1.4: Admin Layout Shell & Dashboard
+
+**As an** admin,
+**I want** a dashboard with sidebar navigation after login,
+**So that** I can navigate to different modules of the system.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated
+**When** I access the root path (`/`)
+**Then** I see the AdminLayout with:
+- Sidebar navigation with module links (Dashboard, Trucks, Schools, Class Groups, Students)
+- Top navbar with user info and logout button
+- Main content area showing the Dashboard
+
+**Given** I am on the dashboard
+**When** I view the page
+**Then** I see a placeholder welcome message and quick stats area
+
+**And** the layout uses DaisyUI components with dark theme
+**And** sidebar is persistent on desktop
+**And** keyboard navigation works for all interactive elements (NFR9)
+
+---
+
+### Story 1.5: Theme System & Accessibility Baseline
+
+**As an** admin,
+**I want** consistent theming and accessible focus states,
+**So that** the UI is readable and keyboard-navigable.
+
+**Acceptance Criteria:**
+
+**Given** the application loads
+**When** I view any page
+**Then** the DaisyUI dark theme is applied consistently
+
+**Given** I use keyboard navigation
+**When** I tab through interactive elements
+**Then** visible focus rings appear on buttons, inputs, and links
+
+**And** form fields have proper labels and error states
+**And** contrast ratios meet basic readability standards
+
+---
+
+## Epic 2: Trucks & Schools Management
+
+Admin can manage the core reference data - trucks and schools - that underpin all scheduling and student operations.
+
+### Story 2.1: Truck Entity & API Endpoints
+
+**As a** developer,
+**I want** the Truck domain entity and REST API endpoints,
+**So that** truck data can be managed through the API.
+
+**Acceptance Criteria:**
+
+**Given** the backend project from Epic 1
+**When** the Truck entity is created
+**Then** the `Truck` entity exists in `Domain/Entities` with properties:
+- Id, Name, RegistrationNumber, Status, Notes
+
+**And** EF Core configuration exists in `Infrastructure/Data`
+**And** migration creates the `trucks` table
+**And** `/api/trucks` endpoints support:
+- GET (list all trucks)
+- GET `/:id` (get single truck)
+- POST (create truck)
+- PUT `/:id` (update truck)
+- DELETE `/:id` (archive/soft-delete truck)
+
+**And** all endpoints return ProblemDetails on error
+**And** endpoints require authentication
+
+---
+
+### Story 2.2: Trucks Management UI
+
+**As an** admin,
+**I want** a trucks management page to view and manage fleet records,
+**So that** I can maintain accurate truck information.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated and click "Trucks" in the sidebar
+**When** the Trucks page loads
+**Then** I see a table listing all trucks with Name, Registration, Status columns
+**And** I see "Add Truck" button
+
+**Given** I click "Add Truck"
+**When** the create form appears
+**Then** I can enter truck details and save
+**And** the new truck appears in the list
+
+**Given** I click a truck row
+**When** the edit form appears
+**Then** I can update truck details and save
+**And** I see a success confirmation
+
+**Given** I click delete on a truck
+**When** I confirm the action
+**Then** the truck is archived (soft-deleted) and removed from the active list
+
+**And** validation errors display inline
+**And** loading states are shown during API calls
+
+---
+
+### Story 2.3: School Entity & API Endpoints
+
+**As a** developer,
+**I want** the School domain entity and REST API endpoints,
+**So that** school data can be managed through the API.
+
+**Acceptance Criteria:**
+
+**Given** the backend project
+**When** the School entity is created
+**Then** the `School` entity exists with properties:
+- Id, Name, Address, ContactName, ContactPhone, ContactEmail, BillingSettings (JSON or relation), IsActive, Notes
+
+**And** EF Core configuration and migration create the `schools` table
+**And** `/api/schools` endpoints support:
+- GET (list schools)
+- GET `/:id` (single school with contacts)
+- POST (create school)
+- PUT `/:id` (update school)
+- DELETE `/:id` (archive school)
+
+**And** endpoints require authentication
+**And** ProblemDetails errors are returned for validation failures (FR13)
+
+---
+
+### Story 2.4: Schools Management UI
+
+**As an** admin,
+**I want** a schools management page to view and edit school records,
+**So that** I can maintain school information and contacts.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated and click "Schools" in sidebar
+**When** the Schools page loads
+**Then** I see a table listing schools with Name, Contact, Address columns
+
+**Given** I click "Add School"
+**When** the create form appears
+**Then** I can enter school details including contact info
+**And** the new school appears in the list after save
+
+**Given** I click a school row
+**When** the edit form appears
+**Then** I can update school details (FR2) and manage contacts/billing settings (FR3)
+**And** changes are saved and confirmed
+
+**And** form validation prevents invalid data (FR13)
+**And** inline errors display for failed validation
+
+---
+
+### Story 2.5: School Billing Settings
+
+**As an** admin,
+**I want** to configure billing settings per school,
+**So that** student billing calculations use the correct rates.
+
+**Acceptance Criteria:**
+
+**Given** I am editing a school
+**When** I view the billing settings section
+**Then** I can configure:
+- Default rate per session
+- Billing cycle (monthly/termly)
+- Any school-specific billing notes
+
+**Given** I save billing settings
+**When** the form submits
+**Then** the settings are persisted with the school record
+**And** I see a success confirmation
+
+**And** this fulfills FR3 (manage school billing settings)
+
+---
+
+## Epic 3: Class Groups & Scheduling
+
+Admin can create and manage class group schedules, assign trucks to schools, and detect/resolve scheduling conflicts.
+
+### Story 3.1: Class Group Entity & API Endpoints
+
+**As a** developer,
+**I want** the ClassGroup domain entity and REST API endpoints,
+**So that** class group data can be managed through the API.
+
+**Acceptance Criteria:**
+
+**Given** the backend project with School and Truck entities
+**When** the ClassGroup entity is created
+**Then** the `ClassGroup` entity exists with properties:
+- Id, Name, SchoolId (FK), TruckId (FK), DayOfWeek, StartTime, EndTime, Sequence, IsActive, Notes
+
+**And** EF Core configuration with foreign key relationships to School and Truck
+**And** migration creates the `class_groups` table
+**And** `/api/class-groups` endpoints support:
+- GET (list class groups with optional school/truck filters)
+- GET `/:id` (single class group with school and truck details)
+- POST (create class group)
+- PUT `/:id` (update class group)
+- DELETE `/:id` (archive class group)
+
+**And** endpoints require authentication
+**And** ProblemDetails errors for validation failures
+
+---
+
+### Story 3.2: Class Groups Management UI
+
+**As an** admin,
+**I want** a class groups management page to view and manage class schedules,
+**So that** I can organize school visits and truck assignments (FR4).
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated and click "Class Groups" in sidebar
+**When** the Class Groups page loads
+**Then** I see a table listing class groups with Name, School, Truck, Day, Time columns
+**And** I can filter by school or truck
+
+**Given** I click "Add Class Group"
+**When** the create form appears
+**Then** I can enter class group details
+**And** select a school from a dropdown
+**And** select a truck from a dropdown
+**And** set day of week and time slot
+
+**Given** I add or edit a class group
+**When** I save the form
+**Then** the class group is created/updated
+**And** I see a success confirmation
+
+---
+
+### Story 3.3: Schedule Time Slot Configuration
+
+**As an** admin,
+**I want** to set class group schedules with day, time, and sequence,
+**So that** I can organize the weekly school visit calendar (FR5).
+
+**Acceptance Criteria:**
+
+**Given** I am creating or editing a class group
+**When** I configure the schedule
+**Then** I can select:
+- Day of week (Monday-Friday dropdown)
+- Start time and end time
+- Sequence number (order within the day)
+
+**Given** I assign a truck to the class group
+**When** I save
+**Then** the truck assignment is persisted
+**And** the schedule appears in a weekly view or list
+
+**And** this fulfills FR5 (set class group schedules and assign trucks)
+
+---
+
+### Story 3.4: Scheduling Conflict Detection
+
+**As an** admin,
+**I want** the system to detect scheduling conflicts before I save,
+**So that** I don't accidentally double-book a truck (FR6).
+
+**Acceptance Criteria:**
+
+**Given** I am creating or editing a class group
+**When** I select a truck, day, and time that overlaps with an existing class group
+**Then** a Schedule Conflict Banner appears warning me of the conflict
+**And** the conflicting class group details are shown
+
+**Given** a conflict is detected
+**When** I try to save
+**Then** I am blocked from saving until the conflict is resolved
+**And** I can adjust the time or truck to resolve
+
+**Given** I resolve the conflict
+**When** I save
+**Then** the class group is saved successfully
+**And** no conflict warning appears
+
+**And** this fulfills FR6 (detect and resolve scheduling conflicts)
+
+---
+
+### Story 3.5: Weekly Schedule Overview
+
+**As an** admin,
+**I want** a visual weekly schedule view showing all class groups,
+**So that** I can see truck utilization and school coverage at a glance.
+
+**Acceptance Criteria:**
+
+**Given** I am on the Class Groups page
+**When** I switch to "Weekly View" tab
+**Then** I see a calendar-style grid with days as columns and time slots as rows
+**And** class groups are displayed as blocks on the grid
+
+**Given** I click on a schedule block
+**When** the detail appears
+**Then** I see the class group name, school, and truck
+**And** I can navigate to edit the class group
+
+**And** conflicts are visually highlighted with a warning indicator
+
+---
+
+## Epic 4: Student & Family Management
+
+Admin can create, search, and manage student records with family/guardian relationships, and view the single-screen student profile.
+
+### Story 4.1: Student Entity & API Endpoints
+
+**As a** developer,
+**I want** the Student domain entity and REST API endpoints,
+**So that** student data can be managed through the API (FR7).
+
+**Acceptance Criteria:**
+
+**Given** the backend project with School and ClassGroup entities
+**When** the Student entity is created
+**Then** the `Student` entity exists with properties:
+- Id, FirstName, LastName, DateOfBirth, Grade, SchoolId (FK), ClassGroupId (FK), SeatNumber, IsActive, Notes
+- Additional fields from legacy XSD: Gender, Language, etc.
+
+**And** EF Core configuration with foreign key relationships
+**And** migration creates the `students` table
+**And** `/api/students` endpoints support:
+- GET (list with pagination and filters)
+- GET `/:id` (single student with school, class group, family details)
+- POST (create student)
+- PUT `/:id` (update student)
+- DELETE `/:id` (archive student)
+
+**And** validation returns ProblemDetails errors (FR13)
+
+---
+
+### Story 4.2: Family Entity & API Endpoints
+
+**As a** developer,
+**I want** the Family domain entity and relationship endpoints,
+**So that** guardian/contact data can be managed and linked to students (FR9).
+
+**Acceptance Criteria:**
+
+**Given** the backend project
+**When** the Family entity is created
+**Then** the `Family` entity exists with properties:
+- Id, FamilyName, PrimaryContactName, Phone, Email, Address, Notes
+
+**And** a `StudentFamily` join table links students to families with a relationship type (parent, guardian, sibling)
+**And** `/api/families` endpoints support CRUD
+**And** `/api/students/:id/families` returns families linked to a student
+**And** POST `/api/students/:id/families` links a family to a student
+
+---
+
+### Story 4.3: Student Assignment to School & Class Group
+
+**As an** admin,
+**I want** to assign a student to a school, class group, and seat,
+**So that** the student's schedule and location are tracked (FR8).
+
+**Acceptance Criteria:**
+
+**Given** I am creating or editing a student
+**When** I view the assignment section
+**Then** I can select a school from a dropdown
+**And** I can select a class group (filtered by school)
+**And** I can enter a seat number
+
+**Given** I save the student with assignments
+**When** the form submits
+**Then** the assignments are persisted
+**And** the student appears in the class group roster
+
+**And** changing school clears the class group selection (validation)
+
+---
+
+### Story 4.4: Global Student Search
+
+**As an** admin,
+**I want** a global search bar to quickly find students by name, school, or grade,
+**So that** I can locate any student within seconds (FR11).
+
+**Acceptance Criteria:**
+
+**Given** I am on any page in the admin layout
+**When** I type in the global search bar
+**Then** typeahead results appear showing matching students
+**And** each result shows: Full Name, School, Grade, Class Group
+
+**Given** there are students with similar names
+**When** I view the results
+**Then** disambiguation is clear (showing school/grade) to select the correct student
+
+**Given** I select a search result
+**When** I click on it
+**Then** I navigate to the student's profile page
+
+**And** search returns results in under 2 seconds (NFR1)
+**And** "No results found" appears when no matches exist
+
+---
+
+### Story 4.5: Students List Page
+
+**As an** admin,
+**I want** a students list page to browse and filter all students,
+**So that** I can find students by various criteria.
+
+**Acceptance Criteria:**
+
+**Given** I click "Students" in the sidebar
+**When** the Students page loads
+**Then** I see a paginated table with Name, School, Grade, Class Group columns
+**And** I can filter by school and class group
+
+**Given** I click "Add Student"
+**When** the create form appears
+**Then** I can create a new student record
+
+**Given** I click on a student row
+**When** I navigate
+**Then** I am taken to the student profile page
+
+---
+
+### Story 4.6: Single-Screen Student Profile Layout
+
+**As an** admin,
+**I want** a single-screen student profile with all key information,
+**So that** I can view and update a student without navigating away (FR10).
+
+**Acceptance Criteria:**
+
+**Given** I navigate to a student profile (`/students/:id`)
+**When** the page loads
+**Then** I see a 3-column summary header with:
+- Column 1: Photo placeholder, name, basic demographics
+- Column 2: School and class group assignment
+- Column 3: Quick status indicators (attendance, billing)
+
+**And** below the header, I see tabbed sections for:
+- Child Info (demographics details)
+- Financial (billing - placeholder for Epic 6)
+- Attendance (placeholder for Epic 5)
+- Evaluation (placeholder for Epic 5)
+
+**And** the page loads in under 2 seconds (NFR2)
+
+---
+
+### Story 4.7: Student Profile - Child Info Tab
+
+**As an** admin,
+**I want** to view and edit student demographics in the Child Info tab,
+**So that** I can maintain accurate student records.
+
+**Acceptance Criteria:**
+
+**Given** I am on the student profile
+**When** I select the "Child Info" tab
+**Then** I see all demographic fields: Name, DOB, Grade, Gender, Language, Notes, etc.
+
+**Given** I edit any field
+**When** I save changes
+**Then** the changes are persisted immediately
+**And** I see a confirmation message
+
+**And** inline validation prevents invalid data (FR13)
+**And** validation errors appear next to the relevant fields
+
+---
+
+### Story 4.8: Family Management in Student Profile
+
+**As an** admin,
+**I want** to manage a student's family contacts within the profile,
+**So that** I can maintain guardian information (FR9).
+
+**Acceptance Criteria:**
+
+**Given** I am on the student profile
+**When** I scroll to the Family Grid section (below tabs)
+**Then** I see a list of linked family members with name, relationship, and contact info
+
+**Given** I click "Add Family"
+**When** the inline form appears
+**Then** I can create a new family record and link it to the student
+**And** I can set the relationship type
+
+**Given** I click on a family row
+**When** the edit form appears
+**Then** I can update family details or remove the link
+
+**And** sibling students in the same family are shown for context
+
+---
+
+## Epic 5: Attendance & Evaluations
+
+Admin can track student attendance per class session, record progress evaluations, and make corrections with a visible audit trail.
+
+### Story 5.1: Attendance Entity & API Endpoints
+
+**As a** developer,
+**I want** the Attendance domain entity and REST API endpoints,
+**So that** attendance data can be tracked per student per session.
+
+**Acceptance Criteria:**
+
+**Given** the backend project with Student and ClassGroup entities
+**When** the Attendance entity is created
+**Then** the `Attendance` entity exists with properties:
+- Id, StudentId (FK), ClassGroupId (FK), SessionDate, Status (Present/Absent/Late), Notes, CreatedAt, ModifiedAt
+
+**And** EF Core configuration with foreign key relationships
+**And** migration creates the `attendance` table
+**And** `/api/attendance` endpoints support:
+- GET (list with student/class group/date filters)
+- GET `/:id` (single attendance record)
+- POST (create attendance entry)
+- PUT `/:id` (update attendance - triggers audit)
+- GET `/api/students/:id/attendance` (attendance history for a student)
+
+**And** endpoints require authentication
+
+---
+
+### Story 5.2: Attendance Tab in Student Profile
+
+**As an** admin,
+**I want** to view and manage attendance in the student profile,
+**So that** I can track and update attendance without leaving the profile (FR10).
+
+**Acceptance Criteria:**
+
+**Given** I am on the student profile
+**When** I select the "Attendance" tab
+**Then** I see a list of recent attendance records with Date, Class Group, Status, Notes columns
+**And** status is shown with color-coded chips (Present=green, Absent=red, Late=yellow)
+
+**Given** I click on an attendance row
+**When** inline edit mode activates
+**Then** I can change the status or add notes
+**And** save the change immediately
+
+**Given** I click "Add Attendance"
+**When** the inline form appears
+**Then** I can select date, class group, and status
+**And** the new record appears in the list
+
+---
+
+### Story 5.3: Attendance Audit Trail
+
+**As an** admin,
+**I want** to see an audit trail for attendance corrections,
+**So that** I have traceability for any changes (FR14).
+
+**Acceptance Criteria:**
+
+**Given** I update an attendance record
+**When** the change is saved
+**Then** an audit log entry is created with:
+- Timestamp, Previous value, New value, User who made the change
+
+**Given** I view an attendance record
+**When** I click "View History"
+**Then** an Audit Trail Panel appears showing all changes to that record
+
+**And** the audit trail is read-only
+**And** this fulfills FR14 for attendance
+
+---
+
+### Story 5.4: Evaluation Entity & API Endpoints
+
+**As a** developer,
+**I want** the Evaluation domain entity and REST API endpoints,
+**So that** student progress evaluations can be recorded.
+
+**Acceptance Criteria:**
+
+**Given** the backend project with Student and Activity entities
+**When** the Evaluation entity is created
+**Then** the `Evaluation` entity exists with properties:
+- Id, StudentId (FK), ActivityId (FK), EvaluationDate, Score, SpeedMetric, AccuracyMetric, Notes, CreatedAt, ModifiedAt
+
+**And** Activity entity exists with basic activity/curriculum info
+**And** EF Core configuration and migrations
+**And** `/api/evaluations` endpoints support CRUD
+**And** GET `/api/students/:id/evaluations` returns evaluation history
+
+---
+
+### Story 5.5: Evaluation Tab in Student Profile
+
+**As an** admin,
+**I want** to view and record evaluations in the student profile,
+**So that** I can track progress without leaving the profile.
+
+**Acceptance Criteria:**
+
+**Given** I am on the student profile
+**When** I select the "Evaluation" tab
+**Then** I see a list of evaluations with Activity, Date, Score, Speed, Accuracy columns
+**And** scores are shown with visual indicators (status chips)
+
+**Given** I click "Add Evaluation"
+**When** the inline form appears
+**Then** I can select an activity, enter date, scores, and notes
+**And** the new evaluation appears in the list
+
+**Given** I click on an evaluation row
+**When** inline edit mode activates
+**Then** I can update scores and notes
+
+---
+
+### Story 5.6: Bulk Attendance Entry
+
+**As an** admin,
+**I want** to record attendance for an entire class group session at once,
+**So that** I can efficiently mark attendance for a class.
+
+**Acceptance Criteria:**
+
+**Given** I am on the Class Groups page
+**When** I click "Take Attendance" on a class group
+**Then** I see a list of all students in the class
+**And** each student has a status toggle (Present/Absent/Late)
+
+**Given** I mark attendance for all students
+**When** I click "Save All"
+**Then** attendance records are created for all students
+**And** I see a success confirmation
+
+**And** existing attendance for the same date shows pre-filled values
+
+---
+
+## Epic 6: Billing & Financials
+
+Admin can manage student billing records, track payments, and view financial status with audit trail.
+
+### Story 6.1: Billing Entity & API Endpoints
+
+**As a** developer,
+**I want** the Billing domain entities and REST API endpoints,
+**So that** financial data can be tracked per student.
+
+**Acceptance Criteria:**
+
+**Given** the backend project with Student entity
+**When** the billing entities are created
+**Then** the following entities exist:
+- `Invoice`: Id, StudentId (FK), InvoiceDate, Amount, DueDate, Status (Pending/Paid/Overdue), Notes
+- `Payment`: Id, StudentId (FK), InvoiceId (FK, optional), PaymentDate, Amount, PaymentMethod, ReceiptNumber, Notes
+- `Receipt`: Id, PaymentId (FK), ReceiptDate, ReceiptNumber
+
+**And** EF Core configuration and migrations create the billing tables
+**And** `/api/billing` endpoints support:
+- GET `/api/students/:id/billing` (billing summary with balance)
+- GET `/api/students/:id/invoices` (list invoices)
+- POST `/api/students/:id/invoices` (create invoice)
+- GET `/api/students/:id/payments` (list payments)
+- POST `/api/students/:id/payments` (record payment)
+
+**And** endpoints require authentication
+
+---
+
+### Story 6.2: Financial Tab in Student Profile
+
+**As an** admin,
+**I want** to view and manage billing in the student profile,
+**So that** I can track and update financial status without leaving the profile.
+
+**Acceptance Criteria:**
+
+**Given** I am on the student profile
+**When** I select the "Financial" tab
+**Then** I see a billing summary showing:
+- Current balance
+- Last payment date and amount
+- Outstanding invoices count
+
+**And** below the summary, I see two sections:
+- Invoices list (Date, Amount, Status)
+- Payments list (Date, Amount, Receipt #)
+
+**Given** I click on an invoice
+**When** the detail appears
+**Then** I can view invoice details and status
+
+---
+
+### Story 6.3: Record Payment
+
+**As an** admin,
+**I want** to record a payment for a student,
+**So that** I can track payments against invoices.
+
+**Acceptance Criteria:**
+
+**Given** I am on the student's Financial tab
+**When** I click "Record Payment"
+**Then** an inline form appears with:
+- Amount input
+- Payment method dropdown
+- Optional invoice to apply against
+- Notes field
+
+**Given** I submit a valid payment
+**When** it saves
+**Then** the payment appears in the payments list
+**And** the balance is updated
+**And** a receipt number is generated
+
+**And** if applied to an invoice, the invoice status updates
+
+---
+
+### Story 6.4: Create Invoice
+
+**As an** admin,
+**I want** to create invoices for a student,
+**So that** I can track amounts owed.
+
+**Acceptance Criteria:**
+
+**Given** I am on the student's Financial tab
+**When** I click "Create Invoice"
+**Then** an inline form appears with:
+- Amount input
+- Due date picker
+- Description/notes
+
+**Given** I submit a valid invoice
+**When** it saves
+**Then** the invoice appears in the invoices list
+**And** the balance is updated
+**And** status is set to "Pending"
+
+---
+
+### Story 6.5: Billing Audit Trail
+
+**As an** admin,
+**I want** to see an audit trail for billing changes,
+**So that** I have traceability for financial corrections (FR14).
+
+**Acceptance Criteria:**
+
+**Given** I update a payment or invoice record
+**When** the change is saved
+**Then** an audit log entry is created with:
+- Timestamp, Previous value, New value, User who made the change
+
+**Given** I view a billing record
+**When** I click "View History"
+**Then** an Audit Trail Panel appears showing all changes
+
+**And** the audit trail is read-only
+**And** this fulfills FR14 for billing
+
+---
+
+### Story 6.6: Billing Status in Profile Header
+
+**As an** admin,
+**I want** to see quick billing status in the profile header,
+**So that** I immediately know if a student has outstanding balance.
+
+**Acceptance Criteria:**
+
+**Given** I view a student profile
+**When** the header loads
+**Then** the third column shows:
+- Current balance with color indicator (green if 0, red if outstanding)
+- "Up to date" or "Balance due" text
+
+**Given** the student has overdue invoices
+**When** I view the header
+**Then** a warning indicator is shown
+
+---
+
+## Epic 7: Legacy Data Migration
+
+Developer can import legacy XML/XSD data with preview, exception handling, and audit logging.
+
+### Story 7.1: Legacy Schema Parser
+
+**As a** developer,
+**I want** a parser that reads legacy XML/XSD files,
+**So that** I can extract data from the Access export format.
+
+**Acceptance Criteria:**
+
+**Given** the legacy XML and XSD files in `docs/legacy/`
+**When** the parser runs
+**Then** it reads and validates XML against the XSD schema
+**And** extracts School, ClassGroup (Class Group), Activity, and Children (Student) data
+**And** handles encoding and format variations in the legacy data
+
+**And** parser errors are logged with file/line information
+**And** the parser can be run from CLI (`dotnet run import parse`)
+
+---
+
+### Story 7.2: Data Mapping Service
+
+**As a** developer,
+**I want** a mapping service that transforms legacy data to domain entities,
+**So that** parsed data can be loaded into the new database.
+
+**Acceptance Criteria:**
+
+**Given** parsed legacy data
+**When** the mapping service runs
+**Then** legacy fields are mapped to new entity properties:
+- Children → Student entity
+- Class Group → ClassGroup entity
+- School → School entity
+- Activity → Activity entity
+
+**And** data transformations are applied (date formats, enum conversions, etc.)
+**And** missing or invalid values are flagged for review
+**And** mapping rules are documented in code
+
+---
+
+### Story 7.3: Import Preview Mode
+
+**As a** developer,
+**I want** to preview import results before committing,
+**So that** I can verify the data before it goes live (FR12).
+
+**Acceptance Criteria:**
+
+**Given** I run the import command with `--preview` flag
+**When** the import runs
+**Then** it shows:
+- Total records to import by entity type
+- Sample of mapped records
+- Validation warnings and errors
+- Records that will be skipped
+
+**And** NO data is written to the database
+**And** I can review the preview output before running full import
+
+---
+
+### Story 7.4: Import Execution with Exception Handling
+
+**As a** developer,
+**I want** to run the full import with proper error handling,
+**So that** valid records are imported and failures are tracked.
+
+**Acceptance Criteria:**
+
+**Given** I run the import command without `--preview`
+**When** the import executes
+**Then** valid records are inserted into the database
+**And** failed records are logged to an exceptions file (JSON or CSV)
+**And** each exception includes: record ID, field, error reason, original value
+
+**Given** some records fail validation
+**When** the import completes
+**Then** a summary shows: X imported, Y failed, Z skipped
+**And** the exceptions file is saved for review
+
+---
+
+### Story 7.5: Import Audit Log
+
+**As a** developer,
+**I want** an audit log of all import operations,
+**So that** I have traceability for data migration.
+
+**Acceptance Criteria:**
+
+**Given** I run an import
+**When** records are created
+**Then** an import audit log entry is created with:
+- Import run timestamp
+- User/process that ran the import
+- Source file(s) used
+- Records created, updated, skipped, failed counts
+
+**And** I can query the audit log to see import history
+**And** this fulfills the audit requirement for FR12
+
+---
+
+### Story 7.6: Import Re-run Capability
+
+**As a** developer,
+**I want** to re-run the import to update or fix records,
+**So that** I can iterate on data quality.
+
+**Acceptance Criteria:**
+
+**Given** data has been previously imported
+**When** I run the import again
+**Then** existing records are matched by a unique key (e.g., legacy ID)
+**And** I can choose: skip existing, update existing, or fail on conflict
+
+**Given** I run with `--update` flag
+**When** matching records exist
+**Then** they are updated with new values
+**And** changes are logged to the audit trail
