@@ -108,21 +108,21 @@ describe('LoginComponent', () => {
 
     it('should submit valid form and login', () => {
       component.loginForm.setValue({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
 
       component.onSubmit();
 
       expect(mockAuthService.login).toHaveBeenCalledWith({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
     });
 
     it('should navigate to return URL on successful login', () => {
       component.loginForm.setValue({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
 
@@ -140,7 +140,7 @@ describe('LoginComponent', () => {
       fixture.detectChanges();
 
       component.loginForm.setValue({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
 
@@ -157,14 +157,14 @@ describe('LoginComponent', () => {
 
       // Verify form submits correctly
       component.loginForm.setValue({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
 
       component.onSubmit();
 
       expect(mockAuthService.login).toHaveBeenCalledWith({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
     });
@@ -259,7 +259,7 @@ describe('LoginComponent', () => {
   describe('loading state', () => {
     it('should set isLoading to true during submission', () => {
       component.loginForm.setValue({
-        email: 'admin@kcow.test',
+        email: 'admin@kcow.local',
         password: 'password123',
       });
 

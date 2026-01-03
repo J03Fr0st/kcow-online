@@ -66,10 +66,10 @@ export class TrucksListComponent implements OnInit {
     const { mode, truck } = event.detail;
 
     if (mode === 'create') {
-      this.notificationService.showSuccess('Truck created successfully');
+      this.notificationService.success('Truck created successfully');
       this.closeForm();
     } else if (mode === 'update' && truck) {
-      this.notificationService.showSuccess('Truck updated successfully');
+      this.notificationService.success('Truck updated successfully');
       this.closeForm();
     }
   }
@@ -96,11 +96,11 @@ export class TrucksListComponent implements OnInit {
 
     this.truckService.deleteTruck(truck.id).subscribe({
       next: () => {
-        this.notificationService.showSuccess('Truck archived successfully');
+        this.notificationService.success('Truck archived successfully');
       },
       error: (err) => {
         console.error('Delete error:', err);
-        this.notificationService.showError('Failed to archive truck');
+        this.notificationService.error('Failed to archive truck');
       },
     });
   }

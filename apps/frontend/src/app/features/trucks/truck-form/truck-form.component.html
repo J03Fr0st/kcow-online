@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col">
   <!-- Header -->
   <div class="flex items-center justify-between p-6 border-b border-base-300 bg-base-100">
-    <h2 class="text-xl font-semibold text-base-content">{{ title() }}</h2>
+    <h2 class="text-xl font-semibold text-base-content">{{ title }}</h2>
     <button
       class="btn btn-ghost btn-sm btn-circle"
       (click)="onCancel()"
@@ -138,8 +138,10 @@
       (click)="submitForm()"
       [disabled]="form.invalid || isLoading() || isSaving()"
       [attr.aria-busy]="isSaving()">
-      <span @if="isSaving()" class="loading loading-spinner loading-sm mr-2"></span>
-      {{ submitButtonText() }}
+      @if (isSaving()) {
+      <span class="loading loading-spinner loading-sm mr-2"></span>
+      }
+      {{ submitButtonText }}
     </button>
   </div>
 </div>
