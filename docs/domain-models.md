@@ -1,7 +1,7 @@
 # KCOW Domain Models
 
 > Domain entity reference derived from legacy Microsoft Access schemas
-> Generated: 2025-12-27 | Updated: 2025-12-27 (Complete XSD field mapping)
+> Generated: 2025-12-27 | Updated: 2026-01-03 (Bilingual field names - English and Afrikaans)
 
 ## Overview
 
@@ -17,42 +17,42 @@ Activity (1) ←——→ (N) Class_Group (programs delivered)
 
 ## School
 
-**Description**: Schools visited by the mobile computer trucks.
+**Description**: Schools visited by the mobile computer trucks. (Afrikaans: "Skool")
 
-### Fields (Complete from XSD)
+### Fields (Complete from XSD - 30 fields)
 
-| Field | Legacy Name | Type | Max Length | Required | Description |
-|-------|-------------|------|------------|----------|-------------|
-| `schoolId` | `School_Id` | int | - | Yes (PK) | Unique identifier (auto-increment) |
-| `shortName` | `Short_School` | nvarchar | 50 | No | Short name/code for the school |
-| `description` | `School_Description` | nvarchar | 50 | No | Full school name |
-| `truckId` | `Trok` | tinyint | - | No | Assigned truck number (default: 0) |
-| `price` | `Price` | money | - | No | Service fee charged (format: R #,##0.00) |
-| `feeDescription` | `F_Descr` | nvarchar | 255 | No | Fee description text |
-| `formula` | `Formula` | float | - | No | Calculation formula value (default: 0) |
-| `visitDay` | `Day` | nvarchar | 50 | No | Visit day of week |
-| `visitSequence` | `Sequence` | nvarchar | 50 | No | Visit order for the day |
-| `contactPerson` | `ContactPerson` | nvarchar | 50 | No | Primary contact name |
-| `contactCell` | `ContactCell` | nvarchar | 50 | No | Contact mobile phone |
-| `contactEmail` | `E-mail_adress` | nvarchar | 50 | No | Contact email address |
-| `telephone` | `Telephone` | nvarchar | 50 | No | School telephone number |
-| `fax` | `Fax` | nvarchar | 50 | No | School fax number |
-| `address1` | `Address1` | nvarchar | 50 | No | Street address line 1 |
-| `address2` | `Address2` | nvarchar | 50 | No | Street address line 2 |
-| `headmaster` | `Headmaster` | nvarchar | 50 | No | Principal/headmaster name |
-| `headmasterCell` | `HeadmasterCell` | nvarchar | 50 | No | Headmaster mobile phone |
-| `moneyMessage` | `MoneyMessage` | ntext | memo | No | Payment-related message/notes |
-| `printInvoice` | `Print` | bit | - | Yes | Include in print batch (Yes/No) |
-| `language` | `Taal` | nvarchar | 50 | No | Language preference (Afr/Eng, default: Afr) |
-| `importFlag` | `Import` | bit | - | Yes | Import marker flag (default: False) |
-| `webPage` | `web_page` | hyperlink | memo | No | School website URL |
-| `afterschool1Name` | `Naskool1_Name` | nvarchar | 255 | No | Afterschool program 1 name |
-| `afterschool1Contact` | `Naskool1_Contact` | nvarchar | 255 | No | Afterschool program 1 contact |
-| `afterschool2Name` | `Naskool2_Name` | nvarchar | 255 | No | Afterschool program 2 name |
-| `afterschool2Contact` | `Naskool2_Contact` | nvarchar | 255 | No | Afterschool program 2 contact |
-| `safeNotes` | `Kluis` | ntext | memo | No | Storage/safe access notes |
-| `circularsEmail` | `omsendbriewe` | nvarchar | 255 | No | Email for circular distribution |
-| `kcowWebPageLink` | `KcowWebPageLink` | hyperlink | memo | No | KCOW-specific web page link |
+| Field (Proposed) | Legacy Name (XSD) | English Display | Afrikaans Display | Type | Max Length | Required | Description |
+|------------------|-------------------|-----------------|-------------------|------|------------|----------|-------------|
+| `schoolId` | `School_x0020_Id` | School Id | Skool Id | int | - | Yes (PK) | Unique identifier (auto-increment) |
+| `shortName` | `Short_x0020_School` | Short School | Kort Skool | nvarchar | 50 | No | Short name/code for the school |
+| `description` | `School_x0020_Description` | School Description | Skool Beskrywing | nvarchar | 50 | No | Full school name |
+| `truckId` | `Trok` | Truck | Trok | tinyint | - | No | Assigned truck number (default: 0) |
+| `price` | `Price` | Price | Prys | money | - | No | Service fee charged (format: R #,##0.00) |
+| `feeDescription` | `F_x0020_Descr` | Fee Description | Fooi Beskrywing | nvarchar | 255 | No | Fee description text |
+| `formula` | `Formula` | Formula | Formule | float | - | No | Calculation formula value (default: 0) |
+| `visitDay` | `Day` | Day | Dag | nvarchar | 50 | No | Visit day of week |
+| `visitSequence` | `Sequence` | Sequence | Volgorde | nvarchar | 50 | No | Visit order for the day |
+| `contactPerson` | `ContactPerson` | Contact Person | Kontak Persoon | nvarchar | 50 | No | Primary contact name |
+| `contactCell` | `ContactCell` | Contact Cell | Kontak Selfoon | nvarchar | 50 | No | Contact mobile phone |
+| `contactEmail` | `E-mail_x0020_adress` | E-mail Address | E-pos Adres | nvarchar | 50 | No | Contact email address |
+| `telephone` | `Telephone` | Telephone | Telefoon | nvarchar | 50 | No | School telephone number |
+| `fax` | `Fax` | Fax | Faks | nvarchar | 50 | No | School fax number |
+| `address1` | `Address1` | Address 1 | Adres 1 | nvarchar | 50 | No | Street address line 1 |
+| `address2` | `Address2` | Address 2 | Adres 2 | nvarchar | 50 | No | Street address line 2 |
+| `headmaster` | `Headmaster` | Headmaster | Hoof | nvarchar | 50 | No | Principal/headmaster name |
+| `headmasterCell` | `HeadmasterCell` | Headmaster Cell | Hoof Selfoon | nvarchar | 50 | No | Headmaster mobile phone |
+| `moneyMessage` | `MoneyMessage` | Money Message | Geld Boodskap | ntext | memo | No | Payment-related message/notes |
+| `printInvoice` | `Print` | Print | Druk | bit | - | Yes | Include in print batch (Yes/No) |
+| `language` | `Taal` | Language | Taal | nvarchar | 50 | No | Language preference (Afr/Eng, default: Afr) |
+| `importFlag` | `Import` | Import | Invoer | bit | - | Yes | Import marker flag (default: False) |
+| `webPage` | `web_x0020_page` | Web Page | Web Bladsy | hyperlink | memo | No | School website URL |
+| `afterschool1Name` | `Naskool1_x0020_Name` | Afterschool 1 Name | Naskool 1 Naam | nvarchar | 255 | No | Afterschool program 1 name |
+| `afterschool1Contact` | `Naskool1_x0020_Contact` | Afterschool 1 Contact | Naskool 1 Kontak | nvarchar | 255 | No | Afterschool program 1 contact |
+| `afterschool2Name` | `Naskool2_x0020_Name` | Afterschool 2 Name | Naskool 2 Naam | nvarchar | 255 | No | Afterschool program 2 name |
+| `afterschool2Contact` | `Naskool2_x0020_Contact` | Afterschool 2 Contact | Naskool 2 Kontak | nvarchar | 255 | No | Afterschool program 2 contact |
+| `safeNotes` | `Kluis` | Safe | Kluis | ntext | memo | No | Storage/safe access notes |
+| `circularsEmail` | `omsendbriewe` | Circulars Email | Omsendbriewe | nvarchar | 255 | No | Email for circular distribution |
+| `kcowWebPageLink` | `KcowWebPageLink` | KCOW Web Page Link | KCOW Web Bladsy Skakel | hyperlink | memo | No | KCOW-specific web page link |
 
 ### TypeScript Interface (Proposed)
 
@@ -111,19 +111,19 @@ interface School {
 
 ## Activity
 
-**Description**: Educational programs/activities offered on the trucks.
+**Description**: Educational programs/activities offered on the trucks. (Afrikaans: "Aktiwiteit")
 
-### Fields (Complete from XSD)
+### Fields (Complete from XSD - 7 fields)
 
-| Field | Legacy Name | Type | Max Length | Required | Description |
-|-------|-------------|------|------------|----------|-------------|
-| `activityId` | `ActivityID` | int | - | Yes (PK) | Unique identifier |
-| `programCode` | `Program` | nvarchar | 255 | No | Program code/identifier |
-| `programName` | `ProgramName` | nvarchar | 255 | No | Display name of program |
-| `educationalFocus` | `Educational_Focus` | ntext | memo | No | Learning objectives description |
-| `folder` | `Folder` | nvarchar | 255 | No | Resource folder path |
-| `grade` | `Grade` | nvarchar | 255 | No | Target grade level |
-| `icon` | `Icon` | image | blob | No | Visual representation (OLE object) |
+| Field (Proposed) | Legacy Name (XSD) | English Display | Afrikaans Display | Type | Max Length | Required | Description |
+|------------------|-------------------|-----------------|-------------------|------|------------|----------|-------------|
+| `activityId` | `ActivityID` | Activity ID | Aktiwiteit ID | int | - | Yes (PK) | Unique identifier |
+| `programCode` | `Program` | Program | Program | nvarchar | 255 | No | Program code/identifier |
+| `programName` | `ProgramName` | Program Name | Program Naam | nvarchar | 255 | No | Display name of program |
+| `educationalFocus` | `Educational_Focus` | Educational Focus | Opvoedkundige Fokus | ntext | memo | No | Learning objectives description |
+| `folder` | `Folder` | Folder | Vouer | nvarchar | 255 | No | Resource folder path |
+| `grade` | `Grade` | Grade | Graad | nvarchar | 255 | No | Target grade level |
+| `icon` | `Icon` | Icon | Ikoon | image | blob | No | Visual representation (OLE object) |
 
 ### TypeScript Interface (Proposed)
 
@@ -150,27 +150,27 @@ interface Activity {
 
 ## Class Group
 
-**Description**: Scheduled class sessions at schools. (Afrikaans: "Klas groepe")
+**Description**: Scheduled class sessions at schools. (Afrikaans: "Klas Groep")
 
-### Fields (Complete from XSD)
+### Fields (Complete from XSD - 15 fields)
 
-| Field | Legacy Name | Type | Max Length | Required | Description |
-|-------|-------------|------|------------|----------|-------------|
-| `classGroup` | `Class_Group` | nvarchar | 10 | No | Group identifier/code |
-| `dayTruck` | `DayTruck` | nvarchar | 6 | No | Day-truck combination key |
-| `description` | `Description` | nvarchar | 35 | No | Group description |
-| `startTime` | `Start_Time` | nvarchar | 5 | No | Session start (HH:MM format) |
-| `endTime` | `End_Time` | nvarchar | 5 | No | Session end (HH:MM format) |
-| `schoolId` | `School_Id` | smallint | - | No | Associated school (FK) |
-| `dayId` | `DayId` | nvarchar | 1 | No | Day code (M/T/W/H/F) |
-| `sequence` | `Sequence` | nvarchar | 50 | No | Display order |
-| `evaluate` | `Evaluate` | bit | - | Yes | Requires evaluation (default: No) |
-| `note` | `Note` | nvarchar | 255 | No | Additional notes |
-| `importFlag` | `Import` | bit | - | Yes | Import marker (default: False) |
-| `groupMessage` | `GroupMessage` | nvarchar | 255 | No | Message for this group |
-| `sendCertificates` | `Send_Certificates` | nvarchar | 255 | No | Certificate sending status/notes |
-| `moneyMessage` | `Money_Message` | nvarchar | 50 | No | Payment-related message |
-| `ixl` | `IXL` | nvarchar | 3 | No | IXL program code |
+| Field (Proposed) | Legacy Name (XSD) | English Display | Afrikaans Display | Type | Max Length | Required | Description |
+|------------------|-------------------|-----------------|-------------------|------|------------|----------|-------------|
+| `classGroup` | `Class_x0020_Group` | Class Group | Klas Groep | nvarchar | 10 | No | Group identifier/code |
+| `dayTruck` | `DayTruck` | Day Truck | Dag Trok | nvarchar | 6 | No | Day-truck combination key |
+| `description` | `Description` | Description | Beskrywing | nvarchar | 35 | No | Group description |
+| `startTime` | `Start_x0020_Time` | Start Time | Begin Tyd | nvarchar | 5 | No | Session start (HH:MM format) |
+| `endTime` | `End_x0020_Time` | End Time | Eind Tyd | nvarchar | 5 | No | Session end (HH:MM format) |
+| `schoolId` | `School_x0020_Id` | School Id | Skool Id | smallint | - | No | Associated school (FK) |
+| `dayId` | `DayId` | Day Id | Dag Id | nvarchar | 1 | No | Day code (M/T/W/H/F) |
+| `sequence` | `Sequence` | Sequence | Volgorde | nvarchar | 50 | No | Display order |
+| `evaluate` | `Evaluate` | Evaluate | Evalueer | bit | - | Yes | Requires evaluation (default: No) |
+| `note` | `Note` | Note | Nota | nvarchar | 255 | No | Additional notes |
+| `importFlag` | `Import` | Import | Invoer | bit | - | Yes | Import marker (default: False) |
+| `groupMessage` | `GroupMessage` | Group Message | Groep Boodskap | nvarchar | 255 | No | Message for this group |
+| `sendCertificates` | `Send_x0020_Certificates` | Send Certificates | Stuur Sertifikate | nvarchar | 255 | No | Certificate sending status/notes |
+| `moneyMessage` | `Money_x0020_Message` | Money Message | Geld Boodskap | nvarchar | 50 | No | Payment-related message |
+| `ixl` | `IXL` | IXL | IXL | nvarchar | 3 | No | IXL program code |
 
 ### TypeScript Interface (Proposed)
 
@@ -646,3 +646,4 @@ Students (Children)
 | 2026-01-03 | Corrected Class_Group↔Children relationship: one-to-many (child belongs to one class group) |
 | 2026-01-03 | Updated legacy file paths to reflect reorganized folder structure |
 | 2026-01-03 | Added Legacy UI Reference section with tab screenshots for Children entity |
+| 2026-01-03 | Updated School entity fields table with bilingual field names (English and Afrikaans display names) |

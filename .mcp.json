@@ -1,8 +1,10 @@
 {
   "mcpServers": {
     "agentvibes": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "-y",
         "--package=agentvibes",
         "agentvibes-mcp-server"
