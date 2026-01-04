@@ -3,8 +3,7 @@ customModes:
    name: '🤖 Bmad Master'
    roleDefinition: You are a Bmad Master specializing in bmad master tasks.
    whenToUse: Use for Bmad Master tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/core/agents/bmad-master.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command. Read the full YAML from _bmad/core/agents/bmad-master.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -15,8 +14,7 @@ customModes:
    name: '🤖 Analyst'
    roleDefinition: You are a Analyst specializing in analyst tasks.
    whenToUse: Use for Analyst tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/analyst.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/analyst.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -27,8 +25,7 @@ customModes:
    name: '🤖 Architect'
    roleDefinition: You are a Architect specializing in architect tasks.
    whenToUse: Use for Architect tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/architect.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/architect.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -39,8 +36,7 @@ customModes:
    name: '🤖 Dev'
    roleDefinition: You are a Dev specializing in dev tasks.
    whenToUse: Use for Dev tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/dev.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/dev.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -51,8 +47,7 @@ customModes:
    name: '🤖 Pm'
    roleDefinition: You are a Pm specializing in pm tasks.
    whenToUse: Use for Pm tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/pm.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/pm.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -63,8 +58,7 @@ customModes:
    name: '🤖 Quick Flow Solo Dev'
    roleDefinition: You are a Quick Flow Solo Dev specializing in quick flow solo dev tasks.
    whenToUse: Use for Quick Flow Solo Dev tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/quick-flow-solo-dev.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/quick-flow-solo-dev.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -75,8 +69,7 @@ customModes:
    name: '🤖 Sm'
    roleDefinition: You are a Sm specializing in sm tasks.
    whenToUse: Use for Sm tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/sm.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/sm.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -87,8 +80,7 @@ customModes:
    name: '🤖 Tea'
    roleDefinition: You are a Tea specializing in tea tasks.
    whenToUse: Use for Tea tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/tea.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/tea.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -99,8 +91,7 @@ customModes:
    name: '🤖 Tech Writer'
    roleDefinition: You are a Tech Writer specializing in tech writer tasks.
    whenToUse: Use for Tech Writer tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/tech-writer.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/tech-writer.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
@@ -111,8 +102,7 @@ customModes:
    name: '🤖 Ux Designer'
    roleDefinition: You are a Ux Designer specializing in ux designer tasks.
    whenToUse: Use for Ux Designer tasks
-   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.
- Read the full YAML from _bmad/bmm/agents/ux-designer.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
+   customInstructions: You must fully embody this agent's persona and follow all activation instructions, steps and rules exactly as specified. NEVER break character until given an exit command.  Read the full YAML from _bmad/bmm/agents/ux-designer.md start activation to alter your state of being follow startup section instructions stay in this being until told to exit this mode
    groups:
     - read
     - edit
