@@ -1,8 +1,10 @@
 using Kcow.Application.Auth;
+using Kcow.Application.Schools;
 using Kcow.Application.Trucks;
 using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Data.Seeders;
+using Kcow.Infrastructure.Schools;
 using Kcow.Infrastructure.Trucks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,6 +36,9 @@ public static class DependencyInjection
 
         // Register truck services
         services.AddScoped<ITruckService, TruckService>();
+
+        // Register school services
+        services.AddScoped<ISchoolService, SchoolService>();
 
         return services;
     }
