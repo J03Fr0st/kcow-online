@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TruckService, type Truck, type CreateTruckRequest, type UpdateTruckRequest, TRUCK_STATUS_OPTIONS } from '@core/services/truck.service';
 import { NotificationService } from '@core/services/notification.service';
 import { finalize } from 'rxjs';
@@ -16,6 +17,7 @@ export class TruckFormComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly truckService = inject(TruckService);
   private readonly notificationService = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Input: truckId is null for create, has value for edit
   readonly truckId = input<number | null>(null);
@@ -62,7 +64,8 @@ export class TruckFormComponent implements OnInit {
     this.error.set(null);
 
     this.truckService.getTruck(id).pipe(
-      finalize(() => this.isLoading.set(false))
+      finalize(() => this.isLoading.set(false)),
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (truck) => {
         this.form.patchValue({
@@ -75,7 +78,7 @@ export class TruckFormComponent implements OnInit {
       error: (err) => {
         console.error('Error loading truck:', err);
         this.error.set('Failed to load truck. Please try again.');
-        this.notificationService.showError('Failed to load truck');
+        this.notificationService.error('Failed to load truck');
       },
     });
   }
@@ -104,7 +107,8 @@ export class TruckFormComponent implements OnInit {
       };
 
       this.truckService.updateTruck(this.truckId()!, updateRequest).pipe(
-        finalize(() => this.isSaving.set(false))
+        finalize(() => this.isSaving.set(false)),
+        takeUntilDestroyed(this.destroyRef)
       ).subscribe({
         next: (truck) => {
           this.submit.emit(new CustomEvent('submit', { detail: { mode: 'update', truck } }));
@@ -112,7 +116,7 @@ export class TruckFormComponent implements OnInit {
         error: (err) => {
           console.error('Update error:', err);
           this.error.set(err.error?.detail || 'Failed to update truck');
-          this.notificationService.showError('Failed to update truck');
+          this.notificationService.error('Failed to update truck');
         },
       });
     } else {
@@ -125,7 +129,8 @@ export class TruckFormComponent implements OnInit {
       };
 
       this.truckService.createTruck(createRequest).pipe(
-        finalize(() => this.isSaving.set(false))
+        finalize(() => this.isSaving.set(false)),
+        takeUntilDestroyed(this.destroyRef)
       ).subscribe({
         next: (truck) => {
           this.submit.emit(new CustomEvent('submit', { detail: { mode: 'create', truck } }));
@@ -133,7 +138,7 @@ export class TruckFormComponent implements OnInit {
         error: (err) => {
           console.error('Create error:', err);
           this.error.set(err.error?.detail || 'Failed to create truck');
-          this.notificationService.showError('Failed to create truck');
+          this.notificationService.error('Failed to create truck');
         },
       });
     }

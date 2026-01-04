@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TruckService, type Truck } from '@core/services/truck.service';
 import { NotificationService } from '@core/services/notification.service';
 import { TruckFormComponent } from '../truck-form/truck-form.component';
@@ -14,6 +15,7 @@ import { TruckFormComponent } from '../truck-form/truck-form.component';
 export class TrucksListComponent implements OnInit {
   protected truckService = inject(TruckService);
   private readonly notificationService = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Local component state
   protected deletingId = signal<number | null>(null);
@@ -23,7 +25,7 @@ export class TrucksListComponent implements OnInit {
   // Computed properties from service
   protected trucks = computed(() => this.truckService.trucks());
   protected loading = computed(() => this.truckService.loading());
-  
+
   // Computed: show form when editing or when create flag is set
   protected showForm = computed(() => this.editingId() !== null || this.showFormFlag());
 
@@ -94,7 +96,9 @@ export class TrucksListComponent implements OnInit {
   protected confirmDelete(truck: Truck): void {
     this.deletingId.set(null);
 
-    this.truckService.deleteTruck(truck.id).subscribe({
+    this.truckService.deleteTruck(truck.id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: () => {
         this.notificationService.success('Truck archived successfully');
       },

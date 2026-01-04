@@ -2,33 +2,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, finalize, throwError, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface Truck {
-  id: number;
-  name: string;
-  registrationNumber: string;
-  status: 'Active' | 'Maintenance' | 'Retired';
-  notes?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
-
-export interface CreateTruckRequest {
-  name: string;
-  registrationNumber: string;
-  status: string;
-  notes?: string;
-}
-
-export interface UpdateTruckRequest {
-  name: string;
-  registrationNumber: string;
-  status: string;
-  notes?: string;
-}
-
-export const TRUCK_STATUS_OPTIONS: readonly ['Active', 'Maintenance', 'Retired'] = ['Active', 'Maintenance', 'Retired'] as const;
+import type { Truck, CreateTruckRequest, UpdateTruckRequest } from '@features/trucks/models/truck.model';
+import { TRUCK_STATUS_OPTIONS } from '@features/trucks/models/truck.model';
 
 @Injectable({
   providedIn: 'root'
@@ -39,6 +14,15 @@ export class TruckService {
 
   readonly trucks = signal<Truck[]>([]);
   readonly loading = signal(false);
+
+  /**
+   * Validate truck status
+   */
+  private validateStatus(status: string): void {
+    if (!TRUCK_STATUS_OPTIONS.includes(status as any)) {
+      throw new Error(`Invalid truck status: "${status}". Must be one of: ${TRUCK_STATUS_OPTIONS.join(', ')}`);
+    }
+  }
 
   /**
    * Load all trucks from the API
@@ -73,6 +57,9 @@ export class TruckService {
    * Create a new truck
    */
   createTruck(data: CreateTruckRequest): Observable<Truck> {
+    // Validate status before sending to API
+    this.validateStatus(data.status);
+
     return this.http.post<Truck>(this.apiUrl, data).pipe(
       tap((newTruck) => {
         // Add to local state
@@ -90,6 +77,9 @@ export class TruckService {
    * Update an existing truck
    */
   updateTruck(id: number, data: UpdateTruckRequest): Observable<Truck> {
+    // Validate status before sending to API
+    this.validateStatus(data.status);
+
     return this.http.put<Truck>(`${this.apiUrl}/${id}`, data).pipe(
       tap((updatedTruck) => {
         // Update local state
