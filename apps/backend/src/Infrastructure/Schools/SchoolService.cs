@@ -25,13 +25,37 @@ public class SchoolService : ISchoolService
     /// </summary>
     public async Task<List<SchoolDto>> GetAllAsync()
     {
-        var schools = await _context.Schools
-            .Where(s => s.IsActive)
-            .OrderBy(s => s.Name)
-            .ToListAsync();
+        try
+        {
+            var schools = await _context.Schools
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.Name)
+                .ToListAsync();
 
-        _logger.LogInformation("Retrieved {Count} active schools", schools.Count);
-        return schools.Select(MapToDto).ToList();
+            _logger.LogInformation("Retrieved {Count} active schools", schools.Count);
+            
+            // Map to DTOs with error handling for individual schools
+            var dtos = new List<SchoolDto>();
+            foreach (var school in schools)
+            {
+                try
+                {
+                    dtos.Add(MapToDto(school));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error mapping school {SchoolId} to DTO. Skipping this school.", school.Id);
+                    // Continue with other schools even if one fails
+                }
+            }
+            
+            return dtos;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving all schools");
+            throw;
+        }
     }
 
     /// <summary>

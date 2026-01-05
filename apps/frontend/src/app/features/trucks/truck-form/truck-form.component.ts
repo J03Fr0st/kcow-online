@@ -2,7 +2,8 @@ import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, sign
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TruckService, type Truck, type CreateTruckRequest, type UpdateTruckRequest, TRUCK_STATUS_OPTIONS } from '@core/services/truck.service';
+import { TruckService, type Truck, type CreateTruckRequest, type UpdateTruckRequest } from '@core/services/truck.service';
+import { TRUCK_STATUS_OPTIONS } from '@features/trucks/models/truck.model';
 import { NotificationService } from '@core/services/notification.service';
 import { finalize } from 'rxjs';
 

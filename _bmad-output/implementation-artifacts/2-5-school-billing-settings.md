@@ -114,7 +114,12 @@ glm-4.7
 - **Updated**: SchoolDto, CreateSchoolRequest, UpdateSchoolRequest to include all fields
 - **Updated**: SchoolService CreateAsync, UpdateAsync, and MapToDto to handle all fields
 - **Updated**: SchoolConfiguration EF Core mappings for all database columns
-- **Tested**: All 16 unit tests passing including new billing settings tests
+- **Created**: Database migration `20260105070442_UpdateSchoolFields` to update database schema:
+  - Renamed columns: contact_name→contact_person, contact_phone→phone, contact_email→email, notes→scheduling_notes
+  - Added 30+ new columns for all legacy school fields
+- **Applied**: Migration to database (schema updated)
+- **Fixed**: All unit and integration tests to use correct field names
+- **Tested**: All 16 frontend unit tests passing, backend tests passing
 
 ### Code Review Notes
 
@@ -150,3 +155,6 @@ After thorough code review and git analysis, the billing settings functionality 
 - `apps/backend/src/Application/Schools/UpdateSchoolRequest.cs` - Updated to include all fields with validation
 - `apps/backend/src/Infrastructure/Schools/SchoolService.cs` - Updated CreateAsync, UpdateAsync, and MapToDto to handle all fields
 - `apps/backend/src/Infrastructure/Data/Configurations/SchoolConfiguration.cs` - Updated EF Core configuration for all database columns
+- `apps/backend/src/Infrastructure/Migrations/20260105070442_UpdateSchoolFields.cs` - Database migration for schema updates
+- `apps/backend/tests/Unit/SchoolServiceTests.cs` - Updated tests to use correct field names
+- `apps/backend/tests/Integration/Schools/SchoolsControllerTests.cs` - Updated tests to use correct field names

@@ -1,6 +1,6 @@
-import { CommonModule, type Location } from '@angular/common';
-import { Component } from '@angular/core';
-import { type Router, RouterLink } from '@angular/router';
+import { CommonModule, Location } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 /**
  * 500 Server Error Page
@@ -160,12 +160,12 @@ import { type Router, RouterLink } from '@angular/router';
   ],
 })
 export class ServerErrorComponent {
-  errorId: string;
+  private readonly location = inject(Location);
+  private readonly router = inject(Router);
+  
+  readonly errorId: string;
 
-  constructor(
-    private location: Location,
-    _router: Router,
-  ) {
+  constructor() {
     // Generate a random error ID for reference
     this.errorId = this.generateErrorId();
   }
@@ -176,5 +176,10 @@ export class ServerErrorComponent {
 
   reload(): void {
     window.location.reload();
+  }
+
+  private generateErrorId(): string {
+    // Generate a short random ID (8 characters)
+    return Math.random().toString(36).substring(2, 10).toUpperCase();
   }
 }

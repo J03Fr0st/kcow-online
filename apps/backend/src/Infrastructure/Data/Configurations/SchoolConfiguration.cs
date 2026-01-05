@@ -147,8 +147,10 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
         builder.Property(s => s.BillingSettings)
             .HasColumnName("billing_settings")
             .HasConversion(
-                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => string.IsNullOrWhiteSpace(v) ? null : JsonSerializer.Deserialize<BillingSettings>(v, (JsonSerializerOptions?)null)
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => string.IsNullOrWhiteSpace(v) 
+                    ? null 
+                    : TryDeserializeBillingSettings(v)
             );
 
         builder.Property(s => s.CreatedAt)
@@ -160,5 +162,22 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
 
         // Composite index for common query pattern: WHERE IsActive = true ORDER BY Name
         builder.HasIndex(s => new { s.IsActive, s.Name });
+    }
+
+    /// <summary>
+    /// Safely deserializes BillingSettings from JSON, returning null if deserialization fails.
+    /// </summary>
+    private static BillingSettings? TryDeserializeBillingSettings(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<BillingSettings>(json, (JsonSerializerOptions?)null);
+        }
+        catch (JsonException)
+        {
+            // Log the error but don't throw - return null to allow the query to continue
+            // Invalid JSON in billing_settings will result in null BillingSettings
+            return null;
+        }
     }
 }

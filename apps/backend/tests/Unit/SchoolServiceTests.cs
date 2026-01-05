@@ -19,16 +19,18 @@ public class SchoolServiceTests
         {
             Name = "Test School",
             Address = "123 Test St",
-            ContactName = "John Doe",
-            ContactPhone = "555-1234",
-            ContactEmail = "test@school.edu",
+            ContactPerson = "John Doe",
+            Phone = "555-1234",
+            Email = "test@school.edu",
             BillingSettings = new BillingSettingsDto
             {
                 DefaultSessionRate = 50.00m,
                 BillingCycle = "Monthly",
                 BillingNotes = "Test billing notes"
             },
-            Notes = "Test notes"
+            SchedulingNotes = "Test notes",
+            PrintInvoice = false,
+            ImportFlag = false
         };
 
         var result = await service.CreateAsync(request);
@@ -36,14 +38,14 @@ public class SchoolServiceTests
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
         Assert.Equal("123 Test St", result.Address);
-        Assert.Equal("John Doe", result.ContactName);
-        Assert.Equal("555-1234", result.ContactPhone);
-        Assert.Equal("test@school.edu", result.ContactEmail);
+        Assert.Equal("John Doe", result.ContactPerson);
+        Assert.Equal("555-1234", result.Phone);
+        Assert.Equal("test@school.edu", result.Email);
         Assert.NotNull(result.BillingSettings);
         Assert.Equal(50.00m, result.BillingSettings.DefaultSessionRate);
         Assert.Equal("Monthly", result.BillingSettings.BillingCycle);
         Assert.Equal("Test billing notes", result.BillingSettings.BillingNotes);
-        Assert.Equal("Test notes", result.Notes);
+        Assert.Equal("Test notes", result.SchedulingNotes);
         Assert.True(result.IsActive);
         Assert.Equal(1, await context.Schools.CountAsync());
     }
@@ -58,11 +60,11 @@ public class SchoolServiceTests
         {
             Name = "Test School",
             Address = "123 Test St",
-            ContactName = "John Doe",
-            ContactPhone = "555-1234",
-            ContactEmail = "test@school.edu",
+            ContactPerson = "John Doe",
+            Phone = "555-1234",
+            Email = "test@school.edu",
             BillingSettings = null,
-            Notes = null
+            SchedulingNotes = null
         };
 
         var result = await service.CreateAsync(request);
@@ -70,7 +72,7 @@ public class SchoolServiceTests
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
         Assert.Null(result.BillingSettings);
-        Assert.Null(result.Notes);
+        Assert.Null(result.SchedulingNotes);
         Assert.True(result.IsActive);
         Assert.Equal(1, await context.Schools.CountAsync());
     }
@@ -84,7 +86,7 @@ public class SchoolServiceTests
             {
                 Name = "Beta School",
                 Address = "Address B",
-                ContactName = "Contact B",
+                ContactPerson = "Contact B",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -92,7 +94,7 @@ public class SchoolServiceTests
             {
                 Name = "Alpha School",
                 Address = "Address A",
-                ContactName = "Contact A",
+                ContactPerson = "Contact A",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
@@ -100,7 +102,7 @@ public class SchoolServiceTests
             {
                 Name = "Inactive School",
                 Address = "Address I",
-                ContactName = "Contact I",
+                ContactPerson = "Contact I",
                 IsActive = false,
                 CreatedAt = DateTime.UtcNow
             }
@@ -125,16 +127,16 @@ public class SchoolServiceTests
             {
                 Name = "Test School",
                 Address = "123 Test St",
-                ContactName = "John Doe",
-                ContactPhone = "555-1234",
-                ContactEmail = "test@school.edu",
+                ContactPerson = "John Doe",
+                Phone = "555-1234",
+                Email = "test@school.edu",
                 BillingSettings = new Domain.Entities.BillingSettings
                 {
                     DefaultSessionRate = 75.50m,
                     BillingCycle = "Weekly",
                     BillingNotes = "Weekly billing"
                 },
-                Notes = "Test notes",
+                SchedulingNotes = "Test notes",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             }
@@ -161,7 +163,7 @@ public class SchoolServiceTests
         {
             Name = "Test School",
             Address = "123 Test St",
-            ContactName = "John Doe",
+            ContactPerson = "John Doe",
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -174,7 +176,7 @@ public class SchoolServiceTests
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
         Assert.Equal("123 Test St", result.Address);
-        Assert.Equal("John Doe", result.ContactName);
+        Assert.Equal("John Doe", result.ContactPerson);
     }
 
     [Fact]
@@ -215,7 +217,7 @@ public class SchoolServiceTests
         {
             Name = "Original Name",
             Address = "Original Address",
-            ContactName = "Original Contact",
+            ContactPerson = "Original Contact",
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -227,16 +229,16 @@ public class SchoolServiceTests
         {
             Name = "Updated Name",
             Address = "Updated Address",
-            ContactName = "Updated Contact",
-            ContactPhone = "555-9999",
-            ContactEmail = "updated@school.edu",
+            ContactPerson = "Updated Contact",
+            Phone = "555-9999",
+            Email = "updated@school.edu",
             BillingSettings = new BillingSettingsDto
             {
                 DefaultSessionRate = 100.00m,
                 BillingCycle = "Bi-Weekly",
                 BillingNotes = "Updated billing"
             },
-            Notes = "Updated notes"
+            SchedulingNotes = "Updated notes"
         };
 
         var result = await service.UpdateAsync(school.Id, request);
@@ -244,14 +246,14 @@ public class SchoolServiceTests
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
         Assert.Equal("Updated Address", result.Address);
-        Assert.Equal("Updated Contact", result.ContactName);
-        Assert.Equal("555-9999", result.ContactPhone);
-        Assert.Equal("updated@school.edu", result.ContactEmail);
+        Assert.Equal("Updated Contact", result.ContactPerson);
+        Assert.Equal("555-9999", result.Phone);
+        Assert.Equal("updated@school.edu", result.Email);
         Assert.NotNull(result.BillingSettings);
         Assert.Equal(100.00m, result.BillingSettings.DefaultSessionRate);
         Assert.Equal("Bi-Weekly", result.BillingSettings.BillingCycle);
         Assert.Equal("Updated billing", result.BillingSettings.BillingNotes);
-        Assert.Equal("Updated notes", result.Notes);
+        Assert.Equal("Updated notes", result.SchedulingNotes);
         Assert.NotNull(result.UpdatedAt);
 
         // Verify database was updated
