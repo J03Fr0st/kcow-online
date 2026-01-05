@@ -57,9 +57,9 @@ development_status:
   epic-2: backlog
   2-1-truck-entity-api-endpoints: done
   2-2-trucks-management-ui: done
-  2-3-school-entity-api-endpoints: review
-  2-4-schools-management-ui: ready-for-dev
-  2-5-school-billing-settings: ready-for-dev
+  2-3-school-entity-api-endpoints: done
+  2-4-schools-management-ui: done
+  2-5-school-billing-settings: done
   epic-2-retrospective: optional
 
   # ========================

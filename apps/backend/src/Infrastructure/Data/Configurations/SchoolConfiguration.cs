@@ -24,31 +24,132 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(s => s.ShortName)
+            .HasColumnName("short_name")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.TruckId)
+            .HasColumnName("truck_id");
+
+        builder.Property(s => s.Price)
+            .HasColumnName("price")
+            .HasColumnType("decimal(18,2)");
+
+        builder.Property(s => s.FeeDescription)
+            .HasColumnName("fee_description")
+            .HasMaxLength(255);
+
+        builder.Property(s => s.Formula)
+            .HasColumnName("formula")
+            .HasColumnType("decimal(18,2)");
+
+        builder.Property(s => s.VisitDay)
+            .HasColumnName("visit_day")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.VisitSequence)
+            .HasColumnName("visit_sequence")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.ContactPerson)
+            .HasColumnName("contact_person")
+            .HasMaxLength(200);
+
+        builder.Property(s => s.ContactCell)
+            .HasColumnName("contact_cell")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.Phone)
+            .HasColumnName("phone")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.Telephone)
+            .HasColumnName("telephone")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.Fax)
+            .HasColumnName("fax")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.Email)
+            .HasColumnName("email")
+            .HasMaxLength(255);
+
+        builder.Property(s => s.CircularsEmail)
+            .HasColumnName("circulars_email")
+            .HasMaxLength(255);
+
         builder.Property(s => s.Address)
-            .HasColumnName("address");
+            .HasColumnName("address")
+            .HasMaxLength(500);
 
-        builder.Property(s => s.ContactName)
-            .HasColumnName("contact_name");
+        builder.Property(s => s.Address2)
+            .HasColumnName("address2")
+            .HasMaxLength(50);
 
-        builder.Property(s => s.ContactPhone)
-            .HasColumnName("contact_phone");
+        builder.Property(s => s.Headmaster)
+            .HasColumnName("headmaster")
+            .HasMaxLength(50);
 
-        builder.Property(s => s.ContactEmail)
-            .HasColumnName("contact_email");
+        builder.Property(s => s.HeadmasterCell)
+            .HasColumnName("headmaster_cell")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.IsActive)
+            .HasColumnName("is_active")
+            .IsRequired();
+
+        builder.Property(s => s.Language)
+            .HasColumnName("language")
+            .HasMaxLength(50);
+
+        builder.Property(s => s.PrintInvoice)
+            .HasColumnName("print_invoice")
+            .IsRequired();
+
+        builder.Property(s => s.ImportFlag)
+            .HasColumnName("import_flag")
+            .IsRequired();
+
+        builder.Property(s => s.Afterschool1Name)
+            .HasColumnName("afterschool1_name")
+            .HasMaxLength(255);
+
+        builder.Property(s => s.Afterschool1Contact)
+            .HasColumnName("afterschool1_contact")
+            .HasMaxLength(255);
+
+        builder.Property(s => s.Afterschool2Name)
+            .HasColumnName("afterschool2_name")
+            .HasMaxLength(255);
+
+        builder.Property(s => s.Afterschool2Contact)
+            .HasColumnName("afterschool2_contact")
+            .HasMaxLength(255);
+
+        builder.Property(s => s.SchedulingNotes)
+            .HasColumnName("scheduling_notes");
+
+        builder.Property(s => s.MoneyMessage)
+            .HasColumnName("money_message");
+
+        builder.Property(s => s.SafeNotes)
+            .HasColumnName("safe_notes");
+
+        builder.Property(s => s.WebPage)
+            .HasColumnName("web_page")
+            .HasMaxLength(500);
+
+        builder.Property(s => s.KcowWebPageLink)
+            .HasColumnName("kcow_web_page_link")
+            .HasMaxLength(500);
 
         builder.Property(s => s.BillingSettings)
             .HasColumnName("billing_settings")
             .HasConversion(
                 v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => JsonSerializer.Deserialize<BillingSettings>(v, (JsonSerializerOptions?)null)!
+                v => string.IsNullOrWhiteSpace(v) ? null : JsonSerializer.Deserialize<BillingSettings>(v, (JsonSerializerOptions?)null)
             );
-
-        builder.Property(s => s.Notes)
-            .HasColumnName("notes");
-
-        builder.Property(s => s.IsActive)
-            .HasColumnName("is_active")
-            .IsRequired();
 
         builder.Property(s => s.CreatedAt)
             .HasColumnName("created_at")
@@ -57,7 +158,7 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
         builder.Property(s => s.UpdatedAt)
             .HasColumnName("updated_at");
 
-        builder.HasIndex(s => s.Name);
-        builder.HasIndex(s => s.IsActive);
+        // Composite index for common query pattern: WHERE IsActive = true ORDER BY Name
+        builder.HasIndex(s => new { s.IsActive, s.Name });
     }
 }

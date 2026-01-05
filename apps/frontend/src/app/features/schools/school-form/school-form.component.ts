@@ -87,7 +87,12 @@ export class SchoolFormComponent implements OnInit {
 
             // Links
             webPage: ['', [Validators.maxLength(500)]],
-            kcowWebPageLink: ['', [Validators.maxLength(500)]]
+            kcowWebPageLink: ['', [Validators.maxLength(500)]],
+
+            // Billing Settings
+            defaultSessionRate: [null, [Validators.min(0)]],
+            billingCycle: ['Monthly'],
+            billingNotes: ['', [Validators.maxLength(1000)]]
         });
 
         // Check if we're in edit mode
@@ -161,7 +166,12 @@ export class SchoolFormComponent implements OnInit {
 
                     // Links
                     webPage: school.webPage || '',
-                    kcowWebPageLink: school.kcowWebPageLink || ''
+                    kcowWebPageLink: school.kcowWebPageLink || '',
+
+                    // Billing Settings
+                    defaultSessionRate: school.billingSettings?.defaultSessionRate || null,
+                    billingCycle: school.billingSettings?.billingCycle || 'Monthly',
+                    billingNotes: school.billingSettings?.billingNotes || ''
                 });
             },
             error: (error) => {
@@ -214,7 +224,12 @@ export class SchoolFormComponent implements OnInit {
             moneyMessage: formValue.moneyMessage || undefined,
             safeNotes: formValue.safeNotes || undefined,
             webPage: formValue.webPage || undefined,
-            kcowWebPageLink: formValue.kcowWebPageLink || undefined
+            kcowWebPageLink: formValue.kcowWebPageLink || undefined,
+            billingSettings: (formValue.defaultSessionRate || formValue.billingCycle !== 'Monthly' || formValue.billingNotes) ? {
+                defaultSessionRate: formValue.defaultSessionRate || undefined,
+                billingCycle: formValue.billingCycle || 'Monthly',
+                billingNotes: formValue.billingNotes || undefined
+            } : undefined
         };
 
         if (this.isEditMode()) {

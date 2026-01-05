@@ -28,6 +28,7 @@ export class SchoolListComponent implements OnInit {
         { key: 'name', label: 'Name', visible: signal(true) },
         { key: 'shortName', label: 'Short Name', visible: signal(false) },
         { key: 'contactPerson', label: 'Contact', visible: signal(true) },
+        { key: 'address', label: 'Address', visible: signal(true) },
         { key: 'phone', label: 'Phone', visible: signal(true) },
         { key: 'email', label: 'Email', visible: signal(false) },
         { key: 'language', label: 'Lang', visible: signal(true) },

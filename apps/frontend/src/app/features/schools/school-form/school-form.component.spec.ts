@@ -27,7 +27,12 @@ describe('SchoolFormComponent', () => {
         isActive: true,
         schedulingNotes: 'Test notes',
         printInvoice: false,
-        importFlag: false
+        importFlag: false,
+        billingSettings: {
+            defaultSessionRate: 150.00,
+            billingCycle: 'Monthly',
+            billingNotes: 'Test billing notes'
+        }
     };
 
     beforeEach(async () => {
@@ -93,6 +98,42 @@ describe('SchoolFormComponent', () => {
         expect(phoneField).toBeTruthy();
         expect(emailField).toBeTruthy();
         expect(schedulingNotesField).toBeTruthy();
+    });
+
+    it('should render billing settings fields', () => {
+        fixture.detectChanges();
+
+        const defaultSessionRateField = fixture.debugElement.query(By.css('input[formControlName="defaultSessionRate"]'));
+        const billingCycleField = fixture.debugElement.query(By.css('select[formControlName="billingCycle"]'));
+        const billingNotesField = fixture.debugElement.query(By.css('textarea[formControlName="billingNotes"]'));
+
+        expect(defaultSessionRateField).toBeTruthy();
+        expect(billingCycleField).toBeTruthy();
+        expect(billingNotesField).toBeTruthy();
+    });
+
+    it('should validate default session rate as >= 0', () => {
+        fixture.detectChanges();
+        const form = (component as any).form;
+        const rateControl = form.get('defaultSessionRate');
+
+        rateControl?.setValue(-10);
+        rateControl?.markAsTouched();
+        fixture.detectChanges();
+
+        expect(rateControl?.hasError('min')).toBe(true);
+    });
+
+    it('should accept valid default session rate', () => {
+        fixture.detectChanges();
+        const form = (component as any).form;
+        const rateControl = form.get('defaultSessionRate');
+
+        rateControl?.setValue(150.50);
+        rateControl?.markAsTouched();
+        fixture.detectChanges();
+
+        expect(rateControl?.valid).toBe(true);
     });
 
     it('should show validation error when name is empty', () => {
@@ -178,6 +219,31 @@ describe('SchoolFormComponent', () => {
         expect(router.navigate).toHaveBeenCalledWith(['/schools']);
     });
 
+    it('should include billing settings in create request when provided', () => {
+        fixture.detectChanges();
+        const form = (component as any).form;
+        form.patchValue({
+            name: 'New School',
+            address: '456 Oak St',
+            defaultSessionRate: 200.00,
+            billingCycle: 'Termly',
+            billingNotes: 'Special billing arrangement',
+        });
+
+        (component as any).onSubmit();
+        fixture.detectChanges();
+
+        expect(mockSchoolService.createSchool).toHaveBeenCalledWith(expect.objectContaining({
+            name: 'New School',
+            address: '456 Oak St',
+            billingSettings: {
+                defaultSessionRate: 200.00,
+                billingCycle: 'Termly',
+                billingNotes: 'Special billing arrangement',
+            },
+        }));
+    });
+
     it('should load and pre-populate form in edit mode', () => {
         mockActivatedRoute.snapshot.paramMap.get.mockReturnValue('1');
         fixture = TestBed.createComponent(SchoolFormComponent);
@@ -194,6 +260,21 @@ describe('SchoolFormComponent', () => {
         expect(form.get('name')?.value).toBe('Test School');
         expect(form.get('address')?.value).toBe('123 Main St');
         expect(form.get('contactPerson')?.value).toBe('John Doe');
+    });
+
+    it('should load and pre-populate billing settings in edit mode', () => {
+        mockActivatedRoute.snapshot.paramMap.get.mockReturnValue('1');
+        fixture = TestBed.createComponent(SchoolFormComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+
+        // Wait for async load
+        fixture.detectChanges();
+
+        const form = (component as any).form;
+        expect(form.get('defaultSessionRate')?.value).toBe(150.00);
+        expect(form.get('billingCycle')?.value).toBe('Monthly');
+        expect(form.get('billingNotes')?.value).toBe('Test billing notes');
     });
 
     it('should call updateSchool and show success on valid edit submission', () => {
@@ -221,6 +302,34 @@ describe('SchoolFormComponent', () => {
             'Success'
         );
         expect(router.navigate).toHaveBeenCalledWith(['/schools']);
+    });
+
+    it('should include updated billing settings in update request', () => {
+        mockActivatedRoute.snapshot.paramMap.get.mockReturnValue('1');
+        fixture = TestBed.createComponent(SchoolFormComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+
+        // Wait for async load
+        fixture.detectChanges();
+
+        const form = (component as any).form;
+        form.patchValue({
+            name: 'Updated School',
+            defaultSessionRate: 250.00,
+            billingCycle: 'Termly',
+        });
+
+        (component as any).onSubmit();
+        fixture.detectChanges();
+
+        expect(mockSchoolService.updateSchool).toHaveBeenCalledWith(1, expect.objectContaining({
+            name: 'Updated School',
+            billingSettings: expect.objectContaining({
+                defaultSessionRate: 250.00,
+                billingCycle: 'Termly',
+            }),
+        }));
     });
 
     it('should show error notification on create failure', () => {

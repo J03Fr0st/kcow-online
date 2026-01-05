@@ -93,21 +93,21 @@ describe('SchoolListComponent', () => {
         mockSchoolService.schools.set(mockSchools);
         fixture.detectChanges();
 
-        const nameHeader = fixture.debugElement.query(By.css('thead th'));
+        const nameHeaderDiv = fixture.debugElement.query(By.css('thead th div[role="button"]'));
 
         // Initial state: Ascending (School A, then School B)
         let firstRowName = fixture.debugElement.query(By.css('tbody tr td')).nativeElement.textContent;
         expect(firstRowName).toContain('School A');
 
         // Click to toggle to Descending
-        nameHeader.triggerEventHandler('click', null);
+        nameHeaderDiv.nativeElement.click();
         fixture.detectChanges();
 
         firstRowName = fixture.debugElement.query(By.css('tbody tr td')).nativeElement.textContent;
         expect(firstRowName).toContain('School B');
 
         // Click to toggle back to Ascending
-        nameHeader.triggerEventHandler('click', null);
+        nameHeaderDiv.nativeElement.click();
         fixture.detectChanges();
 
         firstRowName = fixture.debugElement.query(By.css('tbody tr td')).nativeElement.textContent;

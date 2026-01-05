@@ -328,6 +328,47 @@ public class SchoolServiceTests
         Assert.False(archived);
     }
 
+    [Fact]
+    public async Task BillingSettings_JsonSerialization_RoundTrip()
+    {
+        using var context = CreateContext();
+        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
+
+        // Create school with billing settings
+        var request = new CreateSchoolRequest
+        {
+            Name = "JSON Test School",
+            BillingSettings = new BillingSettingsDto
+            {
+                DefaultSessionRate = 123.45m,
+                BillingCycle = "Termly",
+                BillingNotes = "Complex JSON serialization test with special chars: @#$%"
+            }
+        };
+
+        var created = await service.CreateAsync(request);
+        var schoolId = created.Id;
+
+        // Clear context to force fresh database read
+        context.ChangeTracker.Clear();
+
+        // Retrieve from database and verify JSON deserialization
+        var retrieved = await service.GetByIdAsync(schoolId);
+
+        Assert.NotNull(retrieved);
+        Assert.NotNull(retrieved.BillingSettings);
+        Assert.Equal(123.45m, retrieved.BillingSettings.DefaultSessionRate);
+        Assert.Equal("Termly", retrieved.BillingSettings.BillingCycle);
+        Assert.Equal("Complex JSON serialization test with special chars: @#$%", retrieved.BillingSettings.BillingNotes);
+
+        // Verify direct database query also deserializes correctly
+        var schoolEntity = await context.Schools.FindAsync(schoolId);
+        Assert.NotNull(schoolEntity);
+        Assert.NotNull(schoolEntity.BillingSettings);
+        Assert.Equal(123.45m, schoolEntity.BillingSettings.DefaultSessionRate);
+        Assert.Equal("Termly", schoolEntity.BillingSettings.BillingCycle);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

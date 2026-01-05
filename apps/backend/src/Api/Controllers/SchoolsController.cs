@@ -1,4 +1,5 @@
 using Kcow.Application.Schools;
+using Kcow.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,13 @@ namespace Kcow.Api.Controllers;
 public class SchoolsController : ControllerBase
 {
     private readonly ISchoolService _schoolService;
+    private readonly AppDbContext _context;
     private readonly ILogger<SchoolsController> _logger;
 
-    public SchoolsController(ISchoolService schoolService, ILogger<SchoolsController> logger)
+    public SchoolsController(ISchoolService schoolService, AppDbContext context, ILogger<SchoolsController> logger)
     {
         _schoolService = schoolService;
+        _context = context;
         _logger = logger;
     }
 
@@ -52,6 +55,7 @@ public class SchoolsController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(SchoolDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status410Gone)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetById(int id)
@@ -62,11 +66,23 @@ public class SchoolsController : ControllerBase
 
             if (school == null)
             {
+                // Check if school exists but is archived
+                var archivedSchool = await _context.Schools.FindAsync(id);
+                if (archivedSchool != null && !archivedSchool.IsActive)
+                {
+                    return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
+                    {
+                        Title = "School archived",
+                        Status = 410,
+                        Detail = $"School with ID {id} has been archived and is no longer active"
+                    });
+                }
+
                 return NotFound(new ProblemDetails
                 {
                     Title = "School not found",
                     Status = 404,
-                    Detail = $"School with ID {id} was not found"
+                    Detail = $"No school exists with ID {id}"
                 });
             }
 
@@ -135,6 +151,7 @@ public class SchoolsController : ControllerBase
     [ProducesResponseType(typeof(SchoolDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status410Gone)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateSchoolRequest request)
@@ -156,11 +173,23 @@ public class SchoolsController : ControllerBase
 
             if (school == null)
             {
+                // Check if school exists but is archived
+                var archivedSchool = await _context.Schools.FindAsync(id);
+                if (archivedSchool != null && !archivedSchool.IsActive)
+                {
+                    return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
+                    {
+                        Title = "School archived",
+                        Status = 410,
+                        Detail = $"Cannot update school with ID {id} because it has been archived"
+                    });
+                }
+
                 return NotFound(new ProblemDetails
                 {
                     Title = "School not found",
                     Status = 404,
-                    Detail = $"School with ID {id} was not found"
+                    Detail = $"No school exists with ID {id}"
                 });
             }
 
@@ -191,6 +220,7 @@ public class SchoolsController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status410Gone)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Archive(int id)
@@ -201,11 +231,23 @@ public class SchoolsController : ControllerBase
 
             if (!archived)
             {
+                // Check if school exists but is already archived
+                var archivedSchool = await _context.Schools.FindAsync(id);
+                if (archivedSchool != null && !archivedSchool.IsActive)
+                {
+                    return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
+                    {
+                        Title = "School already archived",
+                        Status = 410,
+                        Detail = $"School with ID {id} is already archived"
+                    });
+                }
+
                 return NotFound(new ProblemDetails
                 {
                     Title = "School not found",
                     Status = 404,
-                    Detail = $"School with ID {id} was not found"
+                    Detail = $"No school exists with ID {id}"
                 });
             }
 
