@@ -20,8 +20,8 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    // Register database initialization hosted service for development
-    if (builder.Environment.IsDevelopment())
+    // Register database initialization hosted service for development and E2E testing
+    if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("E2E"))
     {
         builder.Services.AddHostedService<DatabaseInitializationService>();
     }

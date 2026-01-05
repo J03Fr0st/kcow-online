@@ -123,9 +123,12 @@ export class AuthService {
       tap((user) => {
         this.userSignal.set(user);
       }),
-      catchError(() => {
-        // User not authenticated or error occurred
-        this.clearSession();
+      catchError((error) => {
+        // Only clear session on 401 Unauthorized (token is actually invalid/expired)
+        // For other errors (network, 500, etc.), keep the token and let user continue
+        if (error.status === 401) {
+          this.clearSession();
+        }
         return of(null);
       })
     );
