@@ -1,7 +1,31 @@
 # KCOW Architecture Documentation
 
 > Mobile Computer Literacy Trucks (KCOW) - Admin Application
-> Generated: 2025-12-27 | Scan Level: Deep
+> Generated: 2025-12-27 | Updated: 2026-01-05 | Scan Level: Deep
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Schema Alignment
+
+**All implementations MUST strictly align with the legacy XSD schemas.** The XSD files define the authoritative data model:
+
+| Entity | XSD Location | Fields |
+|--------|--------------|--------|
+| School | `docs/legacy/1_School/School.xsd` | 30 |
+| Class Group | `docs/legacy/2_Class_Group/Class Group.xsd` | 15 |
+| Activity | `docs/legacy/3_Activity/Activity.xsd` | 7 |
+| Children | `docs/legacy/4_Children/Children.xsd` | 92 |
+
+**Alignment Requirements:**
+- Database columns must match XSD field definitions (names, types, lengths)
+- **Use English field names** where XSD uses Afrikaans (e.g., `Trok` → `Truck`, `Taal` → `Language`)
+- API DTOs must include all XSD fields
+- Frontend models must align with XSD structure
+- No fields may be omitted or added without explicit approval
+
+See `docs/domain-models.md` for complete XSD-to-implementation mappings.
+
+---
 
 ## 1. System Overview
 
@@ -181,7 +205,7 @@ Core shared components:
 
 ## 4. Domain Model (Legacy)
 
-Based on legacy Microsoft Access database schemas.
+Based on legacy Microsoft Access database schemas. **All implementations must strictly align with XSD definitions.**
 
 ### 4.0 Legacy System Overview
 

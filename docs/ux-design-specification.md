@@ -89,6 +89,17 @@ Desktop web as the primary surface; no offline requirement. Keyboard-first but t
 
 _Based on existing Access database interface (see screenshots in `docs/legacy/4_Children/`)_
 
+### ⚠️ XSD Schema Alignment
+
+**All UI implementations must align with the legacy XSD schema definitions.** The XSD files define the authoritative data model including all fields, types, and constraints. Form fields, validation rules, and data display must match XSD specifications exactly.
+
+- **School**: `docs/legacy/1_School/School.xsd` (30 fields)
+- **Class Group**: `docs/legacy/2_Class_Group/Class Group.xsd` (15 fields)
+- **Activity**: `docs/legacy/3_Activity/Activity.xsd` (7 fields)
+- **Children**: `docs/legacy/4_Children/Children.xsd` (92 fields)
+
+**Use English field names** where XSD uses Afrikaans (e.g., `Trok` → `Truck`, `Taal` → `Language`). See `docs/domain-models.md` for complete XSD-to-implementation mappings and translations.
+
 ### Legacy UI Screenshots
 
 | Tab | Screenshot | Key Features |

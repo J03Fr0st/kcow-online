@@ -1,11 +1,11 @@
 ---
 project_name: 'kcow-online'
 user_name: 'Joe'
-date: '2025-12-27'
+date: '2026-01-05'
 sections_completed:
-  ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns']
+  ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'xsd_alignment']
 status: 'complete'
-rule_count: 35
+rule_count: 36
 optimized_for_llm: true
 updated_from: 'architecture-workflow'
 ---
@@ -13,6 +13,26 @@ updated_from: 'architecture-workflow'
 # Project Context for AI Agents
 
 _Critical rules and patterns AI agents must follow. Keep consistent with architecture and patterns already defined._
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Alignment
+
+**The legacy XSD schemas are the authoritative source of truth for all domain models.** All entity implementations, database schemas, and API contracts MUST strictly align with the XSD definitions in `docs/legacy/`.
+
+- **School**: `docs/legacy/1_School/School.xsd` (30 fields)
+- **Class Group**: `docs/legacy/2_Class_Group/Class Group.xsd` (15 fields)
+- **Activity**: `docs/legacy/3_Activity/Activity.xsd` (7 fields)
+- **Children**: `docs/legacy/4_Children/Children.xsd` (92 fields)
+
+**XSD Alignment Rules:**
+1. Implement ALL fields from XSD—no omissions
+2. Use exact XSD field names (with case transformations per naming conventions)
+3. **Use English field names** where XSD uses Afrikaans (e.g., `Trok` → `Truck`, `Taal` → `Language`). See `docs/domain-models.md` for translations.
+4. Match XSD data types exactly (see `docs/domain-models.md` for type mappings)
+5. Enforce XSD max lengths in database and validation
+6. Honor `minOccurs` for required/optional designation
+7. Do NOT add fields not present in XSD without explicit approval
 
 ---
 
@@ -68,6 +88,9 @@ _Critical rules and patterns AI agents must follow. Keep consistent with archite
 - Do not omit required JSON fields—use explicit null values.
 - Do not create global loading overlays—use service-level loading with local spinners.
 - Do not skip lazy-loading for feature modules—all features must lazy-load under AdminLayout.
+- **Do not deviate from XSD schemas**—all entity fields, types, and constraints must match the legacy XSD definitions exactly.
+- **Do not omit XSD fields**—every field defined in the XSD must be implemented in the domain model.
+- **Do not add fields not in XSD**—new fields require explicit approval and documentation update.
 
 ---
 
@@ -108,4 +131,4 @@ When implementing student features, replicate the dense, information-rich layout
 - Review quarterly for outdated rules.
 - Remove rules that become obvious over time.
 
-Last Updated: 2026-01-03
+Last Updated: 2026-01-05

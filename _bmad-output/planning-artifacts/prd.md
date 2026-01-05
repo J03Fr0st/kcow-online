@@ -29,7 +29,31 @@ documentCounts:
 # Product Requirements Document - kcow-online
 
 **Author:** Joe
-**Date:** 2026-01-03
+**Date:** 2026-01-05
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Schema Alignment
+
+**All implementations MUST strictly align with the legacy XSD schema definitions.** The XSD files in `docs/legacy/` are the authoritative source of truth for all domain models:
+
+| Entity | XSD Location | Field Count |
+|--------|--------------|-------------|
+| School | `docs/legacy/1_School/School.xsd` | 30 fields |
+| Class Group | `docs/legacy/2_Class_Group/Class Group.xsd` | 15 fields |
+| Activity | `docs/legacy/3_Activity/Activity.xsd` | 7 fields |
+| Children | `docs/legacy/4_Children/Children.xsd` | 92 fields |
+
+**Alignment Requirements:**
+- Implement ALL fields from XSD—no omissions
+- Use exact XSD field names (with case transformations per naming conventions)
+- **Use English field names** where XSD uses Afrikaans (e.g., `Trok` → `Truck`, `Taal` → `Language`). See `docs/domain-models.md` for translations.
+- Match XSD data types exactly
+- Enforce XSD max lengths in database and validation
+- Honor `minOccurs` for required/optional designation
+- Do NOT add fields not present in XSD without explicit approval
+
+---
 
 ## Executive Summary
 
@@ -208,11 +232,13 @@ KCOW is a single-page web application (SPA) intended for desktop use by a single
 ### Data Migration (Dev-Only)
 
 - FR12: Developer can run migration/import tooling to load legacy data into the system.
+- FR12a: Migration tooling must validate imported data against XSD schema definitions.
 
 ### Data Integrity and Auditability
 
 - FR13: Admin can see validation errors before saving invalid data.
 - FR14: Admin can view an audit trail for changes to attendance and billing records.
+- FR15: All entity implementations must include every field defined in the corresponding XSD schema.
 
 ## Non-Functional Requirements
 

@@ -9,13 +9,38 @@ inputDocuments:
 workflowType: 'architecture'
 project_name: 'kcow'
 user_name: 'Joe'
-date: '2025-12-27T13:47:27.3910959+02:00'
+date: '2026-01-05'
 lastStep: 8
 status: 'complete'
-completedAt: '2025-12-27'
----# Architecture Decision Document
+completedAt: '2026-01-05'
+---
+
+# Architecture Decision Document
 
 _This document builds collaboratively through step-by-step discovery. Sections are appended as we work through each architectural decision together._
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Schema Alignment
+
+**All implementations MUST strictly align with the legacy XSD schema definitions.** The XSD files are the authoritative source of truth:
+
+| Entity | XSD Location | Field Count |
+|--------|--------------|-------------|
+| School | `docs/legacy/1_School/School.xsd` | 30 fields |
+| Class Group | `docs/legacy/2_Class_Group/Class Group.xsd` | 15 fields |
+| Activity | `docs/legacy/3_Activity/Activity.xsd` | 7 fields |
+| Children | `docs/legacy/4_Children/Children.xsd` | 92 fields |
+
+**Architectural Constraints from XSD:**
+- Domain entities must include ALL XSD fields
+- **Use English field names** where XSD uses Afrikaans (e.g., `Trok` → `Truck`, `Taal` → `Language`). See `docs/domain-models.md` for translations.
+- Database schemas must enforce XSD types and max lengths
+- API DTOs must expose all XSD fields
+- Frontend models must align with XSD structure
+- Validation must enforce XSD constraints (required fields, lengths)
+
+---
 
 ## Project Context Analysis
 
@@ -126,7 +151,8 @@ Web application (SPA + planned API) based on project requirements and existing c
 
 - **Database:** SQLite (v1), migration path to PostgreSQL.
 - **ORM:** EF Core; entities in Domain, configs in Infrastructure/Data.
-- **Validation:** Shared validation (frontend reactive forms + backend validation).
+- **Schema Source:** ⚠️ **XSD files are authoritative**—all entity schemas must strictly align with `docs/legacy/*.xsd`.
+- **Validation:** Shared validation (frontend reactive forms + backend validation) enforcing XSD constraints.
 - **Migration:** EF Core migrations in `apps/backend/Migrations`.
 - **Import:** Legacy XML/XSD import with preview, exceptions, audit log.
 - **Caching:** None initially.
@@ -239,6 +265,8 @@ Naming, file structure, API formats, error handling, loading states, and validat
 - Follow naming conventions for DB, API, and code.
 - Use ProblemDetails for API errors and map consistently in UI.
 - Keep tests under `apps/frontend/tests/<feature>`.
+- **Strictly align all entity implementations with XSD schemas**—no omissions or additions.
+- **Validate XSD field types, lengths, and required constraints** in both backend and frontend.
 
 **Pattern Enforcement:**
 - Code reviews and lint checks
@@ -253,6 +281,9 @@ Naming, file structure, API formats, error handling, loading states, and validat
 **Anti-Patterns:**
 - Mixing `snake_case` and `camelCase` in JSON
 - Ad-hoc HTTP error handling in components
+- Omitting XSD fields from entity implementations
+- Adding fields not defined in XSD without explicit approval
+- Ignoring XSD max length constraints in validation
 ## Project Structure & Boundaries
 
 ### Complete Project Directory Structure
@@ -538,6 +569,9 @@ All potential conflict points addressed through naming, structure, format, commu
 - Respect project structure and boundaries
 - Refer to this document for all architectural questions
 - When in doubt, prefer the simpler approach that aligns with patterns
+- **⚠️ CRITICAL: Strictly align all implementations with XSD schemas in `docs/legacy/`**
+- **Do not omit any XSD fields from entity implementations**
+- **Do not add fields not defined in XSD without explicit approval**
 
 **First Implementation Priority:**
 1. Backend scaffold: Create ASP.NET Core API project with EF Core + SQLite + JWT Authentication baseline
@@ -578,7 +612,7 @@ All potential conflict points addressed through naming, structure, format, commu
 ### Implementation Handoff
 
 **For AI Agents:**
-This architecture document is your complete guide for implementing kcow. Follow all decisions, patterns, and structures exactly as documented.
+This architecture document is your complete guide for implementing kcow. Follow all decisions, patterns, and structures exactly as documented. **⚠️ All entity implementations must strictly align with XSD schemas in `docs/legacy/`—no field omissions or additions.**
 
 **First Implementation Priority:**
 ```bash

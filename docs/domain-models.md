@@ -1,7 +1,38 @@
 # KCOW Domain Models
 
 > Domain entity reference derived from legacy Microsoft Access schemas
-> Generated: 2025-12-27 | Updated: 2026-01-03 (Bilingual field names - English and Afrikaans)
+> Generated: 2025-12-27 | Updated: 2026-01-05 (Bilingual field names - English and Afrikaans)
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Alignment Requirement
+
+**All domain models, database schemas, and API implementations MUST strictly align with the legacy XSD schema definitions.** The XSD files in `docs/legacy/` are the authoritative source of truth for:
+
+- Field names and data types
+- Field lengths and constraints
+- Required vs optional fields
+- Default values
+- Entity relationships
+
+**Implementation Rules:**
+1. **Field names**: Use XSD field names exactly (with appropriate case transformations per layer)
+2. **English field names**: Where XSD uses Afrikaans names (e.g., `Trok`, `Taal`, `Kluis`), use the **English equivalent** in code (e.g., `Truck`, `Language`, `SafeNotes`). See the field mapping tables below for translations.
+3. **Data types**: Map XSD types to C#/TypeScript types exactly as documented
+4. **Field lengths**: Enforce max lengths as defined in XSD
+5. **Required fields**: Match `minOccurs` attributes from XSD
+6. **No omissions**: All XSD fields must be implemented—do not skip fields
+7. **No additions**: Do not add fields that are not in the XSD without explicit approval
+
+**XSD Source Files:**
+| Entity | XSD Location | Field Count |
+|--------|--------------|-------------|
+| School | `docs/legacy/1_School/School.xsd` | 30 fields |
+| Class Group | `docs/legacy/2_Class_Group/Class Group.xsd` | 15 fields |
+| Activity | `docs/legacy/3_Activity/Activity.xsd` | 7 fields |
+| Children | `docs/legacy/4_Children/Children.xsd` | 92 fields |
+
+---
 
 ## Overview
 
@@ -647,3 +678,4 @@ Students (Children)
 | 2026-01-03 | Updated legacy file paths to reflect reorganized folder structure |
 | 2026-01-03 | Added Legacy UI Reference section with tab screenshots for Children entity |
 | 2026-01-03 | Updated School entity fields table with bilingual field names (English and Afrikaans display names) |
+| 2026-01-05 | **CRITICAL**: Added strict XSD alignment requirement - all implementations must match XSD schemas exactly |

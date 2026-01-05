@@ -1,7 +1,13 @@
 # KCOW Documentation Index
 
 > Mobile Computer Literacy Trucks - Admin Application
-> Generated: 2025-12-27 | Deep Scan Documentation
+> Generated: 2025-12-27 | Updated: 2026-01-05 | Deep Scan Documentation
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Alignment
+
+All implementations must strictly align with the legacy XSD schemas in `docs/legacy/`. The XSD files are the authoritative source of truth for all domain models. See [Domain Models](./domain-models.md) for XSD field mappings and [Tech Rules](./project_context.md) for implementation requirements.
 
 ---
 
@@ -61,23 +67,25 @@ docs/
 └── source-tree.md         # Complete file structure
 ```
 
-### Reference Data (Legacy System)
+### Reference Data (Legacy System) - ⚠️ AUTHORITATIVE SOURCE
 
 The legacy Microsoft Access system is organized by entity type. **Maintenance entities** (School, Class Group, Activity) are lookup/configuration tables, while **Children** is the core operational module.
+
+**⚠️ The XSD files below are the AUTHORITATIVE SOURCE for all domain model implementations. All database schemas, API DTOs, and frontend models MUST strictly align with these definitions.**
 
 ```
 docs/legacy/
 ├── 1_School/                    # [Maintenance] School master data
-│   ├── School.xsd               # Schema: contacts, scheduling, billing
+│   ├── School.xsd               # ⚠️ AUTHORITATIVE: 30 fields - contacts, scheduling, billing
 │   └── School.xml               # Sample data
 ├── 2_Class_Group/               # [Maintenance] Time slots at schools
-│   ├── Class Group.xsd          # Schema: schedule, truck assignment
+│   ├── Class Group.xsd          # ⚠️ AUTHORITATIVE: 15 fields - schedule, truck assignment
 │   └── Class Group.xml          # Sample data
 ├── 3_Activity/                  # [Maintenance] Educational programs catalog
-│   ├── Activity.xsd             # Schema: program code, grade level
+│   ├── Activity.xsd             # ⚠️ AUTHORITATIVE: 7 fields - program code, grade level
 │   └── Activity.xml             # Sample data
 ├── 4_Children/                  # [Core] Student management system
-│   ├── Children.xsd             # Schema: 92 fields
+│   ├── Children.xsd             # ⚠️ AUTHORITATIVE: 92 fields - complete student schema
 │   ├── Children.xml             # Sample data
 │   ├── 1_Child_Information.png  # Tab 1: Personal info, enrollment
 │   ├── 2_Child_Financial.png    # Tab 2: Invoices, receipts, balance

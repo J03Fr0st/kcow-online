@@ -1,7 +1,24 @@
 # KCOW Development Guide
 
 > Development setup, commands, and conventions
-> Generated: 2025-12-27
+> Generated: 2025-12-27 | Updated: 2026-01-05
+
+---
+
+## ⚠️ CRITICAL: Strict XSD Alignment
+
+**Before implementing any domain entity, review the corresponding XSD schema:**
+
+| Entity | XSD Location | Fields |
+|--------|--------------|--------|
+| School | `docs/legacy/1_School/School.xsd` | 30 |
+| Class Group | `docs/legacy/2_Class_Group/Class Group.xsd` | 15 |
+| Activity | `docs/legacy/3_Activity/Activity.xsd` | 7 |
+| Children | `docs/legacy/4_Children/Children.xsd` | 92 |
+
+All implementations must include every XSD field with correct types and constraints. **Use English field names** where XSD uses Afrikaans (e.g., `Trok` → `Truck`, `Taal` → `Language`). See `docs/domain-models.md` for complete field mappings and translations.
+
+---
 
 ## Quick Start
 
