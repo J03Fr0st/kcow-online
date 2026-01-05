@@ -134,12 +134,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
             ContactPerson = "John Doe",
             Phone = "555-1234",
             Email = "test@school.edu",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 50.00m,
-                BillingCycle = "Monthly",
-                BillingNotes = "Test billing notes"
-            },
             SchedulingNotes = "Test school notes"
         };
 
@@ -156,10 +150,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal("John Doe", school.ContactPerson);
         Assert.Equal("555-1234", school.Phone);
         Assert.Equal("test@school.edu", school.Email);
-        Assert.NotNull(school.BillingSettings);
-        Assert.Equal(50.00m, school.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Monthly", school.BillingSettings.BillingCycle);
-        Assert.Equal("Test billing notes", school.BillingSettings.BillingNotes);
         Assert.Equal("Test school notes", school.SchedulingNotes);
         Assert.True(school.IsActive);
     }
@@ -179,7 +169,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
             ContactPerson = null,
             Phone = null,
             Email = null,
-            BillingSettings = null,
             SchedulingNotes = null
         };
 
@@ -196,7 +185,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Null(school.ContactPerson);
         Assert.Null(school.Phone);
         Assert.Null(school.Email);
-        Assert.Null(school.BillingSettings);
         Assert.Null(school.SchedulingNotes);
         Assert.True(school.IsActive);
     }
@@ -239,12 +227,7 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
         {
             Name = schoolName,
             Address = "123 Get Test",
-            ContactPerson = "Get Contact",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 75.00m,
-                BillingCycle = "Weekly"
-            }
+            ContactPerson = "Get Contact"
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/schools", createRequest);
@@ -263,9 +246,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal(schoolName, school.Name);
         Assert.Equal("123 Get Test", school.Address);
         Assert.Equal("Get Contact", school.ContactPerson);
-        Assert.NotNull(school.BillingSettings);
-        Assert.Equal(75.00m, school.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Weekly", school.BillingSettings.BillingCycle);
     }
 
     [Fact]
@@ -302,11 +282,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
             ContactPerson = "Original Contact",
             Phone = "555-0000",
             Email = "original@school.edu",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 50.00m,
-                BillingCycle = "Monthly"
-            },
             SchedulingNotes = "Original notes"
         };
 
@@ -321,12 +296,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
             ContactPerson = "Updated Contact",
             Phone = "555-9999",
             Email = "updated@school.edu",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 100.00m,
-                BillingCycle = "Bi-Weekly",
-                BillingNotes = "Updated billing notes"
-            },
             SchedulingNotes = "Updated notes"
         };
 
@@ -343,10 +312,6 @@ public class SchoolsControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.Equal("Updated Contact", school.ContactPerson);
         Assert.Equal("555-9999", school.Phone);
         Assert.Equal("updated@school.edu", school.Email);
-        Assert.NotNull(school.BillingSettings);
-        Assert.Equal(100.00m, school.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Bi-Weekly", school.BillingSettings.BillingCycle);
-        Assert.Equal("Updated billing notes", school.BillingSettings.BillingNotes);
         Assert.Equal("Updated notes", school.SchedulingNotes);
         Assert.NotNull(school.UpdatedAt);
     }

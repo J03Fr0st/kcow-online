@@ -35,14 +35,6 @@ public class School
     public string? SafeNotes { get; set; }
     public string? WebPage { get; set; }
     public string? KcowWebPageLink { get; set; }
-    public BillingSettings? BillingSettings { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-}
-
-public class BillingSettings
-{
-    public decimal DefaultSessionRate { get; set; }
-    public string BillingCycle { get; set; } = "Monthly"; // Monthly, Termly
-    public string? BillingNotes { get; set; }
 }

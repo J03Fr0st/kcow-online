@@ -41,23 +41,6 @@ public class SchoolDto
     public string? SafeNotes { get; set; }
     public string? WebPage { get; set; }
     public string? KcowWebPageLink { get; set; }
-    public BillingSettingsDto? BillingSettings { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
-}
-
-/// <summary>
-/// Data transfer object for billing settings.
-/// </summary>
-public class BillingSettingsDto
-{
-    [Range(0, double.MaxValue, ErrorMessage = "Default session rate must be greater than or equal to 0")]
-    public decimal DefaultSessionRate { get; set; }
-
-    [Required(ErrorMessage = "Billing cycle is required")]
-    [RegularExpression("^(Monthly|Termly)$", ErrorMessage = "Billing cycle must be 'Monthly' or 'Termly'")]
-    public string BillingCycle { get; set; } = "Monthly";
-
-    [MaxLength(1000, ErrorMessage = "Billing notes cannot exceed 1000 characters")]
-    public string? BillingNotes { get; set; }
 }

@@ -115,12 +115,6 @@ public class SchoolService : ISchoolService
             SafeNotes = request.SafeNotes,
             WebPage = request.WebPage,
             KcowWebPageLink = request.KcowWebPageLink,
-            BillingSettings = request.BillingSettings == null ? null : new Domain.Entities.BillingSettings
-            {
-                DefaultSessionRate = request.BillingSettings.DefaultSessionRate,
-                BillingCycle = request.BillingSettings.BillingCycle,
-                BillingNotes = request.BillingSettings.BillingNotes
-            },
             CreatedAt = DateTime.UtcNow
         };
 
@@ -178,12 +172,6 @@ public class SchoolService : ISchoolService
         school.SafeNotes = request.SafeNotes;
         school.WebPage = request.WebPage;
         school.KcowWebPageLink = request.KcowWebPageLink;
-        school.BillingSettings = request.BillingSettings == null ? null : new Domain.Entities.BillingSettings
-        {
-            DefaultSessionRate = request.BillingSettings.DefaultSessionRate,
-            BillingCycle = request.BillingSettings.BillingCycle,
-            BillingNotes = request.BillingSettings.BillingNotes
-        };
         school.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -256,12 +244,6 @@ public class SchoolService : ISchoolService
             SafeNotes = school.SafeNotes,
             WebPage = school.WebPage,
             KcowWebPageLink = school.KcowWebPageLink,
-            BillingSettings = school.BillingSettings == null ? null : new BillingSettingsDto
-            {
-                DefaultSessionRate = school.BillingSettings.DefaultSessionRate,
-                BillingCycle = school.BillingSettings.BillingCycle,
-                BillingNotes = school.BillingSettings.BillingNotes
-            },
             CreatedAt = school.CreatedAt,
             UpdatedAt = school.UpdatedAt
         };

@@ -22,12 +22,6 @@ public class SchoolServiceTests
             ContactPerson = "John Doe",
             Phone = "555-1234",
             Email = "test@school.edu",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 50.00m,
-                BillingCycle = "Monthly",
-                BillingNotes = "Test billing notes"
-            },
             SchedulingNotes = "Test notes",
             PrintInvoice = false,
             ImportFlag = false
@@ -41,17 +35,13 @@ public class SchoolServiceTests
         Assert.Equal("John Doe", result.ContactPerson);
         Assert.Equal("555-1234", result.Phone);
         Assert.Equal("test@school.edu", result.Email);
-        Assert.NotNull(result.BillingSettings);
-        Assert.Equal(50.00m, result.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Monthly", result.BillingSettings.BillingCycle);
-        Assert.Equal("Test billing notes", result.BillingSettings.BillingNotes);
         Assert.Equal("Test notes", result.SchedulingNotes);
         Assert.True(result.IsActive);
         Assert.Equal(1, await context.Schools.CountAsync());
     }
 
     [Fact]
-    public async Task CreateAsync_WithoutBillingSettings_Persists_School()
+    public async Task CreateAsync_WithMinimalData_Persists_School()
     {
         using var context = CreateContext();
         var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
@@ -63,7 +53,6 @@ public class SchoolServiceTests
             ContactPerson = "John Doe",
             Phone = "555-1234",
             Email = "test@school.edu",
-            BillingSettings = null,
             SchedulingNotes = null
         };
 
@@ -71,7 +60,6 @@ public class SchoolServiceTests
 
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
-        Assert.Null(result.BillingSettings);
         Assert.Null(result.SchedulingNotes);
         Assert.True(result.IsActive);
         Assert.Equal(1, await context.Schools.CountAsync());
@@ -116,43 +104,6 @@ public class SchoolServiceTests
         Assert.Collection(results,
             first => Assert.Equal("Alpha School", first.Name),
             second => Assert.Equal("Beta School", second.Name));
-    }
-
-    [Fact]
-    public async Task GetAllAsync_WithBillingSettings_ReturnsCorrectData()
-    {
-        using var context = CreateContext();
-        context.Schools.Add(
-            new School
-            {
-                Name = "Test School",
-                Address = "123 Test St",
-                ContactPerson = "John Doe",
-                Phone = "555-1234",
-                Email = "test@school.edu",
-                BillingSettings = new Domain.Entities.BillingSettings
-                {
-                    DefaultSessionRate = 75.50m,
-                    BillingCycle = "Weekly",
-                    BillingNotes = "Weekly billing"
-                },
-                SchedulingNotes = "Test notes",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
-        await context.SaveChangesAsync();
-
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-        var results = await service.GetAllAsync();
-
-        Assert.Single(results);
-        var school = results[0];
-        Assert.Equal("Test School", school.Name);
-        Assert.NotNull(school.BillingSettings);
-        Assert.Equal(75.50m, school.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Weekly", school.BillingSettings.BillingCycle);
-        Assert.Equal("Weekly billing", school.BillingSettings.BillingNotes);
     }
 
     [Fact]
@@ -232,12 +183,6 @@ public class SchoolServiceTests
             ContactPerson = "Updated Contact",
             Phone = "555-9999",
             Email = "updated@school.edu",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 100.00m,
-                BillingCycle = "Bi-Weekly",
-                BillingNotes = "Updated billing"
-            },
             SchedulingNotes = "Updated notes"
         };
 
@@ -249,10 +194,6 @@ public class SchoolServiceTests
         Assert.Equal("Updated Contact", result.ContactPerson);
         Assert.Equal("555-9999", result.Phone);
         Assert.Equal("updated@school.edu", result.Email);
-        Assert.NotNull(result.BillingSettings);
-        Assert.Equal(100.00m, result.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Bi-Weekly", result.BillingSettings.BillingCycle);
-        Assert.Equal("Updated billing", result.BillingSettings.BillingNotes);
         Assert.Equal("Updated notes", result.SchedulingNotes);
         Assert.NotNull(result.UpdatedAt);
 
@@ -328,47 +269,6 @@ public class SchoolServiceTests
         var archived = await service.ArchiveAsync(school.Id);
 
         Assert.False(archived);
-    }
-
-    [Fact]
-    public async Task BillingSettings_JsonSerialization_RoundTrip()
-    {
-        using var context = CreateContext();
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-
-        // Create school with billing settings
-        var request = new CreateSchoolRequest
-        {
-            Name = "JSON Test School",
-            BillingSettings = new BillingSettingsDto
-            {
-                DefaultSessionRate = 123.45m,
-                BillingCycle = "Termly",
-                BillingNotes = "Complex JSON serialization test with special chars: @#$%"
-            }
-        };
-
-        var created = await service.CreateAsync(request);
-        var schoolId = created.Id;
-
-        // Clear context to force fresh database read
-        context.ChangeTracker.Clear();
-
-        // Retrieve from database and verify JSON deserialization
-        var retrieved = await service.GetByIdAsync(schoolId);
-
-        Assert.NotNull(retrieved);
-        Assert.NotNull(retrieved.BillingSettings);
-        Assert.Equal(123.45m, retrieved.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Termly", retrieved.BillingSettings.BillingCycle);
-        Assert.Equal("Complex JSON serialization test with special chars: @#$%", retrieved.BillingSettings.BillingNotes);
-
-        // Verify direct database query also deserializes correctly
-        var schoolEntity = await context.Schools.FindAsync(schoolId);
-        Assert.NotNull(schoolEntity);
-        Assert.NotNull(schoolEntity.BillingSettings);
-        Assert.Equal(123.45m, schoolEntity.BillingSettings.DefaultSessionRate);
-        Assert.Equal("Termly", schoolEntity.BillingSettings.BillingCycle);
     }
 
     private static AppDbContext CreateContext()

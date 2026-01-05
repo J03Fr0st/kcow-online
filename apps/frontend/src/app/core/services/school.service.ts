@@ -3,12 +3,6 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, finalize, throwError, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export interface BillingSettings {
-    defaultSessionRate?: number;
-    billingCycle?: 'Monthly' | 'Termly';
-    billingNotes?: string;
-}
-
 export interface School {
     id: number;
     name: string;
@@ -43,7 +37,6 @@ export interface School {
     safeNotes?: string;
     webPage?: string;
     kcowWebPageLink?: string;
-    billingSettings?: BillingSettings;
 }
 
 export interface CreateSchoolRequest {
@@ -78,7 +71,6 @@ export interface CreateSchoolRequest {
     safeNotes?: string;
     webPage?: string;
     kcowWebPageLink?: string;
-    billingSettings?: BillingSettings;
 }
 
 export interface UpdateSchoolRequest {
@@ -114,7 +106,6 @@ export interface UpdateSchoolRequest {
     safeNotes?: string;
     webPage?: string;
     kcowWebPageLink?: string;
-    billingSettings?: BillingSettings;
 }
 
 export interface ProblemDetails {

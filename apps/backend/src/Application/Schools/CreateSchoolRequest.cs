@@ -97,9 +97,4 @@ public class CreateSchoolRequest
 
     [MaxLength(500, ErrorMessage = "KCOW web page link cannot exceed 500 characters")]
     public string? KcowWebPageLink { get; set; }
-
-    /// <summary>
-    /// Billing settings for the school.
-    /// </summary>
-    public BillingSettingsDto? BillingSettings { get; set; }
 }
