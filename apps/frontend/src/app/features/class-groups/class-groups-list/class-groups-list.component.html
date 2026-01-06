@@ -1,0 +1,177 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">Class Groups</h1>
+      <p class="text-base-content/60">Manage and view all class groups</p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        <span class="mr-2" aria-hidden="true">➕</span> Add Class Group
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-4 bg-base-200 p-4 rounded-lg">
+    <div class="form-control">
+      <label class="label" for="filterSchool">
+        <span class="label-text">Filter by School</span>
+      </label>
+      <select
+        id="filterSchool"
+        class="select select-bordered select-sm"
+        (change)="onSchoolFilter($event)"
+      >
+        <option value="">All Schools</option>
+        @for (school of availableSchools(); track school.id) {
+          <option [value]="school.id">{{ school.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form-control">
+      <label class="label" for="filterTruck">
+        <span class="label-text">Filter by Truck</span>
+      </label>
+      <select
+        id="filterTruck"
+        class="select select-bordered select-sm"
+        (change)="onTruckFilter($event)"
+      >
+        <option value="">All Trucks</option>
+        @for (truck of availableTrucks(); track truck.id) {
+          <option [value]="truck.id">{{ truck.name }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+  <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading class groups">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  } @else {
+  <!-- Empty State -->
+  @if (classGroups().length === 0) {
+    <div
+      class="empty-state flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+      <div class="text-6xl mb-4" aria-hidden="true">📚</div>
+      <h3 class="text-xl font-semibold">No class groups found</h3>
+      <p class="text-base-content/60 mb-6 text-center max-w-sm">
+        It looks like you haven't added any class groups yet. Start by creating your first class group.
+      </p>
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        Add Your First Class Group
+      </button>
+    </div>
+  } @else if (classGroups().length > 0) {
+  <!-- Table -->
+  <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+    <table class="table table-zebra table-sm" aria-label="Class Groups Registry">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>School</th>
+          <th>Truck</th>
+          <th>Day</th>
+          <th>Time</th>
+          <th>Sequence</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (classGroup of classGroups(); track classGroup.id) {
+        <tr
+          class="hover cursor-pointer"
+          (click)="openEditForm(classGroup)"
+          [class.opacity-50]="deletingId() === classGroup.id">
+          <td>
+            <div class="font-medium">{{ classGroup.name }}</div>
+            @if (classGroup.notes) {
+            <div class="text-xs text-base-content/60">{{ classGroup.notes }}</div>
+            }
+          </td>
+          <td>
+            @if (classGroup.school) {
+              <div>{{ classGroup.school.name }}</div>
+              @if (classGroup.school.shortName) {
+                <div class="text-xs text-base-content/60">{{ classGroup.school.shortName }}</div>
+              }
+            } @else {
+              <span class="text-base-content/40">School ID: {{ classGroup.schoolId }}</span>
+            }
+          </td>
+          <td>
+            @if (classGroup.truck) {
+              <div>{{ classGroup.truck.name }}</div>
+              <div class="text-xs text-base-content/60">{{ classGroup.truck.registrationNumber }}</div>
+            } @else {
+              <span class="text-base-content/40">No truck</span>
+            }
+          </td>
+          <td>
+            <span class="badge badge-ghost">{{ getDayOfWeekName(classGroup.dayOfWeek) }}</span>
+          </td>
+          <td>
+            <div class="font-mono text-sm">{{ formatTime(classGroup.startTime) }} - {{ formatTime(classGroup.endTime) }}</div>
+          </td>
+          <td>
+            <span class="badge badge-outline">#{{ classGroup.sequence }}</span>
+          </td>
+          <td (click)="$event.stopPropagation()">
+            @if (deletingId() === classGroup.id) {
+            <!-- Inline Confirmation -->
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-warning">Archive this class group?</span>
+              <button
+                class="btn btn-xs btn-error"
+                (click)="confirmDelete(classGroup)"
+                aria-label="Confirm archive">
+                ✓
+              </button>
+              <button
+                class="btn btn-xs btn-ghost"
+                (click)="cancelDelete()"
+                aria-label="Cancel archive">
+                ✗
+              </button>
+            </div>
+            } @else {
+            <!-- Regular Actions -->
+            <button
+              class="btn btn-ghost btn-xs"
+              (click)="startDelete(classGroup)"
+              aria-label="Archive class group"
+              title="Archive class group">
+              🗑️
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <!-- Inline Form Drawer (Create/Edit) -->
+  @if (showForm() && deletingId() === null) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 bg-base-300/50 backdrop-blur-sm transition-opacity"
+      (click)="closeForm()"></div>
+
+    <!-- Drawer Panel -->
+    <div class="relative w-full max-w-md bg-base-100 shadow-xl h-full overflow-y-auto">
+      <app-class-group-form
+        [classGroupId]="editingId()"
+        (submit)="onFormSubmit($event)"
+        (cancel)="closeForm()"
+      />
+    </div>
+  </div>
+  }
+}

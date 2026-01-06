@@ -1,0 +1,210 @@
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">{{ title() }}</h3>
+  </div>
+  <div class="card-body">
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <p>Loading class group data...</p>
+    } @else {
+      <!-- Error Message -->
+      @if (error()) {
+        <div class="alert alert-error" role="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 w-6 h-6" fill="none" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <!-- Form -->
+      <form [formGroup]="form" (ngSubmit)="submitForm()">
+        <!-- Name -->
+        <div class="form-control">
+          <label class="label" for="name">
+            <span class="label-text">Class Group Name</span>
+            <span class="label-text-alt text-error">*</span>
+          </label>
+          <input
+            id="name"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="name"
+            [class]="{ 'input-error': hasError('name') }"
+            placeholder="e.g., Grade 1 - Morning"
+          />
+          @if (hasError('name')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('name') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- School Dropdown -->
+        <div class="form-control">
+          <label class="label" for="schoolId">
+            <span class="label-text">School</span>
+            <span class="label-text-alt text-error">*</span>
+          </label>
+          <select
+            id="schoolId"
+            class="select select-bordered w-full"
+            formControlName="schoolId"
+            [class]="{ 'select-error': hasError('schoolId') }"
+          >
+            <option value="" disabled selected>Select a school</option>
+            @for (school of schools(); track school.id) {
+              <option [value]="school.id">{{ school.name }}{{ school.shortName ? ' (' + school.shortName + ')' : '' }}</option>
+            }
+          </select>
+          @if (hasError('schoolId')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('schoolId') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Truck Dropdown -->
+        <div class="form-control">
+          <label class="label" for="truckId">
+            <span class="label-text">Truck (Optional)</span>
+          </label>
+          <select
+            id="truckId"
+            class="select select-bordered w-full"
+            formControlName="truckId"
+          >
+            <option value="">No truck assigned</option>
+            @for (truck of trucks(); track truck.id) {
+              <option [value]="truck.id">{{ truck.name }} ({{ truck.registrationNumber }})</option>
+            }
+          </select>
+          <label class="label">
+            <span class="label-text-alt">Leave empty to assign no truck</span>
+          </label>
+        </div>
+
+        <!-- Day of Week Dropdown -->
+        <div class="form-control">
+          <label class="label" for="dayOfWeek">
+            <span class="label-text">Day of Week</span>
+            <span class="label-text-alt text-error">*</span>
+          </label>
+          <select
+            id="dayOfWeek"
+            class="select select-bordered w-full"
+            formControlName="dayOfWeek"
+            [class]="{ 'select-error': hasError('dayOfWeek') }"
+          >
+            @for (dayOption of dayOfWeekOptions; track dayOption) {
+              <option [value]="getDayOfWeekNumber(dayOption)">{{ dayOption }}</option>
+            }
+          </select>
+          @if (hasError('dayOfWeek')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('dayOfWeek') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Start Time and End Time -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-control">
+            <label class="label" for="startTime">
+              <span class="label-text">Start Time</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              id="startTime"
+              type="time"
+              class="input input-bordered w-full"
+              formControlName="startTime"
+              [class]="{ 'input-error': hasError('startTime') }"
+            />
+            @if (hasError('startTime')) {
+              <label class="label">
+                <span class="label-text-alt text-error">{{ getErrorMessage('startTime') }}</span>
+              </label>
+            }
+          </div>
+
+          <div class="form-control">
+            <label class="label" for="endTime">
+              <span class="label-text">End Time</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              id="endTime"
+              type="time"
+              class="input input-bordered w-full"
+              formControlName="endTime"
+              [class]="{ 'input-error': hasError('endTime') }"
+            />
+            @if (hasError('endTime')) {
+              <label class="label">
+                <span class="label-text-alt text-error">{{ getErrorMessage('endTime') }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Sequence -->
+        <div class="form-control">
+          <label class="label" for="sequence">
+            <span class="label-text">Sequence</span>
+            <span class="label-text-alt text-error">*</span>
+          </label>
+          <input
+            id="sequence"
+            type="number"
+            class="input input-bordered w-full"
+            formControlName="sequence"
+            [class]="{ 'input-error': hasError('sequence') }"
+            placeholder="Order for scheduling"
+          />
+          @if (hasError('sequence')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('sequence') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Notes -->
+        <div class="form-control">
+          <label class="label" for="notes">
+            <span class="label-text">Notes (Optional)</span>
+          </label>
+          <textarea
+            id="notes"
+            class="textarea textarea-bordered w-full"
+            formControlName="notes"
+            placeholder="Additional notes about this class group"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="card-actions justify-end mt-4">
+          <button
+            type="button"
+            class="btn"
+            (click)="onCancel()"
+            [disabled]="isSaving()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="isSaving()"
+          >
+            @if (isSaving()) {
+              <span class="loading loading-spinner"></span>
+            }
+            {{ submitButtonText() }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

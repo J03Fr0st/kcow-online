@@ -1,6 +1,6 @@
 # Story 3.2: Class Groups Management UI
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -29,27 +29,27 @@ so that **I can organize school visits and truck assignments (FR4)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ClassGroupService for frontend (AC: #1-3)
-  - [ ] Implement CRUD with school/truck filter params
-  - [ ] Add loading state signal
-- [ ] Task 2: Create Class Groups list page (AC: #1)
-  - [ ] Create class-groups-list component
-  - [ ] Add table with Name, School, Truck, Day, Time columns
-  - [ ] Add school and truck filter dropdowns
-  - [ ] Lazy load trucks and schools for filters
-- [ ] Task 3: Create Class Group form component (AC: #2, #3)
-  - [ ] Create class-group-form component
-  - [ ] Add school dropdown (load schools on init)
-  - [ ] Add truck dropdown (load trucks on init)
-  - [ ] Add day of week dropdown
-  - [ ] Add time pickers for start/end
-  - [ ] Add sequence input
-- [ ] Task 4: Implement CRUD flows
-  - [ ] Create class group flow
-  - [ ] Edit class group flow
-  - [ ] Delete with inline confirmation
-- [ ] Task 5: Configure routing
-  - [ ] Add class-groups feature routes
+- [x] Task 1: Create ClassGroupService for frontend (AC: #1-3)
+  - [x] Implement CRUD with school/truck filter params
+  - [x] Add loading state signal
+- [x] Task 2: Create Class Groups list page (AC: #1)
+  - [x] Create class-groups-list component
+  - [x] Add table with Name, School, Truck, Day, Time columns
+  - [x] Add school and truck filter dropdowns
+  - [x] Lazy load trucks and schools for filters
+- [x] Task 3: Create Class Group form component (AC: #2, #3)
+  - [x] Create class-group-form component
+  - [x] Add school dropdown (load schools on init)
+  - [x] Add truck dropdown (load trucks on init)
+  - [x] Add day of week dropdown
+  - [x] Add time pickers for start/end
+  - [x] Add sequence input
+- [x] Task 4: Implement CRUD flows
+  - [x] Create class group flow
+  - [x] Edit class group flow
+  - [x] Delete with inline confirmation
+- [x] Task 5: Configure routing
+  - [x] Add class-groups feature routes
 
 ## Dev Notes
 
@@ -107,5 +107,15 @@ apps/frontend/src/app/features/class-groups/
 ### Debug Log References
 
 ### Completion Notes List
+
+- ClassGroupService created with signals-based state management
+- ClassGroupFormComponent implements both create and edit modes using input() signal
+- Form includes validation for time range (end time must be after start time)
+- List component includes filter dropdowns for school and truck
+- Drawer-based form UI for create/edit operations
+- Inline delete confirmation pattern following trucks-list design
+- Routing configured in app.routes.ts
+- Frontend build successful with no errors
+- All acceptance criteria met
 
 ### File List

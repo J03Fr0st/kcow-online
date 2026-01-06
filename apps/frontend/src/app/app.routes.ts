@@ -167,14 +167,14 @@ export const routes: Routes = [
       {
         path: 'class-groups',
         loadComponent: () =>
-          import('@features/class-groups/class-groups-placeholder.component').then(
-            (m) => m.ClassGroupsPlaceholderComponent,
+          import('@features/class-groups/class-groups-list/class-groups-list.component').then(
+            (m) => m.ClassGroupsListComponent,
           ),
         data: {
           breadcrumb: 'Class Groups',
           breadcrumbIcon: '📚',
           title: 'Class Groups',
-          description: 'Class groups and scheduling - Coming soon',
+          description: 'Manage and view all class groups',
         },
       },
       {
