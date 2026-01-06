@@ -73,7 +73,7 @@ development_status:
   3-3-schedule-time-slot-configuration: review
   3-4-scheduling-conflict-detection: review
   3-5-weekly-schedule-overview: review
-  3-6-data-migration-class-groups-schedules: ready-for-dev
+  3-6-data-migration-class-groups-schedules: review
   3-7-e2e-tests-class-groups-scheduling-conflicts: ready-for-dev
   epic-3-retrospective: optional
 
