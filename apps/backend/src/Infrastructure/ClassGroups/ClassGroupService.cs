@@ -1,0 +1,265 @@
+using Kcow.Application.ClassGroups;
+using Kcow.Domain.Entities;
+using Kcow.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace Kcow.Infrastructure.ClassGroups;
+
+/// <summary>
+/// Implementation of class group management service.
+/// </summary>
+public class ClassGroupService : IClassGroupService
+{
+    private readonly AppDbContext _context;
+    private readonly ILogger<ClassGroupService> _logger;
+
+    public ClassGroupService(AppDbContext context, ILogger<ClassGroupService> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Gets all active class groups with optional filtering.
+    /// </summary>
+    public async Task<List<ClassGroupDto>> GetAllAsync(int? schoolId = null, int? truckId = null)
+    {
+        var query = _context.ClassGroups
+            .Include(cg => cg.School)
+            .Include(cg => cg.Truck)
+            .Where(cg => cg.IsActive);
+
+        if (schoolId.HasValue)
+        {
+            query = query.Where(cg => cg.SchoolId == schoolId.Value);
+        }
+
+        if (truckId.HasValue)
+        {
+            query = query.Where(cg => cg.TruckId == truckId.Value);
+        }
+
+        var classGroups = await query
+            .OrderBy(cg => cg.SchoolId)
+            .ThenBy(cg => cg.DayOfWeek)
+            .ThenBy(cg => cg.StartTime)
+            .Select(cg => new ClassGroupDto
+            {
+                Id = cg.Id,
+                Name = cg.Name,
+                SchoolId = cg.SchoolId,
+                TruckId = cg.TruckId,
+                DayOfWeek = cg.DayOfWeek,
+                StartTime = cg.StartTime,
+                EndTime = cg.EndTime,
+                Sequence = cg.Sequence,
+                Notes = cg.Notes,
+                IsActive = cg.IsActive,
+                CreatedAt = cg.CreatedAt,
+                UpdatedAt = cg.UpdatedAt,
+                School = cg.School == null ? null : new SchoolDto
+                {
+                    Id = cg.School.Id,
+                    Name = cg.School.Name,
+                    ShortName = cg.School.ShortName
+                },
+                Truck = cg.Truck == null ? null : new TruckDto
+                {
+                    Id = cg.Truck.Id,
+                    Name = cg.Truck.Name,
+                    RegistrationNumber = cg.Truck.RegistrationNumber
+                }
+            })
+            .ToListAsync();
+
+        _logger.LogInformation("Retrieved {Count} active class groups (SchoolId: {SchoolId}, TruckId: {TruckId})",
+            classGroups.Count, schoolId, truckId);
+        return classGroups;
+    }
+
+    /// <summary>
+    /// Gets a class group by ID with school and truck details.
+    /// </summary>
+    public async Task<ClassGroupDto?> GetByIdAsync(int id)
+    {
+        var classGroup = await _context.ClassGroups
+            .Include(cg => cg.School)
+            .Include(cg => cg.Truck)
+            .Where(cg => cg.Id == id && cg.IsActive)
+            .Select(cg => new ClassGroupDto
+            {
+                Id = cg.Id,
+                Name = cg.Name,
+                SchoolId = cg.SchoolId,
+                TruckId = cg.TruckId,
+                DayOfWeek = cg.DayOfWeek,
+                StartTime = cg.StartTime,
+                EndTime = cg.EndTime,
+                Sequence = cg.Sequence,
+                Notes = cg.Notes,
+                IsActive = cg.IsActive,
+                CreatedAt = cg.CreatedAt,
+                UpdatedAt = cg.UpdatedAt,
+                School = cg.School == null ? null : new SchoolDto
+                {
+                    Id = cg.School.Id,
+                    Name = cg.School.Name,
+                    ShortName = cg.School.ShortName
+                },
+                Truck = cg.Truck == null ? null : new TruckDto
+                {
+                    Id = cg.Truck.Id,
+                    Name = cg.Truck.Name,
+                    RegistrationNumber = cg.Truck.RegistrationNumber
+                }
+            })
+            .FirstOrDefaultAsync();
+
+        if (classGroup == null)
+        {
+            _logger.LogWarning("Class group with ID {ClassGroupId} not found", id);
+        }
+        else
+        {
+            _logger.LogInformation("Retrieved class group with ID {ClassGroupId}", id);
+        }
+
+        return classGroup;
+    }
+
+    /// <summary>
+    /// Creates a new class group.
+    /// </summary>
+    public async Task<ClassGroupDto> CreateAsync(CreateClassGroupRequest request)
+    {
+        // Validate that the school exists
+        var schoolExists = await _context.Schools.AnyAsync(s => s.Id == request.SchoolId && s.IsActive);
+        if (!schoolExists)
+        {
+            throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist or is not active");
+        }
+
+        // Validate that the truck exists (if provided)
+        if (request.TruckId.HasValue)
+        {
+            var truckExists = await _context.Trucks.AnyAsync(t => t.Id == request.TruckId.Value && t.IsActive);
+            if (!truckExists)
+            {
+                throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist or is not active");
+            }
+        }
+
+        // Validate time range
+        if (request.EndTime <= request.StartTime)
+        {
+            throw new InvalidOperationException("End time must be after start time");
+        }
+
+        var classGroup = new ClassGroup
+        {
+            Name = request.Name,
+            SchoolId = request.SchoolId,
+            TruckId = request.TruckId,
+            DayOfWeek = request.DayOfWeek,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Sequence = request.Sequence,
+            Notes = request.Notes,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.ClassGroups.Add(classGroup);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Created class group with ID {ClassGroupId}: {Name} at School {SchoolId}",
+            classGroup.Id, classGroup.Name, classGroup.SchoolId);
+
+        // Reload with navigation properties
+        var created = await GetByIdAsync(classGroup.Id);
+        return created!;
+    }
+
+    /// <summary>
+    /// Updates an existing class group.
+    /// </summary>
+    public async Task<ClassGroupDto?> UpdateAsync(int id, UpdateClassGroupRequest request)
+    {
+        var classGroup = await _context.ClassGroups
+            .Include(cg => cg.School)
+            .Include(cg => cg.Truck)
+            .FirstOrDefaultAsync(cg => cg.Id == id && cg.IsActive);
+
+        if (classGroup == null)
+        {
+            _logger.LogWarning("Cannot update: Class group with ID {ClassGroupId} not found", id);
+            return null;
+        }
+
+        // Validate that the school exists
+        var schoolExists = await _context.Schools.AnyAsync(s => s.Id == request.SchoolId && s.IsActive);
+        if (!schoolExists)
+        {
+            throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist or is not active");
+        }
+
+        // Validate that the truck exists (if provided)
+        if (request.TruckId.HasValue)
+        {
+            var truckExists = await _context.Trucks.AnyAsync(t => t.Id == request.TruckId.Value && t.IsActive);
+            if (!truckExists)
+            {
+                throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist or is not active");
+            }
+        }
+
+        // Validate time range
+        if (request.EndTime <= request.StartTime)
+        {
+            throw new InvalidOperationException("End time must be after start time");
+        }
+
+        classGroup.Name = request.Name;
+        classGroup.SchoolId = request.SchoolId;
+        classGroup.TruckId = request.TruckId;
+        classGroup.DayOfWeek = request.DayOfWeek;
+        classGroup.StartTime = request.StartTime;
+        classGroup.EndTime = request.EndTime;
+        classGroup.Sequence = request.Sequence;
+        classGroup.Notes = request.Notes;
+        classGroup.IsActive = request.IsActive;
+        classGroup.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Updated class group with ID {ClassGroupId}", id);
+
+        // Reload with navigation properties
+        var updated = await GetByIdAsync(id);
+        return updated;
+    }
+
+    /// <summary>
+    /// Archives (soft-deletes) a class group.
+    /// </summary>
+    public async Task<bool> ArchiveAsync(int id)
+    {
+        var classGroup = await _context.ClassGroups
+            .FirstOrDefaultAsync(cg => cg.Id == id && cg.IsActive);
+
+        if (classGroup == null)
+        {
+            _logger.LogWarning("Cannot archive: Class group with ID {ClassGroupId} not found", id);
+            return false;
+        }
+
+        classGroup.IsActive = false;
+        classGroup.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Archived class group with ID {ClassGroupId}", id);
+        return true;
+    }
+}

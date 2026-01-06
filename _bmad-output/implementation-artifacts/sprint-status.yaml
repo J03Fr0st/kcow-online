@@ -68,7 +68,7 @@ development_status:
   # Epic 3: Class Groups & Scheduling
   # ========================
   epic-3: backlog
-  3-1-class-group-entity-api-endpoints: ready-for-dev
+  3-1-class-group-entity-api-endpoints: review
   3-2-class-groups-management-ui: ready-for-dev
   3-3-schedule-time-slot-configuration: ready-for-dev
   3-4-scheduling-conflict-detection: ready-for-dev

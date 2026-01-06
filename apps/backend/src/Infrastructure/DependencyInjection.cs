@@ -1,7 +1,9 @@
 using Kcow.Application.Auth;
+using Kcow.Application.ClassGroups;
 using Kcow.Application.Schools;
 using Kcow.Application.Trucks;
 using Kcow.Infrastructure.Auth;
+using Kcow.Infrastructure.ClassGroups;
 using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Data.Seeders;
 using Kcow.Infrastructure.Schools;
@@ -39,6 +41,9 @@ public static class DependencyInjection
 
         // Register school services
         services.AddScoped<ISchoolService, SchoolService>();
+
+        // Register class group services
+        services.AddScoped<IClassGroupService, ClassGroupService>();
 
         return services;
     }
