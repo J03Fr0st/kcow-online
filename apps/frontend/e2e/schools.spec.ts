@@ -11,12 +11,16 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Schools Management - Imported Data Verification', () => {
   test.beforeEach(async ({ page }) => {
+    // Get test credentials from environment variables or defaults
+    const testEmail = process.env.TEST_EMAIL || 'admin@kcow.local';
+    const testPassword = process.env.TEST_PASSWORD || 'Admin123!';
+
     // Navigate to login page first
     await page.goto('/login');
 
     // Login with valid credentials
-    await page.locator('#email').fill('admin@kcow.local');
-    await page.locator('#password').fill('Admin123!');
+    await page.locator('#email').fill(testEmail);
+    await page.locator('#password').fill(testPassword);
 
     // Wait for Angular to be stable and form to be valid
     await page.waitForLoadState('networkidle');

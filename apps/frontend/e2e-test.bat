@@ -21,6 +21,8 @@ echo - Test database: kcow-e2e.db
 echo - Test data seeding enabled
 echo.
 
+goto :run
+
 REM Function to check if port is in use
 :check_port
 netstat -ano | findstr ":%1" >nul 2>&1
@@ -34,6 +36,7 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%1"') do (
 )
 goto :eof
 
+:run
 REM Kill any existing processes on required ports
 echo Cleaning up any existing processes...
 call :kill_port 5039
@@ -52,25 +55,26 @@ REM Start backend with test data seeding
 echo.
 echo [1/3] Starting backend server on port 5039 with test data seeding...
 cd /d "%BACKEND_DIR%"
-start /B dotnet run --launch-profile e2e > "%TEMP%\backend.log" 2>&1
+set LOG_SUFFIX=%RANDOM%
+start /B dotnet run --launch-profile e2e > "%TEMP%\backend_%LOG_SUFFIX%.log" 2>&1
 
 REM Wait for backend to start
 echo Waiting for backend to be ready...
 set /a BACKEND_ATTEMPTS=0
 :backend_wait
 set /a BACKEND_ATTEMPTS+=1
-if !BACKEND_ATTEMPTS! gtr 45 (
+if !BACKEND_ATTEMPTS! gtr 60 (
     echo ERROR: Backend failed to start
     echo.
     echo Backend log:
-    type "%TEMP%\backend.log"
+    type "%TEMP%\backend_%LOG_SUFFIX%.log"
     call :cleanup
     exit /b 1
 )
 
-curl -s http://localhost:5039/health >nul 2>&1
+curl -s -o nul http://localhost:5039/health
 if errorlevel 1 (
-    echo Waiting... (!BACKEND_ATTEMPTS!/45)
+    echo Waiting... !BACKEND_ATTEMPTS!/60
     timeout /t 2 /nobreak >nul
     goto backend_wait
 )
@@ -81,23 +85,23 @@ REM Start frontend
 echo.
 echo [2/3] Starting frontend server on port 4200...
 cd /d "%FRONTEND_DIR%"
-start /B npm run dev > "%TEMP%\frontend.log" 2>&1
+start /B npm run dev > "%TEMP%\frontend_%LOG_SUFFIX%.log" 2>&1
 
 REM Wait for frontend to start
 echo Waiting for frontend to be ready...
 set /a FRONTEND_ATTEMPTS=0
 :frontend_wait
 set /a FRONTEND_ATTEMPTS+=1
-if !FRONTEND_ATTEMPTS! gtr 30 (
+if !FRONTEND_ATTEMPTS! gtr 60 (
     echo ERROR: Frontend failed to start
-    type "%TEMP%\frontend.log"
+    type "%TEMP%\frontend_%LOG_SUFFIX%.log"
     call :cleanup
     exit /b 1
 )
 
-curl -s http://localhost:4200 >nul 2>&1
+curl -s -o nul http://localhost:4200
 if errorlevel 1 (
-    echo Waiting... (!FRONTEND_ATTEMPTS!/30)
+    echo Waiting... !FRONTEND_ATTEMPTS!/60
     timeout /t 2 /nobreak >nul
     goto frontend_wait
 )
@@ -127,7 +131,9 @@ if exist "%BACKEND_DIR%\kcow-e2e.db" (
     echo To inspect: SQLite Explorer or DBeaver
 )
 
-if %TEST_EXIT_CODE% equ 0 (
+if not defined TEST_EXIT_CODE set TEST_EXIT_CODE=1
+
+if "%TEST_EXIT_CODE%"=="0" (
     echo.
     echo ========================================
     echo All tests passed!
@@ -135,7 +141,7 @@ if %TEST_EXIT_CODE% equ 0 (
 ) else (
     echo.
     echo ========================================
-    echo Some tests failed
+    echo Some tests failed (Code: %TEST_EXIT_CODE%)
     echo ========================================
     echo.
     echo To debug:

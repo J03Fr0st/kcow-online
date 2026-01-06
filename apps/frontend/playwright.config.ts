@@ -28,6 +28,11 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // Environment variables for test credentials
+    extraHTTPHeaders: {
+      'X-Test-Email': process.env.TEST_EMAIL || 'admin@kcow.local',
+      'X-Test-Password': process.env.TEST_PASSWORD || 'Admin123!',
+    },
   },
 
   projects: [

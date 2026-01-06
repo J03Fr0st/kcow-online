@@ -60,6 +60,12 @@ public class LegacySchoolImportServiceTests : IClassFixture<CustomWebApplication
             var schools = await response.Content.ReadFromJsonAsync<List<SchoolDto>>();
             Assert.NotNull(schools);
             Assert.Contains(schools, s => s.Id == schoolId);
+
+            // Verify field mappings - AC #2 validation
+            var importedSchool = schools.First(s => s.Id == schoolId);
+            Assert.Equal("Import Test", importedSchool.Name); // ShortSchool → Name fallback
+            Assert.True(importedSchool.PrintInvoice); // Print=1 mapped correctly
+            Assert.True(importedSchool.ImportFlag); // Import=1 mapped correctly
         }
         finally
         {

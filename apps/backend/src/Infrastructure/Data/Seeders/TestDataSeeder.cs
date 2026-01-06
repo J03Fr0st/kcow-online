@@ -1,5 +1,6 @@
 using Kcow.Application.Import;
 using Kcow.Domain.Entities;
+using Kcow.Infrastructure.Import;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -21,8 +22,11 @@ public static class TestDataSeeder
         {
             logger.LogInformation("Seeding test data for E2E tests");
 
-            // Seed test trucks
+            // Seed test trucks first (needed for school route validation)
             await SeedTrucksAsync(context, logger);
+
+            // Seed test schools from legacy XML
+            await SeedSchoolsAsync(context, logger);
 
             logger.LogInformation("Test data seeded successfully");
         }
@@ -51,5 +55,60 @@ public static class TestDataSeeder
         await context.SaveChangesAsync();
 
         logger.LogInformation("Seeded {Count} sample trucks", trucks.Count);
+    }
+
+    /// <summary>
+    /// Seeds school data from legacy XML files.
+    /// </summary>
+    private static async Task SeedSchoolsAsync(AppDbContext context, ILogger logger)
+    {
+        if (await context.Schools.AnyAsync())
+        {
+            logger.LogInformation("Schools already exist, skipping school seeding");
+            return;
+        }
+
+        try
+        {
+            var xmlPath = FindRepoFile("docs/legacy/1_School/School.xml");
+            var xsdPath = FindRepoFile("docs/legacy/1_School/School.xsd");
+
+            logger.LogInformation("Importing schools from {XmlPath}", xmlPath);
+
+            var importer = new Kcow.Infrastructure.Import.LegacySchoolImportService(context);
+            var summary = await importer.ImportAsync(xmlPath, xsdPath, null, null);
+
+            logger.LogInformation("Seeded {Count} schools from legacy data", summary.ImportedCount);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to seed schools from legacy data. Continuing with empty schools.");
+        }
+    }
+
+    private static string FindRepoFile(string relativePath)
+    {
+        var baseDirectory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (baseDirectory != null)
+        {
+            var candidate = Path.Combine(baseDirectory.FullName, relativePath);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            baseDirectory = baseDirectory.Parent;
+        }
+
+        // Fallback for different environments
+        var currentDir = Directory.GetCurrentDirectory();
+        var fallback = Path.Combine(currentDir, relativePath);
+        if (File.Exists(fallback)) return fallback;
+
+        // Try one level up from current dir
+        var parentFallback = Path.Combine(Directory.GetParent(currentDir)?.FullName ?? "", relativePath);
+        if (File.Exists(parentFallback)) return parentFallback;
+
+        throw new FileNotFoundException($"Unable to locate {relativePath}");
     }
 }

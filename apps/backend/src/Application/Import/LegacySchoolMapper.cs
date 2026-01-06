@@ -6,6 +6,17 @@ public sealed record LegacySchoolMappingResult(School School, IReadOnlyList<stri
 
 public sealed class LegacySchoolMapper
 {
+    private static readonly IReadOnlySet<int> EmptyTruckIds = new HashSet<int>();
+
+    private readonly IReadOnlySet<int> _validTruckIds;
+
+    public LegacySchoolMapper() : this(EmptyTruckIds) { }
+
+    public LegacySchoolMapper(IReadOnlySet<int> validTruckIds)
+    {
+        _validTruckIds = validTruckIds;
+    }
+
     public LegacySchoolMappingResult Map(LegacySchoolRecord record)
     {
         var warnings = new List<string>();
@@ -16,12 +27,24 @@ public sealed class LegacySchoolMapper
             warnings.Add($"School {record.SchoolId} is missing a description and short name.");
         }
 
+        // Validate TruckId foreign key
+        if (record.Trok.HasValue && _validTruckIds.Count > 0 && !_validTruckIds.Contains(record.Trok.Value))
+        {
+            warnings.Add($"School {record.SchoolId} references invalid TruckId {record.Trok.Value}. Truck will be set to null.");
+        }
+
+        var truckId = record.Trok;
+        if (truckId.HasValue && _validTruckIds.Count > 0 && !_validTruckIds.Contains(truckId.Value))
+        {
+            truckId = null;
+        }
+
         var school = new School
         {
             Id = record.SchoolId,
             Name = name,
             ShortName = Trim(record.ShortSchool),
-            TruckId = record.Trok,
+            TruckId = truckId,
             Price = record.Price.HasValue ? Convert.ToDecimal(record.Price.Value) : null,
             FeeDescription = Trim(record.FormulaDescription),
             Formula = record.Formula.HasValue ? Convert.ToDecimal(record.Formula.Value) : null,

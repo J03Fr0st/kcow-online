@@ -27,12 +27,21 @@ public sealed class LegacySchoolImportService
         var result = _parser.Parse(xmlPath, xsdPath);
         _auditLog.AddValidationErrors(Path.GetFileName(xmlPath), result.ValidationErrors);
 
+        // Load valid truck IDs for foreign key validation
+        var validTruckIds = new HashSet<int>(await _context.Trucks
+            .Where(t => t.IsActive)
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken));
+
+        // Create mapper with truck validation
+        var mapper = new LegacySchoolMapper(validTruckIds);
+
         var imported = 0;
         var skipped = 0;
 
         foreach (var record in result.Records)
         {
-            var mapping = _mapper.Map(record);
+            var mapping = mapper.Map(record);
             if (string.IsNullOrWhiteSpace(mapping.School.Name))
             {
                 skipped++;
@@ -42,6 +51,8 @@ public sealed class LegacySchoolImportService
             var exists = await _context.Schools.AnyAsync(s => s.Id == mapping.School.Id, cancellationToken);
             if (exists)
             {
+                _auditLog.AddValidationErrors(Path.GetFileName(xmlPath),
+                    new[] { new LegacyXmlValidationError($"Skipped duplicate school {mapping.School.Id}", null, null) });
                 skipped++;
                 continue;
             }
