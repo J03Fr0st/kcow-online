@@ -1,3 +1,4 @@
+using Kcow.Application.Import;
 using Kcow.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -44,54 +45,7 @@ public static class TestDataSeeder
             return;
         }
 
-        var trucks = new List<Truck>
-        {
-            new()
-            {
-                Name = "KCOW-Alpha",
-                RegistrationNumber = "KCOW-001",
-                Status = "Active",
-                Notes = "Primary truck for downtown visits",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new()
-            {
-                Name = "KCOW-Bravo",
-                RegistrationNumber = "KCOW-002",
-                Status = "Active",
-                Notes = "Secondary truck for suburban visits",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new()
-            {
-                Name = "KCOW-Charlie",
-                RegistrationNumber = "KCOW-003",
-                Status = "Maintenance",
-                Notes = "Currently undergoing scheduled maintenance",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new()
-            {
-                Name = "KCOW-Delta",
-                RegistrationNumber = "KCOW-004",
-                Status = "Active",
-                Notes = "Newest truck in fleet",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new()
-            {
-                Name = "KCOW- legacy",
-                RegistrationNumber = "KCOW-005",
-                Status = "Inactive",
-                Notes = "Old truck being phased out",
-                IsActive = false,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
+        var trucks = LegacyTruckSeedData.Build();
 
         await context.Trucks.AddRangeAsync(trucks);
         await context.SaveChangesAsync();
