@@ -464,6 +464,181 @@ kcow-online/
 **Deployment Structure:**
 - SPA served separately from API (same domain or reverse proxy)
 
+## E2E Testing Strategy
+
+### Testing Philosophy
+
+E2E tests validate complete user workflows and critical integration points that unit tests cannot cover. Each epic includes dedicated E2E testing stories to ensure feature integrity before marking epic completion.
+
+### Test Scope by Epic
+
+**Epic 1 - Authentication:**
+- Login/logout flows
+- Protected route redirects
+- Auth token handling
+
+**Epic 2 - Trucks & Schools:**
+- CRUD workflows for reference data
+- Validation and error handling
+- Data persistence
+
+**Epic 3 - Class Groups & Scheduling:**
+- Schedule configuration
+- Conflict detection (FR6)
+- Weekly view rendering
+
+**Epic 4 - Students & Families:**
+- Global search (FR11) with disambiguation
+- Student profile navigation (FR10)
+- CRUD operations with related entities
+- Performance targets (NFR1, NFR2)
+
+**Epic 5 - Attendance & Evaluations:**
+- Attendance tracking and bulk entry
+- Audit trail creation and display (FR14)
+- Evaluation recording
+
+**Epic 6 - Billing & Financials:**
+- Invoice and payment workflows
+- Balance calculations
+- Audit trail for financial records (FR14)
+
+**Epic 7 - Data Migration:**
+- Integration tests for import pipeline
+- XML parsing and data mapping
+- Import preview and execution
+
+### Test Organization
+
+**Frontend E2E Tests:**
+```
+apps/frontend/e2e/
+├── auth/
+│   ├── login.spec.ts
+│   ├── logout.spec.ts
+│   └── protected-routes.spec.ts
+├── trucks-schools/
+│   ├── trucks-crud.spec.ts
+│   └── schools-crud.spec.ts
+├── class-groups/
+│   ├── scheduling.spec.ts
+│   └── conflict-detection.spec.ts
+├── students/
+│   ├── global-search.spec.ts
+│   ├── student-profile.spec.ts
+│   └── family-management.spec.ts
+├── attendance-evaluations/
+│   ├── attendance.spec.ts
+│   ├── bulk-attendance.spec.ts
+│   └── audit-trail.spec.ts
+└── billing/
+    ├── invoicing.spec.ts
+    ├── payments.spec.ts
+    └── financial-calculations.spec.ts
+```
+
+**Backend Integration Tests:**
+```
+apps/backend/tests/Integration/Import/
+├── xml-parsing.spec.ts
+├── data-mapping.spec.ts
+├── import-preview.spec.ts
+├── import-execution.spec.ts
+└── import-audit.spec.ts
+```
+
+### Test Data Strategy
+
+**Test Data Seeding:**
+- Dedicated test database (SQLite in-memory or separate file)
+- Seed scripts create baseline data for each test suite
+- Tests run in isolation; database reset between tests
+- Seed data includes:
+  - Admin user credentials
+  - Sample schools, trucks, class groups
+  - Sample students with families
+  - Existing attendance/evaluations/billing records
+
+**Test Data Fixtures:**
+```typescript
+// e2e/fixtures/test-data.ts
+export const testFixtures = {
+  schools: [...],    // 3-5 sample schools
+  trucks: [...],     // 2 sample trucks
+  classGroups: [...], // 5-10 sample class groups
+  students: [...],   // 10-15 sample students
+  families: [...],   // Related family records
+};
+```
+
+**Clean Up Strategy:**
+- Each test suite cleans up its own data
+- Transactions rolled back after each test
+- No persistent test data in main database
+
+### Test Environment Configuration
+
+**Playwright Configuration:**
+```typescript
+// playwright.config.ts
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:4200',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { browserName: 'chromium' },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    port: 4200,
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### CI/CD Integration
+
+**Test Execution:**
+- E2E tests run on every pull request
+- Tests run in parallel for speed
+- Failed tests block merge
+- Test reports uploaded for review
+
+**Pre-merge Requirements:**
+- All E2E tests must pass
+- Code coverage maintained (target: 80%+)
+- Performance tests validate <2s targets
+
+### Epic Completion Criteria
+
+**Each Epic is COMPLETE only when:**
+1. All feature stories are implemented
+2. All E2E/integration tests for the epic pass
+3. Critical user journeys are validated
+4. Performance targets are met (where applicable)
+5. No regressions in existing functionality
+
+### Quality Gates
+
+**Definition of Done for E2E Tests:**
+- [ ] Tests cover all happy paths for epic features
+- [ ] Tests cover critical edge cases and error scenarios
+- [ ] Tests validate audit trail creation (where applicable)
+- [ ] Tests use seeded data and clean up after themselves
+- [ ] Tests run reliably in CI (no flakiness)
+- [ ] Test reports provide clear failure diagnostics
+
 ## Architecture Validation Results
 
 ### Coherence Validation ✅

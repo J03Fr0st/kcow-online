@@ -15,7 +15,7 @@ date: '2026-01-03'
 status: 'complete'
 completedAt: '2026-01-03'
 totalEpics: 7
-totalStories: 38
+totalStories: 53
 ---
 
 # kcow-online - Epic Breakdown
@@ -374,6 +374,40 @@ Admin can securely log in to the system and access a protected dashboard with th
 
 ---
 
+### Story 1.6: E2E Tests - Authentication Flows
+
+**As a** developer,
+**I want** E2E tests covering authentication workflows,
+**So that** login, logout, and protected routes are validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running
+**When** I run E2E tests for authentication
+**Then** the following scenarios are covered:
+
+**Login Flow:**
+- User can navigate to `/login` and see the login form
+- User can enter valid credentials and submit successfully
+- User is redirected to dashboard after successful login
+- User sees inline error message with invalid credentials
+- User remains on login page after failed login
+
+**Protected Routes:**
+- Unauthenticated user accessing `/` is redirected to `/login`
+- Authenticated user can access dashboard and sidebar links
+- Auth tokens are attached to API requests
+
+**Logout Flow:**
+- User can click logout and be redirected to login
+- Session is cleared (token removed)
+
+**And** E2E tests are organized in `e2e/auth/`
+**And** Tests use test data seeding for admin user creation
+**And** All tests must pass for Epic 1 completion
+
+---
+
 ## Epic 2: Trucks & Schools Management
 
 Admin can manage the core reference data - trucks and schools - that underpin all scheduling and student operations.
@@ -514,6 +548,58 @@ Admin can manage the core reference data - trucks and schools - that underpin al
 
 ---
 
+### Story 2.6: Data Migration - Trucks & Schools
+**As a** developer,
+**I want** legacy Trucks/Schools data parsed, mapped, and imported into the database,
+**So that** CRUD flows and E2E tests operate on real migrated records.
+**Acceptance Criteria:**
+**Given** legacy XML/XSD data for Schools (docs/legacy/1_School/)
+**When** the migration import executes for Schools
+**Then** all valid School records are inserted into the database
+**And** field mappings transform legacy data to new schema (e.g., contact fields, billing settings)
+**And** Truck seed data is loaded for route assignments
+**And** validation errors are captured and logged to the migration audit log
+**And** a summary report shows imported count, skipped count, and error count
+**And** the imported data is available in the UI and API
+---
+### Story 2.7: E2E Tests - Trucks & Schools CRUD
+
+**As a** developer,
+**I want** E2E tests covering truck and school management workflows,
+**So that** CRUD operations and validation are validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running and authenticated as admin
+**When** I run E2E tests for trucks and schools
+**Then** the following scenarios are covered:
+
+**Trucks Management:**
+- User can navigate to Trucks page and see truck list
+- User can create a new truck with valid data
+- User can edit existing truck details
+- User can soft-delete a truck (removed from active list)
+- Validation errors display inline for invalid data
+
+**Schools Management:**
+- User can navigate to Schools page and see school list
+- User can create a new school with contact information
+- User can edit school details including contacts
+- User can configure school billing settings (default rate, cycle)
+- User can archive a school
+
+**Data Integrity:**
+- School contacts and billing settings persist correctly
+- Truck status changes are reflected in UI
+- Search and filtering work on list pages
+
+**And** E2E tests are organized in `e2e/trucks-schools/`
+**And** Tests use seeded test data (multiple trucks, schools)
+**And** Tests clean up test data after completion
+**And** All tests must pass for Epic 2 completion
+
+---
+
 ## Epic 3: Class Groups & Scheduling
 
 Admin can create and manage class group schedules, assign trucks to schools, and detect/resolve scheduling conflicts.
@@ -642,6 +728,65 @@ Admin can create and manage class group schedules, assign trucks to schools, and
 **And** I can navigate to edit the class group
 
 **And** conflicts are visually highlighted with a warning indicator
+
+---
+
+### Story 3.6: Data Migration - Class Groups & Schedules
+**As a** developer,
+**I want** legacy Class Group data parsed, mapped, and imported into the database,
+**So that** scheduling and conflict detection operate on real migrated schedules.
+**Acceptance Criteria:**
+**Given** legacy XML/XSD data for Class Groups (docs/legacy/2_Class_Group/)
+**When** the migration import executes for Class Groups
+**Then** all valid Class Group records are inserted into the database
+**And** school associations are linked via imported school IDs
+**And** schedule/time slot data is mapped to the new schema
+**And** validation errors are captured and logged to the migration audit log
+**And** a summary report shows imported count, skipped count, and error count
+**And** the imported data is available in the UI and API
+---
+### Story 3.7: E2E Tests - Class Groups & Scheduling Conflicts
+
+**As a** developer,
+**I want** E2E tests covering class group scheduling and conflict detection,
+**So that** the scheduling workflow and conflict resolution are validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running and authenticated as admin
+**When** I run E2E tests for class groups and scheduling
+**Then** the following scenarios are covered:
+
+**Class Groups CRUD:**
+- User can navigate to Class Groups page and see list
+- User can create a class group with school, truck, day/time
+- User can edit class group schedule
+- User can archive a class group
+- Filters work for school and truck
+
+**Schedule Configuration:**
+- User can select day of week, start time, end time, sequence
+- User can assign truck to class group
+- Schedule appears in weekly view
+- Schedule blocks show class group, school, truck details
+
+**Conflict Detection (FR6 - Critical):**
+- User attempts to create overlapping schedule for same truck
+- Schedule Conflict Banner appears with warning
+- Conflicting class group details are shown
+- User is blocked from saving until conflict resolved
+- User can adjust time or truck to resolve conflict
+- After resolution, class group saves successfully
+
+**Weekly View:**
+- Calendar-style grid displays correctly
+- Conflicts are visually highlighted
+- Clicking schedule block navigates to edit
+
+**And** E2E tests are organized in `e2e/class-groups/`
+**And** Tests use seeded test data (schools, trucks, existing schedules)
+**And** Conflict detection scenarios are thoroughly tested
+**And** All tests must pass for Epic 3 completion
 
 ---
 
@@ -840,6 +985,74 @@ Admin can create, search, and manage student records with family/guardian relati
 
 ---
 
+### Story 4.9: Data Migration - Students & Families
+**As a** developer,
+**I want** legacy Children (Students) and Family data parsed, mapped, and imported into the database,
+**So that** the single-screen profile and global search operate on real migrated records.
+**Acceptance Criteria:**
+**Given** legacy XML/XSD data for Children (docs/legacy/4_Children/)
+**When** the migration import executes for Children/Students
+**Then** all valid Student records are inserted into the database
+**And** Family records are created and linked to Students
+**And** school and class group assignments are linked via imported IDs
+**And** contact information, guardian details, and medical info are mapped
+**And** validation errors are captured and logged to the migration audit log
+**And** a summary report shows imported count, skipped count, and error count
+**And** the imported data is searchable and visible in the student profile UI
+---
+### Story 4.10: E2E Tests - Student Management & Global Search
+
+**As a** developer,
+**I want** E2E tests covering student management and the global search workflow,
+**So that** the primary user journey (student lookup and profile) is validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running and authenticated as admin
+**When** I run E2E tests for student management
+**Then** the following scenarios are covered:
+
+**Global Student Search (FR11 - Critical):**
+- User can access global search bar from any page
+- Typing in search shows typeahead results with students
+- Each result shows: Full Name, School, Grade, Class Group
+- Search disambiguates students with similar names
+- Selecting a result navigates to student profile
+- Search returns results in under 2 seconds (NFR1 validation)
+- "No results found" displays when no matches
+
+**Student Profile Navigation:**
+- User can navigate to student profile from list or search
+- Profile loads with 3-column header (photo, demographics, school, status)
+- Page loads in under 2 seconds (NFR2 validation)
+
+**Single-Screen Student Profile (FR10 - Critical):**
+- Profile header shows: basic info, school assignment, status indicators
+- Tabbed sections visible: Child Info, Financial, Attendance, Evaluation
+- User can switch between tabs without page reload
+- Inline editing works in Child Info tab
+- Save confirmation appears after edits
+- Validation errors display inline
+
+**Student CRUD:**
+- User can create new student with school/class group/seat assignment
+- Class group dropdown filters by selected school
+- User can edit student demographics
+- User can archive a student
+
+**Family Management:**
+- Family Grid displays at bottom of profile
+- User can add family member with relationship type
+- User can edit family contact information
+- Sibling students show in Family Grid
+
+**And** E2E tests are organized in `e2e/students/`
+**And** Tests use seeded test data (schools, class groups, students, families)
+**And** Global search performance is validated
+**And** All tests must pass for Epic 4 completion
+
+---
+
 ## Epic 5: Attendance & Evaluations
 
 Admin can track student attendance per class session, record progress evaluations, and make corrections with a visible audit trail.
@@ -980,6 +1193,72 @@ Admin can track student attendance per class session, record progress evaluation
 **And** I see a success confirmation
 
 **And** existing attendance for the same date shows pre-filled values
+
+---
+
+### Story 5.7: Data Migration - Attendance & Evaluations
+**As a** developer,
+**I want** legacy attendance and evaluation data parsed, mapped, and imported into the database,
+**So that** tracking flows and audit trails operate on real historical records.
+**Acceptance Criteria:**
+**Given** legacy XML/XSD data for Activities (docs/legacy/3_Activity/) and related attendance records
+**When** the migration import executes for Attendance and Evaluations
+**Then** all valid attendance records are inserted with correct student and class group links
+**And** evaluation/assessment records are imported with proper date and score mappings
+**And** historical data maintains accurate timestamps for audit trail purposes
+**And** validation errors are captured and logged to the migration audit log
+**And** a summary report shows imported count, skipped count, and error count
+**And** the imported data appears correctly in the attendance tab and evaluation tab
+---
+### Story 5.8: E2E Tests - Attendance Tracking & Audit Trail
+
+**As a** developer,
+**I want** E2E tests covering attendance tracking and audit trail functionality,
+**So that** attendance workflows and correction traceability are validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running and authenticated as admin
+**When** I run E2E tests for attendance and evaluations
+**Then** the following scenarios are covered:
+
+**Attendance Tab in Student Profile:**
+- User can navigate to Attendance tab
+- List shows recent attendance with Date, Class Group, Status, Notes
+- Status chips display correctly (Present=green, Absent=red, Late=yellow)
+- User can click attendance row to activate inline edit
+- User can change status or add notes
+- Save confirms changes immediately
+- User can add new attendance entry with date, class group, status
+
+**Bulk Attendance Entry:**
+- User can navigate to Class Groups page
+- User can click "Take Attendance" on a class group
+- All enrolled students display with status toggles
+- User can mark attendance for all students (Present/Absent/Late)
+- "Save All" creates attendance records for all students
+- Existing attendance for same date pre-fills with current values
+- Success confirmation appears after save
+
+**Audit Trail (FR14 - Critical):**
+- User updates an attendance record
+- Audit log entry is created with timestamp, previous value, new value, user
+- User can click "View History" on attendance record
+- Audit Trail Panel appears showing all changes
+- Audit trail is read-only
+- Each change shows: timestamp, field changed, old value, new value, actor
+
+**Evaluations Tab:**
+- User can navigate to Evaluation tab
+- List shows evaluations with Activity, Date, Score, Speed, Accuracy
+- User can add new evaluation with activity, date, scores, notes
+- User can edit existing evaluation inline
+- Visual indicators display for score levels
+
+**And** E2E tests are organized in `e2e/attendance-evaluations/`
+**And** Tests use seeded test data (students, class groups, existing attendance)
+**And** Audit trail creation and display are thoroughly tested
+**And** All tests must pass for Epic 5 completion
 
 ---
 
@@ -1130,6 +1409,83 @@ Admin can manage student billing records, track payments, and view financial sta
 
 ---
 
+### Story 6.7: Data Migration - Billing & Financials
+**As a** developer,
+**I want** legacy billing, invoice, and payment data parsed, mapped, and imported into the database,
+**So that** financial flows and balance calculations operate on real migrated records.
+**Acceptance Criteria:**
+**Given** legacy billing data from Children records and school billing configurations
+**When** the migration import executes for Billing records
+**Then** all valid invoice records are inserted with correct student and family links
+**And** payment history is imported with accurate dates and amounts
+**And** outstanding balances are calculated correctly from migrated data
+**And** school billing settings are applied to imported records
+**And** validation errors are captured and logged to the migration audit log
+**And** a summary report shows imported count, skipped count, and error count
+**And** the imported data displays correctly in the financial tab and profile header
+---
+### Story 6.8: E2E Tests - Billing Management & Financial Accuracy
+
+**As a** developer,
+**I want** E2E tests covering billing workflows and financial data integrity,
+**So that** invoicing, payments, and balance calculations are validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running and authenticated as admin
+**When** I run E2E tests for billing and financials
+**Then** the following scenarios are covered:
+
+**Financial Tab in Student Profile:**
+- User can navigate to Financial tab
+- Billing summary shows: current balance, last payment date/amount, outstanding invoices
+- Invoices list displays with Date, Amount, Status
+- Payments list displays with Date, Amount, Receipt #
+- Summary and lists update correctly after changes
+
+**Record Payment:**
+- User can click "Record Payment" to open inline form
+- Form displays: amount input, payment method dropdown, optional invoice, notes
+- User can submit valid payment
+- Payment appears in payments list
+- Balance is updated correctly
+- Receipt number is generated automatically
+- If applied to invoice, invoice status updates
+
+**Create Invoice:**
+- User can click "Create Invoice" to open inline form
+- Form displays: amount input, due date picker, description/notes
+- User can submit valid invoice
+- Invoice appears in invoices list
+- Balance is updated
+- Status is set to "Pending"
+
+**Billing Status in Profile Header:**
+- Profile header third column shows billing status
+- Current balance displays with color indicator (green if 0, red if outstanding)
+- Text shows "Up to date" or "Balance due"
+- Warning indicator displays for overdue invoices
+
+**Audit Trail (FR14 - Critical):**
+- User updates a payment or invoice record
+- Audit log entry is created with timestamp, previous value, new value, user
+- User can click "View History" on billing record
+- Audit Trail Panel appears showing all changes
+- Audit trail is read-only
+
+**Financial Calculations:**
+- Balance updates correctly when invoice is created
+- Balance updates correctly when payment is recorded
+- Applied payments reduce invoice balance
+- Calculations are accurate and consistent
+
+**And** E2E tests are organized in `e2e/billing/`
+**And** Tests use seeded test data (students, existing invoices/payments)
+**And** Financial calculations and audit trails are thoroughly tested
+**And** All tests must pass for Epic 6 completion
+
+---
+
 ## Epic 7: Legacy Data Migration
 
 Developer can import legacy XML/XSD data with preview, exception handling, and audit logging.
@@ -1255,3 +1611,62 @@ Developer can import legacy XML/XSD data with preview, exception handling, and a
 **When** matching records exist
 **Then** they are updated with new values
 **And** changes are logged to the audit trail
+
+---
+
+### Story 7.7: Integration Tests - Legacy Data Import Pipeline
+
+**As a** developer,
+**I want** integration tests covering the legacy XML/XSD import pipeline,
+**So that** data migration accuracy and error handling are validated.
+
+**Acceptance Criteria:**
+
+**Given** the backend project with import infrastructure
+**When** I run integration tests for data migration
+**Then** the following scenarios are covered:
+
+**XML/XSD Parsing:**
+- Parser reads and validates XML against XSD schema
+- Parser extracts School, ClassGroup, Activity, and Children data
+- Parser handles encoding and format variations
+- Parser errors are logged with file/line information
+
+**Data Mapping:**
+- Legacy fields map correctly to new entity properties
+- Data transformations apply correctly (date formats, enum conversions)
+- Missing or invalid values are flagged for review
+- Mapping rules are enforced
+
+**Import Preview Mode:**
+- Preview mode shows total records to import by entity type
+- Sample mapped records display correctly
+- Validation warnings and errors are captured
+- NO data is written to database in preview mode
+
+**Import Execution:**
+- Valid records insert into database correctly
+- Failed records log to exceptions file with details
+- Summary shows: X imported, Y failed, Z skipped
+- Exceptions file includes: record ID, field, error reason, original value
+
+**Import Audit Log:**
+- Import run creates audit log entry with timestamp, user, source files, counts
+- Audit log is queryable for import history
+- All import operations are traceable
+
+**Re-run Capability:**
+- Existing records matched by unique key (legacy ID)
+- Update mode: existing records updated with new values
+- Changes logged to audit trail
+- Conflict modes work correctly (skip/update/fail)
+
+**And** Integration tests are organized in `apps/backend/tests/Integration/Import/`
+**And** Tests use sample XML files from `docs/legacy/`
+**And** Database is reset between test runs
+**And** All tests must pass for Epic 7 completion
+**Note:** No E2E UI tests needed - this is developer CLI tooling
+
+
+
+
