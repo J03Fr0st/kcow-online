@@ -68,12 +68,12 @@ development_status:
   # Epic 3: Class Groups & Scheduling
   # ========================
   epic-3: in-progress
-  3-1-class-group-entity-api-endpoints: in-progress  # Code review found critical XSD violations - fixes applied, migration+tests needed
-  3-2-class-groups-management-ui: review  # Code review complete - added 8 missing XSD fields, fixed validation, tests needed
-  3-3-schedule-time-slot-configuration: review  # Code review complete - validated sorting logic and day mapping, documentation added, tests needed
-  3-4-scheduling-conflict-detection: review  # Code review complete - validated conflict algorithm and debouncing, robust implementation, tests needed
-  3-5-weekly-schedule-overview: review  # Code review complete - found & fixed critical bugs (duplicate import, type error), tests needed
-  3-6-data-migration-class-groups-schedules: review  # Code review complete - fixed missing 7 XSD fields in mapper, tests needed
+  3-1-class-group-entity-api-endpoints: done  # Completed: XSD compliance, migration, comprehensive tests (12 unit + 25+ integration)
+  3-2-class-groups-management-ui: done  # Code reviewed: XSD fields added, validation fixed
+  3-3-schedule-time-slot-configuration: done  # Code reviewed: sorting logic validated, documentation complete
+  3-4-scheduling-conflict-detection: done  # Code reviewed: conflict algorithm validated, robust implementation
+  3-5-weekly-schedule-overview: done  # Code reviewed: critical bugs fixed (duplicate import, type errors)
+  3-6-data-migration-class-groups-schedules: done  # Code reviewed: XSD compliance fixed (7 missing fields added)
   3-7-e2e-tests-class-groups-scheduling-conflicts: ready-for-dev
   epic-3-retrospective: optional
 
