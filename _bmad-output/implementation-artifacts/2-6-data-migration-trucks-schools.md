@@ -1,6 +1,6 @@
 # Story 2.6: Data Migration - Trucks & Schools
 
-Status: ready-for-dev
+Status: in progress
 
 ## Story
 
@@ -31,33 +31,33 @@ So that CRUD flows and E2E tests operate on real migrated records.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Legacy Schema Parser for Schools (AC: #1)
-  - [ ] Read and validate School.xml against School.xsd schema
-  - [ ] Extract all 30 fields from School XSD
-  - [ ] Handle encoding and format variations
+- [x] Task 1: Create Legacy Schema Parser for Schools (AC: #1)
+  - [x] Read and validate School.xml against School.xsd schema
+  - [x] Extract all 30 fields from School XSD
+  - [x] Handle encoding and format variations
 
-- [ ] Task 2: Implement Data Mapping Service for Schools (AC: #2)
-  - [ ] Map legacy School fields to domain entity properties
-  - [ ] Translate Afrikaans field names to English per `docs/domain-models.md`
-  - [ ] Apply data transformations (date formats, contact consolidation)
-  - [ ] Flag missing or invalid values for review
+- [x] Task 2: Implement Data Mapping Service for Schools (AC: #2)
+  - [x] Map legacy School fields to domain entity properties
+  - [x] Translate Afrikaans field names to English per `docs/domain-models.md`
+  - [x] Apply data transformations (date formats, contact consolidation)
+  - [x] Flag missing or invalid values for review
 
-- [ ] Task 3: Create Truck Seed Data (AC: #3)
-  - [ ] Define standard truck seed data based on legacy system trucks
-  - [ ] Ensure trucks are available for route assignment tests
+- [x] Task 3: Create Truck Seed Data (AC: #3)
+  - [x] Define standard truck seed data based on legacy system trucks
+  - [x] Ensure trucks are available for route assignment tests
 
-- [ ] Task 4: Implement Validation and Error Logging (AC: #4)
-  - [ ] Validate imported records against XSD constraints
-  - [ ] Create audit log entries for validation errors
-  - [ ] Include file/line information in error logs
+- [x] Task 4: Implement Validation and Error Logging (AC: #4)
+  - [x] Validate imported records against XSD constraints
+  - [x] Create audit log entries for validation errors
+  - [x] Include file/line information in error logs
 
-- [ ] Task 5: Create Import Summary Report (AC: #5)
-  - [ ] Track imported, skipped, and error counts
-  - [ ] Generate summary report after import completion
-  - [ ] Save report to configurable output location
+- [x] Task 5: Create Import Summary Report (AC: #5)
+  - [x] Track imported, skipped, and error counts
+  - [x] Generate summary report after import completion
+  - [x] Save report to configurable output location
 
 - [ ] Task 6: Verify UI and API Availability (AC: #6)
-  - [ ] Test that imported Schools appear in GET /api/schools
+  - [x] Test that imported Schools appear in GET /api/schools
   - [ ] Test that imported data renders correctly in Schools Management UI
 
 ## Dev Notes
@@ -103,16 +103,51 @@ See `docs/domain-models.md` for complete Afrikaans → English translations:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GPT-5
 
 ### Debug Log References
 
+- `dotnet test apps/backend/tests/Integration/Kcow.Integration.Tests.csproj --filter FullyQualifiedName~LegacySchoolXmlParserTests`
+- `dotnet test apps/backend/tests/Integration/Kcow.Integration.Tests.csproj --filter FullyQualifiedName~LegacySchoolMapperTests`
+- `dotnet test apps/backend/tests/Integration/Kcow.Integration.Tests.csproj --filter FullyQualifiedName~LegacyTruckSeedDataTests`
+- `dotnet test apps/backend/tests/Integration/Kcow.Integration.Tests.csproj --filter FullyQualifiedName~LegacyImportAuditLogTests`
+- `dotnet test apps/backend/tests/Integration/Kcow.Integration.Tests.csproj --filter FullyQualifiedName~LegacyImportSummaryReportTests`
+- `dotnet test apps/backend/tests/Integration/Kcow.Integration.Tests.csproj --filter FullyQualifiedName~LegacySchoolImportServiceTests`
+
 ### Completion Notes List
+
+- Added legacy school XML parser with XSD validation and typed field extraction.
+- Added integration tests for valid parsing and validation errors.
+- Added legacy school mapping service and mapper tests with warning capture.
+- Centralized standard truck seed data for legacy values and reused it in test seeding.
+- Added audit log entry capture for validation errors with file/line metadata.
+- Added legacy import summary report generator with file output.
+- Added legacy school import service and API verification test for imported schools.
+- UI verification remains pending (no Playwright run in this pass).
 
 ### File List
 
+- `apps/backend/src/Application/Import/LegacySchoolXmlParser.cs`
+- `apps/backend/src/Application/Import/LegacySchoolMapper.cs`
+- `apps/backend/src/Application/Import/LegacyTruckSeedData.cs`
+- `apps/backend/src/Application/Import/LegacyImportAuditLog.cs`
+- `apps/backend/src/Application/Import/LegacyImportSummaryReport.cs`
+- `apps/backend/src/Infrastructure/Import/LegacySchoolImportService.cs`
+- `apps/backend/tests/Integration/Import/LegacySchoolXmlParserTests.cs`
+- `apps/backend/tests/Integration/Import/LegacySchoolMapperTests.cs`
+- `apps/backend/tests/Integration/Import/LegacyTruckSeedDataTests.cs`
+- `apps/backend/tests/Integration/Import/LegacyImportAuditLogTests.cs`
+- `apps/backend/tests/Integration/Import/LegacyImportSummaryReportTests.cs`
+- `apps/backend/tests/Integration/Import/LegacySchoolImportServiceTests.cs`
+- `apps/backend/src/Infrastructure/Data/Seeders/TestDataSeeder.cs`
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
+| 2026-01-06 | Implemented legacy school parser and parser tests |
+| 2026-01-06 | Implemented legacy school mapping and mapper tests |
+| 2026-01-06 | Added legacy truck seed data and tests |
+| 2026-01-06 | Added audit log entries for legacy import validation |
+| 2026-01-06 | Added legacy import summary report |
+| 2026-01-06 | Added legacy school import service and API verification test |
