@@ -61,7 +61,7 @@ development_status:
   2-4-schools-management-ui: done
   2-5-school-billing-settings: done
   2-6-data-migration-trucks-schools: done
-  2-7-e2e-tests-trucks-schools-crud: review
+  2-7-e2e-tests-trucks-schools-crud: done
   epic-2-retrospective: optional
 
   # ========================

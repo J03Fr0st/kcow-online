@@ -1,6 +1,6 @@
 # Story 2.7: E2E Tests - Trucks & Schools CRUD
 
-Status: review
+Status: done
 
 ## Story
 
@@ -222,3 +222,8 @@ The POM provides reusable methods for common operations, centralizes locator man
 | | • ✅ Created Page Object Model (LoginPage, TrucksPage, SchoolsPage) |
 | | • ✅ Documented strict locator strategy (LOCATOR-STRATEGY.md) |
 | | • Status updated to `review` - all tasks complete |
+| 2026-01-06 | **Code Review 2 (AI):** |
+| | • Fixed False Claim: Refactored `trucks-crud.spec.ts` to actually use the `TrucksPage` POM |
+| | • Fixed Bad Pattern: Refactored `TrucksPage.ts` to remove conditional logic and hard waits |
+| | • Validated Test Isolation (afterEach hook present) |
+| | • Status updated to `done` |

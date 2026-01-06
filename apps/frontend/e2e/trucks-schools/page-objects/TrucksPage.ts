@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 /**
  * Page Object Model for Trucks Management Page
@@ -51,7 +51,6 @@ export class TrucksPage {
   async goto() {
     await this.page.goto('/trucks');
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(1000);
   }
 
   /**
@@ -72,9 +71,9 @@ export class TrucksPage {
    * Click add button to open create form
    */
   async clickAddTruck() {
+    await expect(this.addButton).toBeVisible();
     await this.addButton.click();
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -82,16 +81,13 @@ export class TrucksPage {
    */
   async clickEditTruck(truckName: string) {
     const truckRow = this.findTruckByName(truckName);
+    await expect(truckRow).toBeVisible();
+    
     const editButton = truckRow.locator('button').filter({ hasText: /edit|modify/i }).first();
-
-    if (await editButton.count() > 0) {
-      await editButton.click();
-    } else {
-      await truckRow.click();
-    }
+    await expect(editButton).toBeVisible();
+    await editButton.click();
 
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -99,7 +95,10 @@ export class TrucksPage {
    */
   async clickDeleteTruck(truckName: string) {
     const truckRow = this.findTruckByName(truckName);
+    await expect(truckRow).toBeVisible();
+    
     const deleteButton = truckRow.locator('button').filter({ hasText: /delete|remove|archive/i }).first();
+    await expect(deleteButton).toBeVisible();
 
     // Set up dialog handler before clicking
     this.page.on('dialog', async dialog => {
@@ -119,17 +118,24 @@ export class TrucksPage {
     year?: string;
     notes?: string;
   }) {
+    await expect(this.nameInput).toBeVisible();
     await this.nameInput.fill(data.name);
 
-    if (data.plate && await this.plateInput.isVisible()) {
+    if (data.plate) {
+      // Expect plate input to be visible if we are trying to fill it
+      // Or simply try to fill it, assuming the form has it.
+      // Given the "Admin" context, these fields should be present.
+      await expect(this.plateInput).toBeVisible();
       await this.plateInput.fill(data.plate);
     }
 
-    if (data.year && await this.yearInput.isVisible()) {
+    if (data.year) {
+      await expect(this.yearInput).toBeVisible();
       await this.yearInput.fill(data.year);
     }
 
-    if (data.notes && await this.notesInput.isVisible()) {
+    if (data.notes) {
+      await expect(this.notesInput).toBeVisible();
       await this.notesInput.fill(data.notes);
     }
   }
@@ -138,20 +144,19 @@ export class TrucksPage {
    * Submit the truck form
    */
   async submitForm() {
+    await expect(this.submitButton).toBeVisible();
     await this.submitButton.click();
     await this.page.waitForURL(/\/trucks/, { timeout: 10000 });
     await this.page.waitForLoadState('networkidle');
-    await this.page.waitForTimeout(1000);
   }
 
   /**
    * Cancel form without saving
    */
   async cancelForm() {
-    if (await this.cancelButton.count() > 0) {
-      await this.cancelButton.click();
-      await this.page.waitForURL(/\/trucks$/, { timeout: 5000 });
-    }
+    await expect(this.cancelButton).toBeVisible();
+    await this.cancelButton.click();
+    await this.page.waitForURL(/\/trucks$/, { timeout: 5000 });
   }
 
   /**
@@ -159,31 +164,29 @@ export class TrucksPage {
    */
   async isTruckVisible(truckName: string): Promise<boolean> {
     const truckLocator = this.page.locator(`text=${truckName}`);
-    return await truckLocator.count() > 0;
+    return await truckLocator.isVisible();
   }
 
   /**
    * Search for trucks by text
    */
   async search(searchTerm: string) {
-    const searchInput = this.page.locator('input[placeholder*="search" i], input[type="search"], #search');
-
-    if (await searchInput.count() > 0) {
-      await searchInput.first().fill(searchTerm);
-      await this.page.waitForTimeout(1000);
-    }
+    const searchInput = this.page.locator('input[placeholder*="search" i], input[type="search"], #search').first();
+    await expect(searchInput).toBeVisible();
+    await searchInput.fill(searchTerm);
+    // Remove fixed wait, use waitForLoadState or response wait if possible
+    // For search, usually a debounce is involved. 
+    // We can wait for the table to update? Or just a small wait if necessary, but preferred to wait for state.
+    // For now, removing the hard wait and assuming the test assertion will wait for the result.
   }
 
   /**
    * Clear search
    */
   async clearSearch() {
-    const searchInput = this.page.locator('input[placeholder*="search" i], input[type="search"], #search');
-
-    if (await searchInput.count() > 0) {
-      await searchInput.first().clear();
-      await this.page.waitForTimeout(1000);
-    }
+    const searchInput = this.page.locator('input[placeholder*="search" i], input[type="search"], #search').first();
+    await expect(searchInput).toBeVisible();
+    await searchInput.clear();
   }
 
   /**

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { TrucksPage } from './page-objects/TrucksPage';
 
 /**
  * E2E Tests for Truck CRUD Operations
@@ -135,67 +136,37 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
 
   test.describe('AC #1.2: Create New Truck', () => {
     test('should create a new truck with valid data', async ({ page }) => {
-      await page.goto('/trucks');
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
+      const trucksPage = new TrucksPage(page);
+      await trucksPage.goto();
 
       // Count trucks before creation
-      const table = page.locator('table tbody tr');
-      const countBefore = await table.count();
-
-      // Click "Add Truck" button
-      const addButton = page.locator('button').filter({ hasText: /add|new|create/i }).first();
-      await expect(addButton).toBeVisible();
-      await addButton.click();
-
-      // Wait for form to load
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
+      const countBefore = await trucksPage.getTruckCount();
 
       // Fill in truck details with unique data
       const timestamp = Date.now();
       const truckName = `E2E Test Truck ${timestamp}`;
       const registrationNumber = `E2E-${timestamp}`;
 
-      const truckForm = page.locator('form');
-
-      // Fill name field
-      const nameInput = truckForm.locator('input[name="name"], input[placeholder*="name" i], #name').first();
-      await expect(nameInput).toBeVisible();
-      await nameInput.fill(truckName);
-
-      // Fill registration number
-      const plateInput = truckForm.locator('input[name="plate"], input[name="registrationNumber"], input[placeholder*="plate" i], input[placeholder*="registration" i]').first();
-      await expect(plateInput).toBeVisible();
-      await plateInput.fill(registrationNumber);
-
-      // Fill year - Optional but should be checked if we expect it
-      const yearInput = truckForm.locator('input[name="year"], input[type="number"]').first();
-      if (await yearInput.isVisible()) {
-         await yearInput.fill('2024');
-      }
-
-      // Fill notes
-      const notesInput = truckForm.locator('textarea[name="notes"], #notes').first();
-      await expect(notesInput).toBeVisible();
-      await notesInput.fill('E2E test truck - can be deleted');
-
-      // Submit form
-      const submitButton = truckForm.locator('button[type="submit"]');
-      await expect(submitButton).toBeVisible();
-      await submitButton.click();
-
-      // Wait for navigation back to list
-      await page.waitForURL(/\/trucks/, { timeout: 10000 });
-      await page.waitForLoadState('networkidle');
+      // Create new truck using POM
+      await trucksPage.clickAddTruck();
+      await trucksPage.fillTruckForm({
+        name: truckName,
+        plate: registrationNumber,
+        year: '2024',
+        notes: 'E2E test truck - can be deleted'
+      });
+      await trucksPage.submitForm();
 
       // Verify truck was added to list
-      const countAfter = await table.count();
+      const countAfter = await trucksPage.getTruckCount();
       expect(countAfter).toBe(countBefore + 1);
 
       // Verify new truck is visible in list
-      await expect(page.locator(`text=${truckName}`)).toBeVisible();
-      await expect(page.locator(`text=${registrationNumber}`)).toBeVisible();
+      const isVisible = await trucksPage.isTruckVisible(truckName);
+      expect(isVisible).toBe(true);
+      
+      const isPlateVisible = await trucksPage.isTruckVisible(registrationNumber);
+      expect(isPlateVisible).toBe(true);
 
       // Verify success message
       const successMessage = page.locator('text=/success|created|added/i').first();
