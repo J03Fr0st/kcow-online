@@ -48,13 +48,21 @@ public class ClassGroupService : IClassGroupService
             {
                 Id = cg.Id,
                 Name = cg.Name,
+                DayTruck = cg.DayTruck,
+                Description = cg.Description,
                 SchoolId = cg.SchoolId,
                 TruckId = cg.TruckId,
                 DayOfWeek = cg.DayOfWeek,
                 StartTime = cg.StartTime,
                 EndTime = cg.EndTime,
                 Sequence = cg.Sequence,
+                Evaluate = cg.Evaluate,
                 Notes = cg.Notes,
+                ImportFlag = cg.ImportFlag,
+                GroupMessage = cg.GroupMessage,
+                SendCertificates = cg.SendCertificates,
+                MoneyMessage = cg.MoneyMessage,
+                Ixl = cg.Ixl,
                 IsActive = cg.IsActive,
                 CreatedAt = cg.CreatedAt,
                 UpdatedAt = cg.UpdatedAt,
@@ -91,13 +99,21 @@ public class ClassGroupService : IClassGroupService
             {
                 Id = cg.Id,
                 Name = cg.Name,
+                DayTruck = cg.DayTruck,
+                Description = cg.Description,
                 SchoolId = cg.SchoolId,
                 TruckId = cg.TruckId,
                 DayOfWeek = cg.DayOfWeek,
                 StartTime = cg.StartTime,
                 EndTime = cg.EndTime,
                 Sequence = cg.Sequence,
+                Evaluate = cg.Evaluate,
                 Notes = cg.Notes,
+                ImportFlag = cg.ImportFlag,
+                GroupMessage = cg.GroupMessage,
+                SendCertificates = cg.SendCertificates,
+                MoneyMessage = cg.MoneyMessage,
+                Ixl = cg.Ixl,
                 IsActive = cg.IsActive,
                 CreatedAt = cg.CreatedAt,
                 UpdatedAt = cg.UpdatedAt,
@@ -159,13 +175,21 @@ public class ClassGroupService : IClassGroupService
         var classGroup = new ClassGroup
         {
             Name = request.Name,
+            DayTruck = request.DayTruck,
+            Description = request.Description,
             SchoolId = request.SchoolId,
             TruckId = request.TruckId,
             DayOfWeek = request.DayOfWeek,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             Sequence = request.Sequence,
+            Evaluate = request.Evaluate,
             Notes = request.Notes,
+            ImportFlag = request.ImportFlag,
+            GroupMessage = request.GroupMessage,
+            SendCertificates = request.SendCertificates,
+            MoneyMessage = request.MoneyMessage,
+            Ixl = request.Ixl,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -221,13 +245,21 @@ public class ClassGroupService : IClassGroupService
         }
 
         classGroup.Name = request.Name;
+        classGroup.DayTruck = request.DayTruck;
+        classGroup.Description = request.Description;
         classGroup.SchoolId = request.SchoolId;
         classGroup.TruckId = request.TruckId;
         classGroup.DayOfWeek = request.DayOfWeek;
         classGroup.StartTime = request.StartTime;
         classGroup.EndTime = request.EndTime;
         classGroup.Sequence = request.Sequence;
+        classGroup.Evaluate = request.Evaluate;
         classGroup.Notes = request.Notes;
+        classGroup.ImportFlag = request.ImportFlag;
+        classGroup.GroupMessage = request.GroupMessage;
+        classGroup.SendCertificates = request.SendCertificates;
+        classGroup.MoneyMessage = request.MoneyMessage;
+        classGroup.Ixl = request.Ixl;
         classGroup.IsActive = request.IsActive;
         classGroup.UpdatedAt = DateTime.UtcNow;
 

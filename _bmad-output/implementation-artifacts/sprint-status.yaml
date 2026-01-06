@@ -68,7 +68,7 @@ development_status:
   # Epic 3: Class Groups & Scheduling
   # ========================
   epic-3: in-progress
-  3-1-class-group-entity-api-endpoints: review
+  3-1-class-group-entity-api-endpoints: in-progress  # Code review found critical XSD violations - fixes applied, migration+tests needed
   3-2-class-groups-management-ui: review
   3-3-schedule-time-slot-configuration: review
   3-4-scheduling-conflict-detection: review

@@ -18,10 +18,23 @@ public class ClassGroupConfiguration : IEntityTypeConfiguration<ClassGroup>
         builder.Property(cg => cg.Id)
             .HasColumnName("id");
 
+        // XSD Field: "Class Group" (10 chars max)
         builder.Property(cg => cg.Name)
             .HasColumnName("name")
+            .HasMaxLength(10)
             .IsRequired();
 
+        // XSD Field: "DayTruck" (6 chars max)
+        builder.Property(cg => cg.DayTruck)
+            .HasColumnName("day_truck")
+            .HasMaxLength(6);
+
+        // XSD Field: "Description" (35 chars max)
+        builder.Property(cg => cg.Description)
+            .HasColumnName("description")
+            .HasMaxLength(35);
+
+        // XSD Field: "School_x0020_Id"
         builder.Property(cg => cg.SchoolId)
             .HasColumnName("school_id")
             .IsRequired();
@@ -29,25 +42,62 @@ public class ClassGroupConfiguration : IEntityTypeConfiguration<ClassGroup>
         builder.Property(cg => cg.TruckId)
             .HasColumnName("truck_id");
 
+        // XSD Field: "DayId" (mapped to DayOfWeek enum)
         builder.Property(cg => cg.DayOfWeek)
             .HasColumnName("day_of_week")
             .IsRequired();
 
+        // XSD Field: "Start_x0020_Time"
         builder.Property(cg => cg.StartTime)
             .HasColumnName("start_time")
             .IsRequired();
 
+        // XSD Field: "End_x0020_Time"
         builder.Property(cg => cg.EndTime)
             .HasColumnName("end_time")
             .IsRequired();
 
+        // XSD Field: "Sequence" (50 chars in XSD)
         builder.Property(cg => cg.Sequence)
             .HasColumnName("sequence")
             .IsRequired();
 
-        builder.Property(cg => cg.Notes)
-            .HasColumnName("notes");
+        // XSD Field: "Evaluate" (boolean, required)
+        builder.Property(cg => cg.Evaluate)
+            .HasColumnName("evaluate")
+            .IsRequired();
 
+        // XSD Field: "Note" (255 chars max)
+        builder.Property(cg => cg.Notes)
+            .HasColumnName("notes")
+            .HasMaxLength(255);
+
+        // XSD Field: "Import" (boolean, required)
+        builder.Property(cg => cg.ImportFlag)
+            .HasColumnName("import_flag")
+            .IsRequired();
+
+        // XSD Field: "GroupMessage" (255 chars max)
+        builder.Property(cg => cg.GroupMessage)
+            .HasColumnName("group_message")
+            .HasMaxLength(255);
+
+        // XSD Field: "Send_x0020_Certificates" (255 chars max)
+        builder.Property(cg => cg.SendCertificates)
+            .HasColumnName("send_certificates")
+            .HasMaxLength(255);
+
+        // XSD Field: "Money_x0020_Message" (50 chars max)
+        builder.Property(cg => cg.MoneyMessage)
+            .HasColumnName("money_message")
+            .HasMaxLength(50);
+
+        // XSD Field: "IXL" (3 chars max)
+        builder.Property(cg => cg.Ixl)
+            .HasColumnName("ixl")
+            .HasMaxLength(3);
+
+        // Application-level fields (not in XSD)
         builder.Property(cg => cg.IsActive)
             .HasColumnName("is_active")
             .IsRequired();

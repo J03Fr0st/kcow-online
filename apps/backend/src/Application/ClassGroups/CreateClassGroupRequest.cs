@@ -4,15 +4,28 @@ namespace Kcow.Application.ClassGroups;
 
 /// <summary>
 /// Request model for creating a new class group.
+/// Aligned with legacy XSD schema constraints.
 /// </summary>
 public class CreateClassGroupRequest
 {
     /// <summary>
-    /// Class group name.
+    /// Class group name (XSD: 10 chars max).
     /// </summary>
     [Required(ErrorMessage = "Name is required")]
-    [MaxLength(100, ErrorMessage = "Name cannot exceed 100 characters")]
+    [MaxLength(10, ErrorMessage = "Name cannot exceed 10 characters")]
     public required string Name { get; set; }
+
+    /// <summary>
+    /// DayTruck composite identifier for legacy compatibility (XSD: 6 chars max).
+    /// </summary>
+    [MaxLength(6, ErrorMessage = "DayTruck cannot exceed 6 characters")]
+    public string? DayTruck { get; set; }
+
+    /// <summary>
+    /// Class group description (XSD: 35 chars max).
+    /// </summary>
+    [MaxLength(35, ErrorMessage = "Description cannot exceed 35 characters")]
+    public string? Description { get; set; }
 
     /// <summary>
     /// School ID this class group belongs to.
@@ -50,8 +63,42 @@ public class CreateClassGroupRequest
     public int Sequence { get; set; } = 1;
 
     /// <summary>
-    /// Optional notes about this class group.
+    /// Evaluation flag (XSD: boolean, default false).
     /// </summary>
-    [MaxLength(1000, ErrorMessage = "Notes cannot exceed 1000 characters")]
+    public bool Evaluate { get; set; } = false;
+
+    /// <summary>
+    /// Optional notes about this class group (XSD: 255 chars max).
+    /// </summary>
+    [MaxLength(255, ErrorMessage = "Notes cannot exceed 255 characters")]
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Import flag (XSD: boolean, default false).
+    /// </summary>
+    public bool ImportFlag { get; set; } = false;
+
+    /// <summary>
+    /// Group message (XSD: 255 chars max).
+    /// </summary>
+    [MaxLength(255, ErrorMessage = "GroupMessage cannot exceed 255 characters")]
+    public string? GroupMessage { get; set; }
+
+    /// <summary>
+    /// Send certificates flag/message (XSD: 255 chars max).
+    /// </summary>
+    [MaxLength(255, ErrorMessage = "SendCertificates cannot exceed 255 characters")]
+    public string? SendCertificates { get; set; }
+
+    /// <summary>
+    /// Money message (XSD: 50 chars max).
+    /// </summary>
+    [MaxLength(50, ErrorMessage = "MoneyMessage cannot exceed 50 characters")]
+    public string? MoneyMessage { get; set; }
+
+    /// <summary>
+    /// IXL integration identifier (XSD: 3 chars max).
+    /// </summary>
+    [MaxLength(3, ErrorMessage = "IXL cannot exceed 3 characters")]
+    public string? Ixl { get; set; }
 }
