@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, inject, OnInit, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ClassGroupService } from '@core/services/class-group.service';
@@ -76,7 +76,7 @@ export class WeeklyScheduleComponent implements OnInit {
 
         blocks.push({
           classGroup,
-          column: this.getDayNumber(classGroup.dayOfWeek) + 1, // +1 for time label column
+          column: classGroup.dayOfWeek + 1, // classGroup.dayOfWeek is already a number (1-5), +1 for time label column
           rowStart: position.rowStart,
           rowEnd: position.rowEnd,
           hasConflict,
