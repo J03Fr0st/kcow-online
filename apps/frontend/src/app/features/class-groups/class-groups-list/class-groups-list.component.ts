@@ -36,7 +36,16 @@ export class ClassGroupsListComponent implements OnInit {
   protected availableTrucks = signal<Truck[]>([]);
 
   // Computed properties from service
-  protected classGroups = computed(() => this.classGroupService.classGroups());
+  protected classGroups = computed(() => {
+    const groups = this.classGroupService.classGroups();
+    // Sort by day of week, then by sequence
+    return [...groups].sort((a, b) => {
+      if (a.dayOfWeek !== b.dayOfWeek) {
+        return a.dayOfWeek - b.dayOfWeek;
+      }
+      return a.sequence - b.sequence;
+    });
+  });
   protected loading = computed(() => this.classGroupService.loading());
 
   // Computed: show form when editing or when create flag is set

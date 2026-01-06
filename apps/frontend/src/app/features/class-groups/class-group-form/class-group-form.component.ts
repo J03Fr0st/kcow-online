@@ -68,7 +68,7 @@ export class ClassGroupFormComponent implements OnInit {
       name: ['', [Validators.required, Validators.maxLength(100)]],
       schoolId: [null, [Validators.required]],
       truckId: [null],
-      dayOfWeek: [0, [Validators.required]],
+      dayOfWeek: [1, [Validators.required]], // Default to Monday (1)
       startTime: ['', [Validators.required]],
       endTime: ['', [Validators.required]],
       sequence: [1, [Validators.required, Validators.min(1)]],
