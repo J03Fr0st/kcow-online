@@ -28,13 +28,35 @@ namespace Kcow.Infrastructure.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("DayTruck")
+                        .HasMaxLength(6)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("day_truck");
+
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("INTEGER")
                         .HasColumnName("day_of_week");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(35)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("description");
+
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("TEXT")
                         .HasColumnName("end_time");
+
+                    b.Property<bool>("Evaluate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("evaluate")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("ImportFlag")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("import_flag")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER")
@@ -42,12 +64,34 @@ namespace Kcow.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(10)
                         .HasColumnType("TEXT")
                         .HasColumnName("name");
 
                     b.Property<string>("Notes")
+                        .HasMaxLength(255)
                         .HasColumnType("TEXT")
                         .HasColumnName("notes");
+
+                    b.Property<string>("GroupMessage")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("group_message");
+
+                    b.Property<string>("SendCertificates")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("send_certificates");
+
+                    b.Property<string>("MoneyMessage")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("money_message");
+
+                    b.Property<string>("Ixl")
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ixl");
 
                     b.Property<int>("SchoolId")
                         .HasColumnType("INTEGER")

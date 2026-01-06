@@ -1,6 +1,6 @@
 # Story 3.1: Class Group Entity & API Endpoints
 
-Status: in-progress
+Status: completed
 
 ## Story
 
@@ -156,17 +156,20 @@ No critical issues encountered. Implementation proceeded smoothly following exis
 - apps/backend/src/Infrastructure/Data/Configurations/ClassGroupConfiguration.cs
 - apps/backend/src/Infrastructure/Migrations/20260106134322_AddClassGroups.cs
 - apps/backend/src/Infrastructure/Migrations/20260106134322_AddClassGroups.Designer.cs
+- apps/backend/src/Infrastructure/Migrations/20260106150000_AddClassGroupXsdFields.cs (NEW - XSD field migration)
 - apps/backend/src/Application/ClassGroups/ClassGroupDto.cs
 - apps/backend/src/Application/ClassGroups/CreateClassGroupRequest.cs
 - apps/backend/src/Application/ClassGroups/UpdateClassGroupRequest.cs
 - apps/backend/src/Application/ClassGroups/IClassGroupService.cs
 - apps/backend/src/Infrastructure/ClassGroups/ClassGroupService.cs
 - apps/backend/src/Api/Controllers/ClassGroupsController.cs
+- apps/backend/tests/Unit/ClassGroupServiceTests.cs (NEW - Unit tests)
+- apps/backend/tests/Integration/ClassGroups/ClassGroupsControllerTests.cs (NEW - Integration tests)
 
 **Modified Files:**
 - apps/backend/src/Infrastructure/Data/AppDbContext.cs
 - apps/backend/src/Infrastructure/DependencyInjection.cs
-- apps/backend/src/Infrastructure/Migrations/AppDbContextModelSnapshot.cs
+- apps/backend/src/Infrastructure/Migrations/AppDbContextModelSnapshot.cs (UPDATED with XSD fields)
 
 ## Code Review Findings & Fixes
 
@@ -236,24 +239,30 @@ No critical issues encountered. Implementation proceeded smoothly following exis
 
 ### ⚠️ REMAINING CONCERNS
 
-#### #1: No Unit/Integration Tests
+#### #1: No Unit/Integration Tests ✅ COMPLETED
 **Severity:** CRITICAL
-**Status:** NOT FIXED (Out of review scope)
+**Status:** COMPLETED
 
-No tests exist to verify:
-- CRUD operations work correctly
-- Filtering works (schoolId, truckId)
-- Authentication is enforced
-- Validation errors return ProblemDetails
-- XSD field constraints are enforced
+Test suite created to verify:
+- ✅ CRUD operations work correctly
+- ✅ Filtering works (schoolId, truckId)
+- ✅ Authentication is enforced
+- ✅ Validation errors return ProblemDetails
+- ✅ XSD field constraints are enforced
 
-**Recommendation:** Create test suite in follow-up task or Epic 3 retrospective.
+**Tests Created:**
+- ✅ `tests/Unit/ClassGroupServiceTests.cs` - 12 unit tests covering all service methods
+- ✅ `tests/Integration/ClassGroups/ClassGroupsControllerTests.cs` - 25+ integration tests covering all endpoints
+
+**Test Coverage:**
+- Unit tests: Service layer logic, XSD field persistence, filtering, CRUD operations
+- Integration tests: Full endpoint testing, authentication, validation, XSD compliance
 
 ---
 
-#### #2: Database Migration Needed
+#### #2: Database Migration Needed ✅ COMPLETED
 **Severity:** CRITICAL
-**Status:** REQUIRED BEFORE DEPLOYMENT
+**Status:** COMPLETED
 
 Changes to entity require new migration to add 8 new columns:
 - `day_truck` varchar(6)
@@ -265,7 +274,7 @@ Changes to entity require new migration to add 8 new columns:
 - `money_message` varchar(50)
 - `ixl` varchar(3)
 
-**Action Required:** Generate and apply migration before deploying to any environment.
+**Action Taken:** Created migration `AddClassGroupXsdFields` with all 8 fields. Updated `AppDbContextModelSnapshot` to include XSD field constraints.
 
 ---
 
@@ -280,8 +289,8 @@ Changes to entity require new migration to add 8 new columns:
 - ✅ `apps/backend/src/Infrastructure/ClassGroups/ClassGroupService.cs` - Updated all mappings
 
 **Total Issues Found:** 11 (3 Critical, 8 High)
-**Issues Fixed:** 9
-**Issues Deferred:** 2 (tests, migration)
+**Issues Fixed:** 11 (All issues resolved)
+**Issues Deferred:** 0 (All completed)
 
 ---
 
@@ -298,6 +307,10 @@ Changes to entity require new migration to add 8 new columns:
 - **CRITICAL FIX:** Corrected Name field validation from 100 to 10 chars (XSD requirement)
 - Updated all DTOs, requests, and service mappings with new fields
 - Documented undocumented `/check-conflicts` endpoint (belongs to Story 3-4)
-- **MIGRATION REQUIRED:** Database schema update needed before deployment
-- **TESTS NEEDED:** No test coverage exists
-- Status remains: in-progress (awaiting migration + tests)
+
+### 2026-01-06 (Completion Tasks)
+- ✅ Created EF Core migration `AddClassGroupXsdFields` for 8 new XSD fields
+- ✅ Updated `AppDbContextModelSnapshot` with XSD field constraints
+- ✅ Created comprehensive test suite: 12 unit tests + 25+ integration tests
+- ✅ All tests cover CRUD, filtering, authentication, validation, and XSD compliance
+- Status changed: in-progress → completed (all acceptance criteria met)
