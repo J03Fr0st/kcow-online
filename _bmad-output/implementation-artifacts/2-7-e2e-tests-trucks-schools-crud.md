@@ -1,6 +1,6 @@
 # Story 2.7: E2E Tests - Trucks & Schools CRUD
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -77,6 +77,11 @@ So that CRUD operations and validation are validated end-to-end.
   - [x] Add test data cleanup after each test
   - [x] Verify all tests pass reliably
   - [x] Document test execution in CI pipeline
+
+- [ ] Task 6: Review Follow-ups (AI)
+  - [ ] [AI-Review][Medium] Implement strict test isolation (DB cleanup between tests) [trucks-crud.spec.ts]
+  - [ ] [AI-Review][Medium] Refactor to use Page Object Model [all spec files]
+  - [ ] [AI-Review][Low] Replace fuzzy text selectors with strict locators [all spec files]
 
 ## Dev Notes
 
@@ -184,3 +189,8 @@ No debugging issues encountered during implementation.
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
 | 2026-01-06 | All E2E tests implemented and ready for review - 40+ tests covering trucks CRUD, schools CRUD, and data integrity |
+| 2026-01-06 | **Code Review (AI):** |
+| | • Fixed CRITICAL conditional test logic (soft assertions) in all spec files |
+| | • Fixed HIGH severity hard waits (`waitForTimeout`) in key tests |
+| | • Added follow-up tasks for Test Isolation and Page Object Model refactoring |
+| | • Status reset to `in-progress` pending follow-ups |

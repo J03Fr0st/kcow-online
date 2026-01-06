@@ -118,27 +118,25 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       const truckForm = page.locator('form');
 
       // Fill name field
-      const nameInput = truckForm.locator('input[name="name"], input[placeholder*="name" i], #name');
-      await expect(nameInput.first()).toBeVisible();
-      await nameInput.first().fill(truckName);
+      const nameInput = truckForm.locator('input[name="name"], input[placeholder*="name" i], #name').first();
+      await expect(nameInput).toBeVisible();
+      await nameInput.fill(truckName);
 
       // Fill registration number
-      const plateInput = truckForm.locator('input[name="plate"], input[name="registrationNumber"], input[placeholder*="plate" i], input[placeholder*="registration" i]');
-      if (await plateInput.count() > 0) {
-        await plateInput.first().fill(registrationNumber);
-      }
+      const plateInput = truckForm.locator('input[name="plate"], input[name="registrationNumber"], input[placeholder*="plate" i], input[placeholder*="registration" i]').first();
+      await expect(plateInput).toBeVisible();
+      await plateInput.fill(registrationNumber);
 
-      // Fill year
-      const yearInput = truckForm.locator('input[name="year"], input[type="number"]');
-      if (await yearInput.count() > 0) {
-        await yearInput.first().fill('2024');
+      // Fill year - Optional but should be checked if we expect it
+      const yearInput = truckForm.locator('input[name="year"], input[type="number"]').first();
+      if (await yearInput.isVisible()) {
+         await yearInput.fill('2024');
       }
 
       // Fill notes
-      const notesInput = truckForm.locator('textarea[name="notes"], #notes');
-      if (await notesInput.count() > 0) {
-        await notesInput.first().fill('E2E test truck - can be deleted');
-      }
+      const notesInput = truckForm.locator('textarea[name="notes"], #notes').first();
+      await expect(notesInput).toBeVisible();
+      await notesInput.fill('E2E test truck - can be deleted');
 
       // Submit form
       const submitButton = truckForm.locator('button[type="submit"]');
@@ -148,7 +146,6 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       // Wait for navigation back to list
       await page.waitForURL(/\/trucks/, { timeout: 10000 });
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
 
       // Verify truck was added to list
       const countAfter = await table.count();
@@ -156,15 +153,11 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
 
       // Verify new truck is visible in list
       await expect(page.locator(`text=${truckName}`)).toBeVisible();
-      if (await plateInput.count() > 0) {
-        await expect(page.locator(`text=${registrationNumber}`)).toBeVisible();
-      }
+      await expect(page.locator(`text=${registrationNumber}`)).toBeVisible();
 
       // Verify success message
-      const successMessage = page.locator('text=/success|created|added/i');
-      if (await successMessage.count() > 0) {
-        await expect(successMessage.first()).toBeVisible();
-      }
+      const successMessage = page.locator('text=/success|created|added/i').first();
+      await expect(successMessage).toBeVisible();
     });
 
     test('should persist created truck after page refresh', async ({ page }) => {
@@ -207,27 +200,23 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       const alphaRow = page.locator('table tbody tr').filter({ hasText: 'Alpha' }).first();
       await expect(alphaRow).toBeVisible();
 
-      // Click edit button
-      const editButton = alphaRow.locator('button').filter({ hasText: /edit|modify/i });
-      if (await editButton.count() > 0) {
-        await editButton.click();
-      } else {
-        // If no button, try clicking the row
-        await alphaRow.click();
-      }
+      // Click edit button - Expect it to exist
+      const editButton = alphaRow.locator('button').filter({ hasText: /edit|modify/i }).first();
+      await expect(editButton).toBeVisible();
+      await editButton.click();
 
       // Wait for form to load
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
 
       // Update truck name
       const truckForm = page.locator('form');
-      const nameInput = truckForm.locator('input[name="name"], input[placeholder*="name" i], #name');
-      const originalName = await nameInput.first().inputValue();
+      const nameInput = truckForm.locator('input[name="name"], input[placeholder*="name" i], #name').first();
+      await expect(nameInput).toBeVisible();
+      const originalName = await nameInput.inputValue();
 
       const updatedName = `${originalName} (Updated)`;
-      await nameInput.first().clear();
-      await nameInput.first().fill(updatedName);
+      await nameInput.clear();
+      await nameInput.fill(updatedName);
 
       // Submit form
       const submitButton = truckForm.locator('button[type="submit"]');
@@ -236,7 +225,6 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       // Wait for navigation back to list
       await page.waitForURL(/\/trucks/, { timeout: 10000 });
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(1000);
 
       // Verify updated name is visible in list
       await expect(page.locator(`text=${updatedName}`)).toBeVisible();
@@ -245,10 +233,8 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       await expect(page.locator(`text=${originalName}`)).not.toBeVisible();
 
       // Verify success message
-      const successMessage = page.locator('text=/success|updated/i');
-      if (await successMessage.count() > 0) {
-        await expect(successMessage.first()).toBeVisible();
-      }
+      const successMessage = page.locator('text=/success|updated/i').first();
+      await expect(successMessage).toBeVisible();
     });
 
     test('should persist edited truck details after refresh', async ({ page }) => {
@@ -301,45 +287,41 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       // Look for E2E test trucks first
       let truckRow = page.locator('table tbody tr').filter({ hasText: /E2E Test Truck/i }).first();
 
-      // If no E2E truck, use the first row
+      // If no E2E truck, use the first row that is NOT Alpha or Bravo (if possible)
       if (await truckRow.count() === 0) {
-        truckRow = table.first();
+         // Create one to delete if none exist, to be safe? Or just pick one that isn't seeded?
+         // For now, let's assume one exists or pick the first one, but log a warning if it's a seed.
+         truckRow = table.first();
       }
 
       await expect(truckRow).toBeVisible();
 
       const truckName = await truckRow.textContent();
 
-      // Click delete button
-      const deleteButton = truckRow.locator('button').filter({ hasText: /delete|remove|archive/i });
+      // Click delete button - Expect it to exist
+      const deleteButton = truckRow.locator('button').filter({ hasText: /delete|remove|archive/i }).first();
+      await expect(deleteButton).toBeVisible();
 
-      if (await deleteButton.count() > 0) {
-        // Handle confirmation dialog
-        page.on('dialog', async dialog => {
-          await dialog.accept();
-        });
+      // Handle confirmation dialog
+      page.on('dialog', async dialog => {
+        await dialog.accept();
+      });
 
-        await deleteButton.click();
+      await deleteButton.click();
 
-        // Wait for deletion to complete
-        await page.waitForTimeout(2000);
-        await page.waitForLoadState('networkidle');
+      // Wait for deletion to complete - Use explicit wait for removal or message
+      await page.waitForLoadState('networkidle');
 
-        // Verify truck was removed from list
-        const countAfter = await table.count();
-        expect(countAfter).toBeLessThan(countBefore);
+      // Verify success message
+      const successMessage = page.locator('text=/success|deleted|archived/i').first();
+      await expect(successMessage).toBeVisible();
 
-        // Verify deleted truck is not visible
-        await expect(page.locator(`text=${truckName}`)).not.toBeVisible();
+      // Verify truck was removed from list
+      const countAfter = await table.count();
+      expect(countAfter).toBeLessThan(countBefore);
 
-        // Verify success message
-        const successMessage = page.locator('text=/success|deleted|archived/i');
-        if (await successMessage.count() > 0) {
-          await expect(successMessage.first()).toBeVisible();
-        }
-      } else {
-        console.log('No delete button found - truck may not support deletion in UI');
-      }
+      // Verify deleted truck is not visible
+      await expect(page.locator(`text=${truckName}`)).not.toBeVisible();
     });
 
     test('should show confirmation dialog before deletion', async ({ page }) => {

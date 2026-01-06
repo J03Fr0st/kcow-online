@@ -110,72 +110,62 @@ test.describe('Schools CRUD - Comprehensive E2E', () => {
 
       // Click "Add School" button
       const addButton = page.locator('button').filter({ hasText: /add|new|create/i }).first();
+      await expect(addButton).toBeVisible();
+      await addButton.click();
 
-      if (await addButton.count() > 0) {
-        await addButton.click();
+      // Wait for form to load
+      await page.waitForLoadState('networkidle');
 
-        // Wait for form to load
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(500);
+      // Fill in school details with unique data
+      const timestamp = Date.now();
+      const schoolName = `E2E Test School ${timestamp}`;
 
-        // Fill in school details with unique data
-        const timestamp = Date.now();
-        const schoolName = `E2E Test School ${timestamp}`;
+      const schoolForm = page.locator('form');
 
-        const schoolForm = page.locator('form');
+      // Fill required fields
+      const nameInput = schoolForm.locator('input[name="name"], input[placeholder*="name" i], #name').first();
+      await expect(nameInput).toBeVisible();
+      await nameInput.fill(schoolName);
 
-        // Fill required fields
-        const nameInput = schoolForm.locator('input[name="name"], input[placeholder*="name" i], #name');
-        if (await nameInput.count() > 0) {
-          await nameInput.first().fill(schoolName);
-        }
+      // Fill contact information
+      const contactPersonInput = schoolForm.locator('input[name="contactPerson"], input[placeholder*="contact person" i]').first();
+      await expect(contactPersonInput).toBeVisible();
+      await contactPersonInput.fill('John Doe');
 
-        // Fill contact information
-        const contactPersonInput = schoolForm.locator('input[name="contactPerson"], input[placeholder*="contact person" i]');
-        if (await contactPersonInput.count() > 0) {
-          await contactPersonInput.first().fill('John Doe');
-        }
-
-        const contactCellInput = schoolForm.locator('input[name="contactCell"], input[placeholder*="cell" i], input[placeholder*="mobile" i]');
-        if (await contactCellInput.count() > 0) {
-          await contactCellInput.first().fill('+27 82 123 4567');
-        }
-
-        const emailInput = schoolForm.locator('input[name="email"], input[type="email"]');
-        if (await emailInput.count() > 0) {
-          await emailInput.first().fill(`test${timestamp}@example.com`);
-        }
-
-        const addressInput = schoolForm.locator('input[name="address"], textarea[name="address"], input[placeholder*="address" i]');
-        if (await addressInput.count() > 0) {
-          await addressInput.first().fill('123 Test Street, Test City');
-        }
-
-        // Submit form
-        const submitButton = schoolForm.locator('button[type="submit"]');
-        await expect(submitButton).toBeVisible();
-        await submitButton.click();
-
-        // Wait for navigation back to list
-        await page.waitForURL(/\/schools/, { timeout: 10000 });
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(1000);
-
-        // Verify school was added to list
-        const countAfter = await table.count();
-        expect(countAfter).toBeGreaterThan(countBefore);
-
-        // Verify new school is visible in list
-        await expect(page.locator(`text=${schoolName}`)).toBeVisible();
-
-        // Verify success message
-        const successMessage = page.locator('text=/success|created|added/i');
-        if (await successMessage.count() > 0) {
-          await expect(successMessage.first()).toBeVisible();
-        }
-      } else {
-        console.log('Add School button not found - school creation may not be implemented in UI');
+      const contactCellInput = schoolForm.locator('input[name="contactCell"], input[placeholder*="cell" i], input[placeholder*="mobile" i]').first();
+      if (await contactCellInput.isVisible()) {
+          await contactCellInput.fill('+27 82 123 4567');
       }
+
+      const emailInput = schoolForm.locator('input[name="email"], input[type="email"]').first();
+      if (await emailInput.isVisible()) {
+          await emailInput.fill(`test${timestamp}@example.com`);
+      }
+
+      const addressInput = schoolForm.locator('input[name="address"], textarea[name="address"], input[placeholder*="address" i]').first();
+      if (await addressInput.isVisible()) {
+          await addressInput.fill('123 Test Street, Test City');
+      }
+
+      // Submit form
+      const submitButton = schoolForm.locator('button[type="submit"]');
+      await expect(submitButton).toBeVisible();
+      await submitButton.click();
+
+      // Wait for navigation back to list
+      await page.waitForURL(/\/schools/, { timeout: 10000 });
+      await page.waitForLoadState('networkidle');
+
+      // Verify school was added to list
+      const countAfter = await table.count();
+      expect(countAfter).toBeGreaterThan(countBefore);
+
+      // Verify new school is visible in list
+      await expect(page.locator(`text=${schoolName}`)).toBeVisible();
+
+      // Verify success message
+      const successMessage = page.locator('text=/success|created|added/i').first();
+      await expect(successMessage).toBeVisible();
     });
 
     test('should validate contact information format', async ({ page }) => {
@@ -183,41 +173,29 @@ test.describe('Schools CRUD - Comprehensive E2E', () => {
       await page.waitForLoadState('networkidle');
 
       const addButton = page.locator('button').filter({ hasText: /add|new|create/i }).first();
+      await expect(addButton).toBeVisible();
+      await addButton.click();
+      await page.waitForLoadState('networkidle');
 
-      if (await addButton.count() > 0) {
-        await addButton.click();
-        await page.waitForLoadState('networkidle');
-        await page.waitForTimeout(500);
+      // Try to enter invalid email
+      const emailInput = page.locator('input[name="email"], input[type="email"]').first();
+      await expect(emailInput).toBeVisible();
+      await emailInput.fill('invalid-email');
+      await emailInput.blur();
 
-        // Try to enter invalid email
-        const emailInput = page.locator('input[name="email"], input[type="email"]').first();
+      // Check for validation error
+      const emailError = page.locator('text=/email|invalid|format/i').first();
+      await expect(emailError).toBeVisible();
 
-        if (await emailInput.count() > 0) {
-          await emailInput.fill('invalid-email');
-          await emailInput.blur();
-          await page.waitForTimeout(500);
-
-          // Check for validation error
-          const emailError = page.locator('text=/email|invalid|format/i');
-          if (await emailError.count() > 0) {
-            await expect(emailError.first()).toBeVisible();
-          }
-        }
-
-        // Try to enter invalid phone number
-        const phoneInput = page.locator('input[name="contactCell"], input[placeholder*="cell" i]').first();
-
-        if (await phoneInput.count() > 0) {
+      // Try to enter invalid phone number
+      const phoneInput = page.locator('input[name="contactCell"], input[placeholder*="cell" i]').first();
+      if (await phoneInput.isVisible()) {
           await phoneInput.fill('abc');
           await phoneInput.blur();
-          await page.waitForTimeout(500);
 
           // Check for validation error
-          const phoneError = page.locator('text=/phone|invalid|numeric/i');
-          if (await phoneError.count() > 0) {
-            await expect(phoneError.first()).toBeVisible();
-          }
-        }
+          const phoneError = page.locator('text=/phone|invalid|numeric/i').first();
+          await expect(phoneError).toBeVisible();
       }
     });
   });

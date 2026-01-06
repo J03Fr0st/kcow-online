@@ -658,36 +658,33 @@ test.describe('Data Integrity - Trucks & Schools', () => {
       await page.waitForTimeout(1000);
 
       const schoolRow = page.locator('table tbody tr').first();
-      const editButton = schoolRow.locator('button').filter({ hasText: /edit|modify/i });
+      const editButton = schoolRow.locator('button').filter({ hasText: /edit|modify/i }).first();
+      await expect(editButton).toBeVisible();
 
-      if (await editButton.count() > 0) {
-        // First edit
-        await editButton.click();
-        await page.waitForLoadState('networkidle');
+      // First edit
+      await editButton.click();
+      await page.waitForLoadState('networkidle');
 
-        const contactPersonInput = page.locator('input[name="contactPerson"]');
-        if (await contactPersonInput.count() > 0) {
-          await contactPersonInput.first().fill('Edit 1');
-          await page.locator('button[type="submit"]').click();
-          await page.waitForURL(/\/schools/, { timeout: 10000 });
-          await page.waitForTimeout(1000);
+      const contactPersonInput = page.locator('input[name="contactPerson"]').first();
+      await expect(contactPersonInput).toBeVisible();
 
-          // Second edit immediately after
-          await schoolRow.locator('button').filter({ hasText: /edit|modify/i }).first().click();
-          await page.waitForLoadState('networkidle');
-          await contactPersonInput.first().fill('Edit 2');
-          await page.locator('button[type="submit"]').click();
-          await page.waitForURL(/\/schools/, { timeout: 10000 });
-          await page.waitForTimeout(1000);
+      await contactPersonInput.fill('Edit 1');
+      await page.locator('button[type="submit"]').click();
+      await page.waitForURL(/\/schools/, { timeout: 10000 });
 
-          // Verify final state
-          await schoolRow.locator('button').filter({ hasText: /edit|modify/i }).first().click();
-          await page.waitForLoadState('networkidle');
+      // Second edit immediately after
+      await schoolRow.locator('button').filter({ hasText: /edit|modify/i }).first().click();
+      await page.waitForLoadState('networkidle');
+      await contactPersonInput.fill('Edit 2');
+      await page.locator('button[type="submit"]').click();
+      await page.waitForURL(/\/schools/, { timeout: 10000 });
 
-          const finalValue = await contactPersonInput.first().inputValue();
-          expect(finalValue).toBe('Edit 2');
-        }
-      }
+      // Verify final state
+      await schoolRow.locator('button').filter({ hasText: /edit|modify/i }).first().click();
+      await page.waitForLoadState('networkidle');
+
+      const finalValue = await contactPersonInput.inputValue();
+      expect(finalValue).toBe('Edit 2');
     });
 
     test('should maintain data consistency after page navigation', async ({ page }) => {
