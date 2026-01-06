@@ -262,4 +262,56 @@ public class ClassGroupService : IClassGroupService
         _logger.LogInformation("Archived class group with ID {ClassGroupId}", id);
         return true;
     }
+
+    /// <summary>
+    /// Checks for scheduling conflicts with existing class groups.
+    /// </summary>
+    public async Task<CheckConflictsResponse> CheckConflictsAsync(CheckConflictsRequest request)
+    {
+        _logger.LogInformation(
+            "Checking conflicts for TruckId: {TruckId}, DayOfWeek: {DayOfWeek}, StartTime: {StartTime}, EndTime: {EndTime}, ExcludeId: {ExcludeId}",
+            request.TruckId, request.DayOfWeek, request.StartTime, request.EndTime, request.ExcludeId);
+
+        // Find class groups that match the criteria
+        var query = _context.ClassGroups
+            .Include(cg => cg.School)
+            .Where(cg => cg.IsActive);
+        // Filter by truck
+        query = query.Where(cg => cg.TruckId == request.TruckId);
+        // Filter by day of week (convert int to DayOfWeek enum)
+        query = query.Where(cg => cg.DayOfWeek == (DayOfWeek)request.DayOfWeek);
+        // Exclude current class group when editing
+        if (request.ExcludeId.HasValue)
+        {
+            query = query.Where(cg => cg.Id != request.ExcludeId.Value);
+        }
+
+        var allClassGroups = await query.ToListAsync();
+
+        // Filter for time overlaps in memory
+        // Two time ranges overlap if: startA < endB AND startB < endA
+        var conflicts = allClassGroups
+            .Where(cg =>
+                cg.StartTime < request.EndTime && request.StartTime < cg.EndTime)
+            .Select(cg => new ScheduleConflictDto
+            {
+                Id = cg.Id,
+                Name = cg.Name,
+                SchoolName = cg.School?.Name ?? $"School {cg.SchoolId}",
+                StartTime = cg.StartTime,
+                EndTime = cg.EndTime
+            })
+            .ToList();
+
+        var response = new CheckConflictsResponse
+        {
+            HasConflicts = conflicts.Count > 0,
+            Conflicts = conflicts
+        };
+
+        _logger.LogInformation("Found {ConflictCount} conflicts for TruckId: {TruckId}",
+            conflicts.Count, request.TruckId);
+
+        return response;
+    }
 }

@@ -1,6 +1,6 @@
 # Story 3.4: Scheduling Conflict Detection
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -29,25 +29,25 @@ so that **I don't accidentally double-book a truck (FR6)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create conflict detection API (AC: #1)
-  - [ ] Add endpoint POST `/api/class-groups/check-conflicts`
-  - [ ] Accept truckId, dayOfWeek, startTime, endTime, excludeId (for edits)
-  - [ ] Return list of conflicting class groups
-- [ ] Task 2: Create ConflictBanner component (AC: #1)
-  - [ ] Display warning with conflicting group details
-  - [ ] Show school name, time, and day
-  - [ ] Style as prominent warning banner
-- [ ] Task 3: Wire conflict check to form (AC: #1, #2)
-  - [ ] Call conflict check on truck/day/time change
-  - [ ] Debounce API calls
-  - [ ] Display ConflictBanner when conflicts found
-- [ ] Task 4: Block save on conflict (AC: #2)
-  - [ ] Disable save button when conflicts exist
-  - [ ] Show message explaining how to resolve
-- [ ] Task 5: Handle conflict resolution (AC: #3)
-  - [ ] Re-check conflicts when fields change
-  - [ ] Clear banner when no conflicts
-  - [ ] Enable save button
+- [x] Task 1: Create conflict detection API (AC: #1)
+  - [x] Add endpoint POST `/api/class-groups/check-conflicts`
+  - [x] Accept truckId, dayOfWeek, startTime, endTime, excludeId (for edits)
+  - [x] Return list of conflicting class groups
+- [x] Task 2: Create ConflictBanner component (AC: #1)
+  - [x] Display warning with conflicting group details
+  - [x] Show school name, time, and day
+  - [x] Style as prominent warning banner
+- [x] Task 3: Wire conflict check to form (AC: #1, #2)
+  - [x] Call conflict check on truck/day/time change
+  - [x] Debounce API calls (300ms)
+  - [x] Display ConflictBanner when conflicts found
+- [x] Task 4: Block save on conflict (AC: #2)
+  - [x] Disable save button when conflicts exist
+  - [x] Show message explaining how to resolve
+- [x] Task 5: Handle conflict resolution (AC: #3)
+  - [x] Re-check conflicts when fields change
+  - [x] Clear banner when no conflicts
+  - [x] Enable save button
 
 ## Dev Notes
 
@@ -121,5 +121,26 @@ interface ConflictCheckResponse {
 ### Debug Log References
 
 ### Completion Notes List
+
+Backend:
+- Created CheckConflictsRequest and ScheduleConflictDto/CheckConflictsResponse DTOs
+- Added CheckConflictsAsync method to IClassGroupService
+- Implemented conflict detection in ClassGroupService (time overlap logic)
+- Added POST /api/class-groups/check-conflicts endpoint
+- Conflict logic: same truck + same day + overlapping time ranges
+
+Frontend:
+- Added conflict detection types to class-group.model.ts
+- Added checkConflicts method to ClassGroupService
+- Created ConflictBannerComponent with warning alert styling
+- Integrated conflict checking into ClassGroupFormComponent:
+  - Debounced conflict checking (300ms)
+  - Form value change listeners for truck/day/time
+  - conflicts signal to store detected conflicts
+  - hasConflicts computed property for reactive state
+  - Submit button disabled when conflicts exist
+  - Error message shown when attempting to save with conflicts
+- Conflict banner displays after error message in form
+- All acceptance criteria met
 
 ### File List

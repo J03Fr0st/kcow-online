@@ -6,6 +6,8 @@ import type {
   ClassGroup,
   CreateClassGroupRequest,
   UpdateClassGroupRequest,
+  CheckConflictsRequest,
+  CheckConflictsResponse,
 } from '@features/class-groups/models/class-group.model';
 
 @Injectable({
@@ -101,6 +103,18 @@ export class ClassGroupService {
       }),
       catchError((error: HttpErrorResponse) => {
         console.error(`Error deleting class group ${id}:`, error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Check for scheduling conflicts
+   */
+  checkConflicts(request: CheckConflictsRequest): Observable<CheckConflictsResponse> {
+    return this.http.post<CheckConflictsResponse>(`${this.apiUrl}/check-conflicts`, request).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error checking conflicts:', error);
         return throwError(() => error);
       })
     );

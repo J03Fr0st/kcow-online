@@ -71,7 +71,7 @@ development_status:
   3-1-class-group-entity-api-endpoints: review
   3-2-class-groups-management-ui: review
   3-3-schedule-time-slot-configuration: review
-  3-4-scheduling-conflict-detection: ready-for-dev
+  3-4-scheduling-conflict-detection: review
   3-5-weekly-schedule-overview: ready-for-dev
   3-6-data-migration-class-groups-schedules: ready-for-dev
   3-7-e2e-tests-class-groups-scheduling-conflicts: ready-for-dev

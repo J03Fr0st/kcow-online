@@ -41,4 +41,11 @@ public interface IClassGroupService
     /// <param name="id">Class group ID</param>
     /// <returns>True if class group was archived, false if not found</returns>
     Task<bool> ArchiveAsync(int id);
+
+    /// <summary>
+    /// Checks for scheduling conflicts with existing class groups.
+    /// </summary>
+    /// <param name="request">Conflict check request</param>
+    /// <returns>Conflict check response with list of conflicts</returns>
+    Task<CheckConflictsResponse> CheckConflictsAsync(CheckConflictsRequest request);
 }

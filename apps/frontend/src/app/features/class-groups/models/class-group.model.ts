@@ -90,3 +90,25 @@ export function getDayOfWeekNumber(dayName: string): number {
 export function getDayOfWeekName(dayNumber: number): string {
   return DAY_NUMBER_TO_NAME[dayNumber] ?? 'Unknown';
 }
+
+// Conflict detection types
+export interface ScheduleConflict {
+  id: number;
+  name: string;
+  schoolName: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface CheckConflictsRequest {
+  truckId: number;
+  dayOfWeek: number;
+  startTime: string; // "HH:mm:ss"
+  endTime: string;
+  excludeId?: number;
+}
+
+export interface CheckConflictsResponse {
+  hasConflicts: boolean;
+  conflicts: ScheduleConflict[];
+}

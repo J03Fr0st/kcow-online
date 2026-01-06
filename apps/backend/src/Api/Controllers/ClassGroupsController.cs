@@ -221,6 +221,42 @@ public class ClassGroupsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Checks for scheduling conflicts with existing class groups.
+    /// </summary>
+    /// <param name="request">Conflict check request parameters</param>
+    /// <returns>Conflict check response with list of conflicting class groups</returns>
+    [HttpPost("check-conflicts")]
+    [ProducesResponseType(typeof(CheckConflictsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CheckConflicts([FromBody] CheckConflictsRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Validation failed",
+                Status = 400,
+                Detail = "One or more validation errors occurred",
+                Extensions = { ["errors"] = ModelState }
+            });
+        }
+
+        try
+        {
+            var result = await _classGroupService.CheckConflictsAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking conflicts for TruckId: {TruckId}", request.TruckId);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while checking for conflicts"));
+        }
+    }
+
     private ProblemDetails CreateServerErrorProblemDetails(string title)
     {
         var problemDetails = new ProblemDetails

@@ -17,6 +17,9 @@
         </div>
       }
 
+      <!-- Conflict Banner -->
+      <app-conflict-banner [conflicts]="conflicts()" />
+
       <!-- Form -->
       <form [formGroup]="form" (ngSubmit)="submitForm()">
         <!-- Name -->
@@ -196,7 +199,7 @@
           <button
             type="submit"
             class="btn btn-primary"
-            [disabled]="isSaving()"
+            [disabled]="isSaving() || hasConflicts()"
           >
             @if (isSaving()) {
               <span class="loading loading-spinner"></span>

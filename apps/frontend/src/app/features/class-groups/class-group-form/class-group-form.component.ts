@@ -1,7 +1,9 @@
-import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal, DestroyRef, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
 import { ClassGroupService } from '@core/services/class-group.service';
 import { SchoolService, type School } from '@core/services/school.service';
 import { TruckService, type Truck } from '@core/services/truck.service';
@@ -9,15 +11,18 @@ import type {
   ClassGroup,
   CreateClassGroupRequest,
   UpdateClassGroupRequest,
+  ScheduleConflict,
+  CheckConflictsRequest,
 } from '@features/class-groups/models/class-group.model';
 import { DAY_OF_WEEK_OPTIONS, getDayOfWeekNumber } from '@features/class-groups/models/class-group.model';
 import { NotificationService } from '@core/services/notification.service';
 import { finalize } from 'rxjs';
+import { ConflictBannerComponent } from '../conflict-banner/conflict-banner.component';
 
 @Component({
   selector: 'app-class-group-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ConflictBannerComponent],
   templateUrl: './class-group-form.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -41,6 +46,14 @@ export class ClassGroupFormComponent implements OnInit {
   isLoading = signal(false);
   isSaving = signal(false);
   error = signal<string | null>(null);
+  checkingConflicts = signal(false);
+  conflicts = signal<ScheduleConflict[]>([]);
+
+  // Computed: has conflicts flag
+  protected readonly hasConflicts = computed(() => this.conflicts().length > 0);
+
+  // Subject for debounced conflict checking
+  private conflictCheckTrigger = new Subject<void>();
 
   // Dropdown data
   schools = signal<School[]>([]);
@@ -53,6 +66,7 @@ export class ClassGroupFormComponent implements OnInit {
     this.initForm();
     this.loadSchools();
     this.loadTrucks();
+    this.setupConflictChecking();
 
     // Load class group data if editing
     if (this.classGroupId()) {
@@ -73,6 +87,20 @@ export class ClassGroupFormComponent implements OnInit {
       endTime: ['', [Validators.required]],
       sequence: [1, [Validators.required, Validators.min(1)]],
       notes: ['', Validators.maxLength(1000)],
+    });
+
+    // Watch for value changes to trigger conflict checks
+    this.form.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged((prev, curr) =>
+        prev.truckId === curr.truckId &&
+        prev.dayOfWeek === curr.dayOfWeek &&
+        prev.startTime === curr.startTime &&
+        prev.endTime === curr.endTime
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.triggerConflictCheck();
     });
   }
 
@@ -104,6 +132,57 @@ export class ClassGroupFormComponent implements OnInit {
   }
 
   /**
+   * Setup debounced conflict checking
+   */
+  private setupConflictChecking(): void {
+    this.conflictCheckTrigger.pipe(
+      debounceTime(300),
+      switchMap(() => {
+        const truckId = this.form.value.truckId;
+        const dayOfWeek = this.form.value.dayOfWeek;
+        const startTime = this.form.value.startTime;
+        const endTime = this.form.value.endTime;
+
+        // Only check if we have all required fields and a truck is assigned
+        if (!truckId || !dayOfWeek || !startTime || !endTime) {
+          this.conflicts.set([]);
+          return of({ hasConflicts: false, conflicts: [] });
+        }
+
+        this.checkingConflicts.set(true);
+
+        const request: CheckConflictsRequest = {
+          truckId,
+          dayOfWeek,
+          startTime: `${startTime}:00`,
+          endTime: `${endTime}:00`,
+          excludeId: this.classGroupId() ?? undefined,
+        };
+
+        return this.classGroupService.checkConflicts(request);
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (response) => {
+        this.conflicts.set(response.conflicts);
+        this.checkingConflicts.set(false);
+      },
+      error: (err) => {
+        console.error('Error checking conflicts:', err);
+        this.conflicts.set([]);
+        this.checkingConflicts.set(false);
+      },
+    });
+  }
+
+  /**
+   * Trigger conflict check
+   */
+  private triggerConflictCheck(): void {
+    this.conflictCheckTrigger.next();
+  }
+
+  /**
    * Load class group data for editing
    */
   private loadClassGroup(id: number): void {
@@ -125,6 +204,8 @@ export class ClassGroupFormComponent implements OnInit {
           sequence: classGroup.sequence,
           notes: classGroup.notes || '',
         });
+        // Trigger conflict check after loading
+        this.triggerConflictCheck();
       },
       error: (err) => {
         console.error('Error loading class group:', err);
@@ -148,6 +229,12 @@ export class ClassGroupFormComponent implements OnInit {
     const endTime = this.form.value.endTime;
     if (endTime <= startTime) {
       this.error.set('End time must be after start time');
+      return;
+    }
+
+    // Block save if there are conflicts
+    if (this.hasConflicts()) {
+      this.error.set('Please resolve scheduling conflicts before saving');
       return;
     }
 
