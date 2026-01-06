@@ -16,6 +16,9 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
   const testEmail = process.env.TEST_EMAIL || 'admin@kcow.local';
   const testPassword = process.env.TEST_PASSWORD || 'Admin123!';
 
+  // Track test-created trucks for cleanup
+  const createdTrucks: string[] = [];
+
   test.beforeEach(async ({ page }) => {
     // Navigate to login page
     await page.goto('/login');
@@ -36,6 +39,45 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
 
     // Wait for auth to stabilize
     await page.waitForTimeout(1000);
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Clean up any test-created trucks to maintain test isolation
+    if (createdTrucks.length > 0) {
+      try {
+        await page.goto('/trucks');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(500);
+
+        for (const truckName of createdTrucks) {
+          try {
+            const truckRow = page.locator('table tbody tr').filter({ hasText: truckName }).first();
+
+            if (await truckRow.count() > 0) {
+              const deleteButton = truckRow.locator('button').filter({ hasText: /delete|remove|archive/i }).first();
+
+              if (await deleteButton.count() > 0) {
+                page.on('dialog', async dialog => {
+                  await dialog.accept();
+                });
+
+                await deleteButton.click();
+                await page.waitForTimeout(1000);
+              }
+            }
+          } catch (error) {
+            // Log but don't fail - truck may already be deleted
+            console.log(`Note: Could not cleanup truck ${truckName}, it may already be deleted`);
+          }
+        }
+
+        // Clear the array for next test
+        createdTrucks.length = 0;
+      } catch (error) {
+        console.log('Cleanup error:', error);
+        // Don't fail the test if cleanup fails
+      }
+    }
   });
 
   test.describe('AC #1.1: Navigation and List Display', () => {
@@ -158,6 +200,9 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
       // Verify success message
       const successMessage = page.locator('text=/success|created|added/i').first();
       await expect(successMessage).toBeVisible();
+
+      // Track for cleanup
+      createdTrucks.push(truckName);
     });
 
     test('should persist created truck after page refresh', async ({ page }) => {
@@ -187,6 +232,9 @@ test.describe('Trucks CRUD - Comprehensive E2E', () => {
 
       // Verify truck is still in list
       await expect(page.locator(`text=${truckName}`)).toBeVisible();
+
+      // Track for cleanup
+      createdTrucks.push(truckName);
     });
   });
 

@@ -16,6 +16,9 @@ test.describe('Schools CRUD - Comprehensive E2E', () => {
   const testEmail = process.env.TEST_EMAIL || 'admin@kcow.local';
   const testPassword = process.env.TEST_PASSWORD || 'Admin123!';
 
+  // Track test-created schools for cleanup
+  const createdSchools: string[] = [];
+
   test.beforeEach(async ({ page }) => {
     // Navigate to login page
     await page.goto('/login');
@@ -36,6 +39,43 @@ test.describe('Schools CRUD - Comprehensive E2E', () => {
 
     // Wait for auth to stabilize
     await page.waitForTimeout(1000);
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Clean up any test-created schools to maintain test isolation
+    if (createdSchools.length > 0) {
+      try {
+        await page.goto('/schools');
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(500);
+
+        for (const schoolName of createdSchools) {
+          try {
+            const schoolRow = page.locator('table tbody tr').filter({ hasText: schoolName }).first();
+
+            if (await schoolRow.count() > 0) {
+              const deleteButton = schoolRow.locator('button').filter({ hasText: /delete|remove|archive/i }).first();
+
+              if (await deleteButton.count() > 0) {
+                page.on('dialog', async dialog => {
+                  await dialog.accept();
+                });
+
+                await deleteButton.click();
+                await page.waitForTimeout(1000);
+              }
+            }
+          } catch (error) {
+            console.log(`Note: Could not cleanup school ${schoolName}, it may already be deleted`);
+          }
+        }
+
+        // Clear the array for next test
+        createdSchools.length = 0;
+      } catch (error) {
+        console.log('Cleanup error:', error);
+      }
+    }
   });
 
   test.describe('AC #2.1: Navigation and List Display', () => {
@@ -166,6 +206,9 @@ test.describe('Schools CRUD - Comprehensive E2E', () => {
       // Verify success message
       const successMessage = page.locator('text=/success|created|added/i').first();
       await expect(successMessage).toBeVisible();
+
+      // Track for cleanup
+      createdSchools.push(schoolName);
     });
 
     test('should validate contact information format', async ({ page }) => {
