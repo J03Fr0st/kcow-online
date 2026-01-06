@@ -12,7 +12,30 @@
     </div>
   </div>
 
-  <!-- Filters -->
+  <!-- View Tabs -->
+  <div role="tablist" class="tabs tabs-boxed bg-base-200 p-1">
+    <button
+      class="tab"
+      [class.tab-active]="isListView()"
+      (click)="showListView()"
+      role="tab"
+      [attr.aria-selected]="isListView()"
+      aria-controls="list-view-panel">
+      📋 List View
+    </button>
+    <button
+      class="tab"
+      [class.tab-active]="isWeeklyView()"
+      (click)="showWeeklyView()"
+      role="tab"
+      [attr.aria-selected]="isWeeklyView()"
+      aria-controls="weekly-view-panel">
+      📅 Weekly View
+    </button>
+  </div>
+
+  <!-- Filters (List View Only) -->
+  @if (isListView()) {
   <div class="flex flex-wrap gap-4 bg-base-200 p-4 rounded-lg">
     <div class="form-control">
       <label class="label" for="filterSchool">
@@ -46,6 +69,7 @@
       </select>
     </div>
   </div>
+  }
 
   <!-- Loading State -->
   @if (loading()) {
@@ -53,6 +77,8 @@
     <span class="loading loading-spinner loading-lg text-primary"></span>
   </div>
   } @else {
+  <!-- List View Panel -->
+  @if (isListView()) {
   <!-- Empty State -->
   @if (classGroups().length === 0) {
     <div
@@ -153,6 +179,14 @@
         }
       </tbody>
     </table>
+  </div>
+  }
+  }
+
+  <!-- Weekly View Panel -->
+  @if (isWeeklyView()) {
+  <div id="weekly-view-panel" role="tabpanel" aria-labelledby="weekly-view-tab">
+    <app-weekly-schedule />
   </div>
   }
 

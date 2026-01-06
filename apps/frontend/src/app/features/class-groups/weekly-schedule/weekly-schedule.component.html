@@ -1,0 +1,45 @@
+<div class="weekly-schedule">
+  @if (isLoading()) {
+    <p>Loading schedule...</p>
+  } @else {
+    <div class="schedule-grid">
+      <!-- Header Row -->
+      <div class="schedule-cell schedule-cell--header schedule-cell--time-label"></div>
+      @for (day of days; track day) {
+        <div class="schedule-cell schedule-cell--header">{{ day }}</div>
+      }
+
+      <!-- Time Slot Rows -->
+      @for (slot of timeSlots(); track slot.label; let slotIndex = $index) {
+        <!-- Time Label -->
+        <div class="schedule-cell schedule-cell--time-label">{{ slot.label }}</div>
+
+        <!-- Day Columns -->
+        @for (day of days; track day) {
+          <div class="schedule-cell schedule-cell--slot" [attr.data-day]="day" [attr.data-slot]="slotIndex">
+            @for (block of getBlocksForSlot(day, slotIndex); track block.classGroup.id) {
+              <app-schedule-block
+                [classGroup]="block.classGroup"
+                [hasConflict]="block.hasConflict"
+                [ngStyle]="getBlockStyle(block)"
+                (blockClick)="onBlockClick(block.classGroup)"
+              />
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Legend -->
+    <div class="schedule-legend">
+      <div class="schedule-legend__item">
+        <div class="schedule-legend__color schedule-legend__color--normal"></div>
+        <span>Normal</span>
+      </div>
+      <div class="schedule-legend__item">
+        <div class="schedule-legend__color schedule-legend__color--conflict"></div>
+        <span>Conflict</span>
+      </div>
+    </div>
+  }
+</div>

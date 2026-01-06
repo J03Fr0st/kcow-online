@@ -1,0 +1,49 @@
+.schedule-block {
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-left: 4px solid;
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative;
+}
+
+.schedule-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.schedule-block--conflict {
+  border: 2px solid hsl(45, 93%, 47%);
+  border-left: 4px solid;
+}
+
+.schedule-block__name {
+  font-weight: 600;
+  margin-bottom: 0.125rem;
+}
+
+.schedule-block__school {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-bottom: 0.125rem;
+}
+
+.schedule-block__truck {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-bottom: 0.125rem;
+}
+
+.schedule-block__time {
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  opacity: 0.9;
+}
+
+.schedule-block__conflict-indicator {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  font-size: 0.75rem;
+}

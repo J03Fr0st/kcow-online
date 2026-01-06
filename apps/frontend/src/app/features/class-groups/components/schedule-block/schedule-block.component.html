@@ -1,0 +1,19 @@
+<div
+  class="schedule-block"
+  [class.schedule-block--conflict]="hasConflict()"
+  [ngStyle]="blockStyle()"
+  (click)="onClick()"
+  [title]="`${classGroup().name} at ${classGroup().schoolName}
+${classGroup().startTime.substring(0, 5)} - ${classGroup().endTime.substring(0, 5)}
+Truck: ${classGroup().truckName || 'None'}`"
+>
+  <div class="schedule-block__name">{{ classGroup().name }}</div>
+  <div class="schedule-block__school">{{ classGroup().schoolName }}</div>
+  @if (classGroup().truckName) {
+    <div class="schedule-block__truck">{{ classGroup().truckName }}</div>
+  }
+  <div class="schedule-block__time">{{ classGroup().startTime.substring(0, 5) }} - {{ classGroup().endTime.substring(0, 5) }}</div>
+  @if (hasConflict()) {
+    <div class="schedule-block__conflict-indicator">⚠️ Conflict</div>
+  }
+</div>

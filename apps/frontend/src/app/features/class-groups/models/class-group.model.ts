@@ -14,8 +14,10 @@ export interface ClassGroup {
   id: number;
   name: string;
   schoolId: number;
+  schoolName?: string;
   school?: School;
   truckId?: number;
+  truckName?: string;
   truck?: Truck;
   dayOfWeek: number;
   startTime: string;

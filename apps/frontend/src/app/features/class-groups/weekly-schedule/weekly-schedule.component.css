@@ -1,0 +1,72 @@
+.weekly-schedule {
+  overflow-x: auto;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 80px repeat(5, 1fr);
+  grid-auto-rows: minmax(40px, auto);
+  gap: 1px;
+  background-color: var(--fallback-bc, oklch(var(--bc) / 0.2));
+  border: 1px solid var(--fallback-bc, oklch(var(--bc) / 0.2));
+}
+
+.schedule-cell {
+  background-color: var(--fallback-b1, oklch(var(--b1)));
+  padding: 0.5rem;
+  min-height: 40px;
+  position: relative;
+}
+
+.schedule-cell--header {
+  font-weight: 600;
+  text-align: center;
+  background-color: var(--fallback-b2, oklch(var(--b2)));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.schedule-cell--time-label {
+  font-size: 0.75rem;
+  color: var(--fallback-bc, oklch(var(--bc) / 0.6));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--fallback-b2, oklch(var(--b2)));
+}
+
+.schedule-cell--slot {
+  min-height: 40px;
+}
+
+.schedule-legend {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.schedule-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.schedule-legend__color {
+  width: 1.5rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border-left: 3px solid;
+}
+
+.schedule-legend__color--normal {
+  background-color: hsl(0, 70%, 85%);
+  border-left-color: hsl(0, 70%, 45%);
+}
+
+.schedule-legend__color--conflict {
+  background-color: hsl(45, 100%, 85%);
+  border-left-color: hsl(45, 100%, 45%);
+  border: 2px solid hsl(45, 93%, 47%);
+}

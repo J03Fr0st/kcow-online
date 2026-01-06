@@ -6,12 +6,15 @@ import { SchoolService, type School } from '@core/services/school.service';
 import { TruckService, type Truck } from '@core/services/truck.service';
 import { NotificationService } from '@core/services/notification.service';
 import { ClassGroupFormComponent } from '../class-group-form/class-group-form.component';
+import { WeeklyScheduleComponent } from '../weekly-schedule/weekly-schedule.component';
 import { getDayOfWeekName } from '../models/class-group.model';
+
+type ViewMode = 'list' | 'weekly';
 
 @Component({
   selector: 'app-class-groups-list',
   standalone: true,
-  imports: [CommonModule, ClassGroupFormComponent],
+  imports: [CommonModule, ClassGroupFormComponent, WeeklyScheduleComponent],
   templateUrl: './class-groups-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -26,6 +29,7 @@ export class ClassGroupsListComponent implements OnInit {
   protected deletingId = signal<number | null>(null);
   protected editingId = signal<number | null>(null);
   private showFormFlag = signal<boolean>(false);
+  protected viewMode = signal<ViewMode>('list');
 
   // Filters
   protected filterSchoolId = signal<number | null>(null);
@@ -194,5 +198,33 @@ export class ClassGroupsListComponent implements OnInit {
    */
   protected formatTime(time: string): string {
     return time.substring(0, 5); // "HH:mm:ss" -> "HH:mm"
+  }
+
+  /**
+   * Switch to list view
+   */
+  protected showListView(): void {
+    this.viewMode.set('list');
+  }
+
+  /**
+   * Switch to weekly view
+   */
+  protected showWeeklyView(): void {
+    this.viewMode.set('weekly');
+  }
+
+  /**
+   * Check if list view is active
+   */
+  protected isListView(): boolean {
+    return this.viewMode() === 'list';
+  }
+
+  /**
+   * Check if weekly view is active
+   */
+  protected isWeeklyView(): boolean {
+    return this.viewMode() === 'weekly';
   }
 }
