@@ -119,3 +119,154 @@ apps/frontend/src/app/features/class-groups/
 - All acceptance criteria met
 
 ### File List
+
+**New Files:**
+- `apps/frontend/src/app/features/class-groups/models/class-group.model.ts` - ClassGroup model and types
+- `apps/frontend/src/app/core/services/class-group.service.ts` - ClassGroup service with signals
+- `apps/frontend/src/app/features/class-groups/class-groups-list/class-groups-list.component.ts` - List component
+- `apps/frontend/src/app/features/class-groups/class-groups-list/class-groups-list.component.html` - List template
+- `apps/frontend/src/app/features/class-groups/class-group-form/class-group-form.component.ts` - Form component
+- `apps/frontend/src/app/features/class-groups/class-group-form/class-group-form.component.html` - Form template
+- `apps/frontend/src/app/features/class-groups/conflict-banner/conflict-banner.component.ts` - Conflict banner (Story 3.4)
+- `apps/frontend/src/app/features/class-groups/conflict-banner/conflict-banner.component.html` - Conflict banner template
+- `apps/frontend/src/app/features/class-groups/weekly-schedule/weekly-schedule.component.ts` - Weekly schedule (Story 3.5)
+- `apps/frontend/src/app/features/class-groups/weekly-schedule/weekly-schedule.component.html` - Weekly schedule template
+- `apps/frontend/src/app/features/class-groups/components/schedule-block/schedule-block.component.ts` - Schedule block component
+
+**Modified Files:**
+- `apps/frontend/src/app/app.routes.ts` - Added class-groups routes
+
+## Code Review Findings & Fixes
+
+### Review Date: 2026-01-06
+**Reviewer:** AI Code Review Agent
+**Review Type:** XSD Compliance & Frontend-Backend Alignment Review
+
+### 🔴 CRITICAL ISSUES FOUND & FIXED
+
+#### Issue #1: Frontend Model Missing 8 XSD Fields ✅ FIXED
+**Severity:** CRITICAL
+**Location:** `apps/frontend/src/app/features/class-groups/models/class-group.model.ts:13-30`
+
+**Problem:** Frontend ClassGroup interface was missing 8 XSD fields that were just added to backend in Story 3-1:
+- ❌ `dayTruck` (6 chars)
+- ❌ `description` (35 chars)
+- ❌ `evaluate` (boolean, required)
+- ❌ `importFlag` (boolean, required)
+- ❌ `groupMessage` (255 chars)
+- ❌ `sendCertificates` (255 chars)
+- ❌ `moneyMessage` (50 chars)
+- ❌ `ixl` (3 chars)
+
+**Impact:** Frontend cannot serialize/deserialize backend DTOs. API calls would fail or lose data.
+
+**Fix Applied:** ✅
+- Added all 8 missing fields to `ClassGroup` interface
+- Added all 8 fields to `CreateClassGroupRequest` interface
+- Added all 8 fields to `UpdateClassGroupRequest` interface
+- Added XSD length constraints as comments
+
+---
+
+#### Issue #2: Incorrect Form Validation - Name Field ✅ FIXED
+**Severity:** HIGH
+**Location:** `apps/frontend/src/app/features/class-groups/class-group-form/class-group-form.component.ts:82`
+
+**Problem:**
+```typescript
+name: ['', [Validators.required, Validators.maxLength(100)]], // ❌ WRONG
+```
+XSD specifies 10 chars max, not 100.
+
+**Fix Applied:** ✅
+```typescript
+name: ['', [Validators.required, Validators.maxLength(10)]], // XSD: 10 chars max
+```
+
+---
+
+#### Issue #3: Incorrect Form Validation - Notes Field ✅ FIXED
+**Severity:** MEDIUM
+**Location:** `apps/frontend/src/app/features/class-groups/class-group-form/class-group-form.component.ts:89`
+
+**Problem:**
+```typescript
+notes: ['', Validators.maxLength(1000)], // ❌ WRONG
+```
+XSD specifies 255 chars max, not 1000.
+
+**Fix Applied:** ✅
+```typescript
+notes: ['', Validators.maxLength(255)], // XSD: 255 chars max
+```
+
+---
+
+### ⚠️ REMAINING CONCERNS
+
+#### #1: No Unit Tests
+**Severity:** CRITICAL
+**Status:** NOT FIXED (Out of review scope)
+
+No tests exist for:
+- ClassGroupService CRUD operations
+- ClassGroupFormComponent validation and submission
+- ClassGroupsListComponent filtering and display
+- Component routing and navigation
+
+**Recommendation:** Create test suite in follow-up task or Epic 3 retrospective.
+
+---
+
+#### #2: Incomplete Story Documentation
+**Severity:** MEDIUM
+**Status:** FIXED
+
+**Problem:** File List section was completely empty.
+
+**Fix Applied:** ✅ Documented all 11 new files created.
+
+---
+
+#### #3: Undocumented Components
+**Severity:** LOW
+**Status:** NOTED
+
+Story implementation includes components not mentioned in acceptance criteria:
+- `conflict-banner` component (belongs to Story 3.4)
+- `weekly-schedule` component (belongs to Story 3.5)
+- `schedule-block` component (shared component)
+
+These appear to be implemented ahead of their respective stories.
+
+---
+
+### ✅ FILES MODIFIED (Code Review Fixes)
+
+**Updated Files:**
+- ✅ `apps/frontend/src/app/features/class-groups/models/class-group.model.ts` - Added 8 XSD fields to all interfaces
+- ✅ `apps/frontend/src/app/features/class-groups/class-group-form/class-group-form.component.ts` - Fixed validation
+
+**Total Issues Found:** 5 (2 Critical, 2 High, 1 Medium)
+**Issues Fixed:** 3
+**Issues Deferred:** 2 (tests, follow-up stories)
+
+---
+
+## Change Log
+
+### 2026-01-06
+- Implemented Story 3.2: Class Groups Management UI
+- Created ClassGroupService with signals-based state management
+- Created list and form components with filtering and CRUD operations
+- Status changed to: review
+
+### 2026-01-06 (Code Review Pass)
+- **CRITICAL FIX:** Added 8 missing XSD fields to frontend models (DayTruck, Description, Evaluate, ImportFlag, GroupMessage, SendCertificates, MoneyMessage, IXL)
+- **HIGH FIX:** Corrected Name field validation from 100 to 10 chars (XSD requirement)
+- **MEDIUM FIX:** Corrected Notes field validation from 1000 to 255 chars (XSD requirement)
+- Updated all TypeScript interfaces (ClassGroup, CreateClassGroupRequest, UpdateClassGroupRequest) with XSD fields
+- Updated form validation in class-group-form.component.ts
+- Documented 11 files created in File List section
+- **TESTS NEEDED:** No test coverage exists
+- Status remains: review (awaiting backend migration completion from Story 3-1)

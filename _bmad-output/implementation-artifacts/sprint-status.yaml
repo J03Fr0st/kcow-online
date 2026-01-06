@@ -69,7 +69,7 @@ development_status:
   # ========================
   epic-3: in-progress
   3-1-class-group-entity-api-endpoints: in-progress  # Code review found critical XSD violations - fixes applied, migration+tests needed
-  3-2-class-groups-management-ui: review
+  3-2-class-groups-management-ui: review  # Code review complete - added 8 missing XSD fields, fixed validation, tests needed
   3-3-schedule-time-slot-configuration: review
   3-4-scheduling-conflict-detection: review
   3-5-weekly-schedule-overview: review

@@ -79,14 +79,14 @@ export class ClassGroupFormComponent implements OnInit {
    */
   private initForm(): void {
     this.form = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(100)]],
+      name: ['', [Validators.required, Validators.maxLength(10)]], // XSD: 10 chars max
       schoolId: [null, [Validators.required]],
       truckId: [null],
       dayOfWeek: [1, [Validators.required]], // Default to Monday (1)
       startTime: ['', [Validators.required]],
       endTime: ['', [Validators.required]],
       sequence: [1, [Validators.required, Validators.min(1)]],
-      notes: ['', Validators.maxLength(1000)],
+      notes: ['', Validators.maxLength(255)], // XSD: 255 chars max
     });
 
     // Watch for value changes to trigger conflict checks
