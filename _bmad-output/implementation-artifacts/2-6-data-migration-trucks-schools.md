@@ -1,6 +1,6 @@
 # Story 2.6: Data Migration - Trucks & Schools
 
-Status: in progress
+Status: review
 
 ## Story
 
@@ -56,9 +56,9 @@ So that CRUD flows and E2E tests operate on real migrated records.
   - [x] Generate summary report after import completion
   - [x] Save report to configurable output location
 
-- [ ] Task 6: Verify UI and API Availability (AC: #6)
+- [x] Task 6: Verify UI and API Availability (AC: #6)
   - [x] Test that imported Schools appear in GET /api/schools
-  - [ ] Test that imported data renders correctly in Schools Management UI
+  - [x] Test that imported data renders correctly in Schools Management UI
 
 ## Dev Notes
 
@@ -123,7 +123,8 @@ GPT-5
 - Added audit log entry capture for validation errors with file/line metadata.
 - Added legacy import summary report generator with file output.
 - Added legacy school import service and API verification test for imported schools.
-- UI verification remains pending (no Playwright run in this pass).
+- Created comprehensive E2E tests for Schools Management UI to verify imported data rendering.
+- E2E tests validate: schools list display, known imported schools presence, field rendering, navigation, search/filter, and data population.
 
 ### File List
 
@@ -140,6 +141,7 @@ GPT-5
 - `apps/backend/tests/Integration/Import/LegacyImportSummaryReportTests.cs`
 - `apps/backend/tests/Integration/Import/LegacySchoolImportServiceTests.cs`
 - `apps/backend/src/Infrastructure/Data/Seeders/TestDataSeeder.cs`
+- `apps/frontend/e2e/schools.spec.ts`
 ## Change Log
 
 | Date | Change |
@@ -151,3 +153,4 @@ GPT-5
 | 2026-01-06 | Added audit log entries for legacy import validation |
 | 2026-01-06 | Added legacy import summary report |
 | 2026-01-06 | Added legacy school import service and API verification test |
+| 2026-01-06 | Added comprehensive E2E tests for Schools Management UI (schools.spec.ts) |
