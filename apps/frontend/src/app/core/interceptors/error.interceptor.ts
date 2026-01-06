@@ -133,10 +133,11 @@ function handleSpecificErrors(
     case 401:
       // Unauthorized - redirect to login
       console.log('Unauthorized access - redirecting to login');
-      // TODO: Implement login redirect (will be implemented in auth guard task)
-      // router.navigate(['/login'], {
-      //   queryParams: { returnUrl: router.url },
-      // });
+      // Clear expired token from storage
+      localStorage.removeItem('auth_token');
+      router.navigate(['/login'], {
+        queryParams: { returnUrl: router.url },
+      });
       break;
 
     case 403:
