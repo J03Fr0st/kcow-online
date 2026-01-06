@@ -128,13 +128,21 @@ public sealed class LegacyClassGroupMapper
         var classGroup = new ClassGroup
         {
             Name = name,
+            DayTruck = Trim(record.DayTruck),
+            Description = Trim(record.Description),
             SchoolId = record.SchoolId,
             TruckId = truckId,
             DayOfWeek = dayOfWeek,
             StartTime = startTime ?? new TimeOnly(8, 0), // Default 8:00 AM
             EndTime = endTime ?? new TimeOnly(9, 0),     // Default 9:00 AM
             Sequence = sequence,
-            Notes = Trim(record.Note) ?? Trim(record.GroupMessage),
+            Evaluate = record.Evaluate,
+            Notes = Trim(record.Note),
+            ImportFlag = record.Import,
+            GroupMessage = Trim(record.GroupMessage),
+            SendCertificates = Trim(record.SendCertificates),
+            MoneyMessage = Trim(record.MoneyMessage),
+            Ixl = Trim(record.IXL),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
