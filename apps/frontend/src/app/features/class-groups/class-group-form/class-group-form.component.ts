@@ -38,7 +38,7 @@ export class ClassGroupFormComponent implements OnInit {
   readonly classGroupId = input<number | null>(null);
 
   // Outputs
-  readonly submit = output<Event>();
+  readonly submit = output<{ mode: 'create' | 'update'; classGroup: ClassGroup }>();
   readonly cancel = output<void>();
 
   // Form state
@@ -57,7 +57,8 @@ export class ClassGroupFormComponent implements OnInit {
 
   // Dropdown data
   schools = signal<School[]>([]);
-  trucks = signal<Truck[]>([]);
+  // Computed: trucks from service (reactive to service updates)
+  protected readonly trucks = computed(() => this.truckService.trucks());
 
   // Day of week options
   readonly dayOfWeekOptions = DAY_OF_WEEK_OPTIONS;
@@ -121,13 +122,7 @@ export class ClassGroupFormComponent implements OnInit {
    * Load trucks for dropdown
    */
   private loadTrucks(): void {
-    this.truckService.trucks.subscribe({
-      next: (trucks) => this.trucks.set(trucks),
-      error: (err) => {
-        console.error('Error loading trucks:', err);
-        this.notificationService.error('Failed to load trucks');
-      },
-    });
+    // Just trigger loading - trucks signal is computed from service
     this.truckService.loadTrucks();
   }
 
@@ -262,7 +257,7 @@ export class ClassGroupFormComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       ).subscribe({
         next: (classGroup) => {
-          this.submit.emit(new CustomEvent('submit', { detail: { mode: 'update', classGroup } }));
+          this.submit.emit({ mode: 'update', classGroup });
         },
         error: (err) => {
           console.error('Update error:', err);
@@ -288,7 +283,7 @@ export class ClassGroupFormComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       ).subscribe({
         next: (classGroup) => {
-          this.submit.emit(new CustomEvent('submit', { detail: { mode: 'create', classGroup } }));
+          this.submit.emit({ mode: 'create', classGroup });
         },
         error: (err) => {
           console.error('Create error:', err);
@@ -357,5 +352,12 @@ export class ClassGroupFormComponent implements OnInit {
    */
   protected get submitButtonText(): string {
     return this.isSaving() ? 'Saving...' : this.classGroupId() ? 'Update Class Group' : 'Create Class Group';
+  }
+
+  /**
+   * Get day of week number for form value
+   */
+  protected getDayOfWeekNumber(dayName: string): number {
+    return getDayOfWeekNumber(dayName);
   }
 }

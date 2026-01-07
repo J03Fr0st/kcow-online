@@ -117,13 +117,13 @@ export class ClassGroupsListComponent implements OnInit {
   /**
    * Handle form submission (create or update)
    */
-  protected onFormSubmit(event: CustomEvent<{ mode: 'create' | 'update'; classGroup?: ClassGroup }>): void {
-    const { mode, classGroup } = event.detail;
+  protected onFormSubmit(data: { mode: 'create' | 'update'; classGroup: ClassGroup }): void {
+    const { mode, classGroup } = data;
 
     if (mode === 'create') {
       this.notificationService.success('Class group created successfully');
       this.closeForm();
-    } else if (mode === 'update' && classGroup) {
+    } else if (mode === 'update') {
       this.notificationService.success('Class group updated successfully');
       this.closeForm();
     }
