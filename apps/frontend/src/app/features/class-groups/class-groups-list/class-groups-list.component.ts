@@ -1,9 +1,11 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ClassGroupService, type ClassGroup } from '@core/services/class-group.service';
+import { ClassGroupService } from '@core/services/class-group.service';
 import { SchoolService, type School } from '@core/services/school.service';
-import { TruckService, type Truck } from '@core/services/truck.service';
+import { TruckService } from '@core/services/truck.service';
+import type { ClassGroup } from '../models/class-group.model';
+import type { Truck } from '@features/trucks/models/truck.model';
 import { NotificationService } from '@core/services/notification.service';
 import { ClassGroupFormComponent } from '../class-group-form/class-group-form.component';
 import { WeeklyScheduleComponent } from '../weekly-schedule/weekly-schedule.component';
@@ -37,7 +39,7 @@ export class ClassGroupsListComponent implements OnInit {
 
   // Dropdown data for filters
   protected availableSchools = signal<School[]>([]);
-  protected availableTrucks = signal<Truck[]>([]);
+  protected availableTrucks = computed(() => this.truckService.trucks());
 
   // Computed properties from service
   protected classGroups = computed(() => {
@@ -84,15 +86,7 @@ export class ClassGroupsListComponent implements OnInit {
    * Load trucks for filter dropdown
    */
   private loadTrucks(): void {
-    this.truckService.trucks.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (trucks) => this.availableTrucks.set(trucks),
-      error: (err) => {
-        console.error('Error loading trucks:', err);
-        this.notificationService.error('Failed to load trucks');
-      },
-    });
+    // Load trucks - availableTrucks is a computed signal that automatically updates
     this.truckService.loadTrucks();
   }
 

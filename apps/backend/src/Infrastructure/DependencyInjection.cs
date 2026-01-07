@@ -82,8 +82,9 @@ public static class DependencyInjection
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<AppDbContext>>();
 
-        // Ensure database is created (includes all entities from DbContext)
-        await dbContext.Database.EnsureCreatedAsync();
+        // Apply migrations to ensure database schema is up to date
+        await dbContext.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied successfully");
 
         // Seed authentication data
         await AuthSeeder.SeedAsync(dbContext, logger);

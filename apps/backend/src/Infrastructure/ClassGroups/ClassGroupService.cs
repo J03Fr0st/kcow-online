@@ -40,46 +40,49 @@ public class ClassGroupService : IClassGroupService
             query = query.Where(cg => cg.TruckId == truckId.Value);
         }
 
-        var classGroups = await query
+        // Load entities first, then map to DTOs in memory
+        // This avoids EF Core translation issues with conditional expressions in Select
+        var entities = await query
             .OrderBy(cg => cg.SchoolId)
             .ThenBy(cg => cg.DayOfWeek)
             .ThenBy(cg => cg.StartTime)
-            .Select(cg => new ClassGroupDto
-            {
-                Id = cg.Id,
-                Name = cg.Name,
-                DayTruck = cg.DayTruck,
-                Description = cg.Description,
-                SchoolId = cg.SchoolId,
-                TruckId = cg.TruckId,
-                DayOfWeek = cg.DayOfWeek,
-                StartTime = cg.StartTime,
-                EndTime = cg.EndTime,
-                Sequence = cg.Sequence,
-                Evaluate = cg.Evaluate,
-                Notes = cg.Notes,
-                ImportFlag = cg.ImportFlag,
-                GroupMessage = cg.GroupMessage,
-                SendCertificates = cg.SendCertificates,
-                MoneyMessage = cg.MoneyMessage,
-                Ixl = cg.Ixl,
-                IsActive = cg.IsActive,
-                CreatedAt = cg.CreatedAt,
-                UpdatedAt = cg.UpdatedAt,
-                School = cg.School == null ? null : new SchoolDto
-                {
-                    Id = cg.School.Id,
-                    Name = cg.School.Name,
-                    ShortName = cg.School.ShortName
-                },
-                Truck = cg.Truck == null ? null : new TruckDto
-                {
-                    Id = cg.Truck.Id,
-                    Name = cg.Truck.Name,
-                    RegistrationNumber = cg.Truck.RegistrationNumber
-                }
-            })
             .ToListAsync();
+
+        var classGroups = entities.Select(cg => new ClassGroupDto
+        {
+            Id = cg.Id,
+            Name = cg.Name,
+            DayTruck = cg.DayTruck,
+            Description = cg.Description,
+            SchoolId = cg.SchoolId,
+            TruckId = cg.TruckId,
+            DayOfWeek = cg.DayOfWeek,
+            StartTime = cg.StartTime,
+            EndTime = cg.EndTime,
+            Sequence = cg.Sequence,
+            Evaluate = cg.Evaluate,
+            Notes = cg.Notes,
+            ImportFlag = cg.ImportFlag,
+            GroupMessage = cg.GroupMessage,
+            SendCertificates = cg.SendCertificates,
+            MoneyMessage = cg.MoneyMessage,
+            Ixl = cg.Ixl,
+            IsActive = cg.IsActive,
+            CreatedAt = cg.CreatedAt,
+            UpdatedAt = cg.UpdatedAt,
+            School = cg.School != null ? new SchoolDto
+            {
+                Id = cg.School.Id,
+                Name = cg.School.Name,
+                ShortName = cg.School.ShortName
+            } : null,
+            Truck = cg.Truck != null ? new TruckDto
+            {
+                Id = cg.Truck.Id,
+                Name = cg.Truck.Name,
+                RegistrationNumber = cg.Truck.RegistrationNumber
+            } : null
+        }).ToList();
 
         _logger.LogInformation("Retrieved {Count} active class groups (SchoolId: {SchoolId}, TruckId: {TruckId})",
             classGroups.Count, schoolId, truckId);
@@ -91,46 +94,52 @@ public class ClassGroupService : IClassGroupService
     /// </summary>
     public async Task<ClassGroupDto?> GetByIdAsync(int id)
     {
-        var classGroup = await _context.ClassGroups
+        var entity = await _context.ClassGroups
             .Include(cg => cg.School)
             .Include(cg => cg.Truck)
-            .Where(cg => cg.Id == id && cg.IsActive)
-            .Select(cg => new ClassGroupDto
+            .FirstOrDefaultAsync(cg => cg.Id == id && cg.IsActive);
+
+        if (entity == null)
+        {
+            return null;
+        }
+
+        // Map entity to DTO in memory to avoid EF Core translation issues
+        var classGroup = new ClassGroupDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            DayTruck = entity.DayTruck,
+            Description = entity.Description,
+            SchoolId = entity.SchoolId,
+            TruckId = entity.TruckId,
+            DayOfWeek = entity.DayOfWeek,
+            StartTime = entity.StartTime,
+            EndTime = entity.EndTime,
+            Sequence = entity.Sequence,
+            Evaluate = entity.Evaluate,
+            Notes = entity.Notes,
+            ImportFlag = entity.ImportFlag,
+            GroupMessage = entity.GroupMessage,
+            SendCertificates = entity.SendCertificates,
+            MoneyMessage = entity.MoneyMessage,
+            Ixl = entity.Ixl,
+            IsActive = entity.IsActive,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
+            School = entity.School != null ? new SchoolDto
             {
-                Id = cg.Id,
-                Name = cg.Name,
-                DayTruck = cg.DayTruck,
-                Description = cg.Description,
-                SchoolId = cg.SchoolId,
-                TruckId = cg.TruckId,
-                DayOfWeek = cg.DayOfWeek,
-                StartTime = cg.StartTime,
-                EndTime = cg.EndTime,
-                Sequence = cg.Sequence,
-                Evaluate = cg.Evaluate,
-                Notes = cg.Notes,
-                ImportFlag = cg.ImportFlag,
-                GroupMessage = cg.GroupMessage,
-                SendCertificates = cg.SendCertificates,
-                MoneyMessage = cg.MoneyMessage,
-                Ixl = cg.Ixl,
-                IsActive = cg.IsActive,
-                CreatedAt = cg.CreatedAt,
-                UpdatedAt = cg.UpdatedAt,
-                School = cg.School == null ? null : new SchoolDto
-                {
-                    Id = cg.School.Id,
-                    Name = cg.School.Name,
-                    ShortName = cg.School.ShortName
-                },
-                Truck = cg.Truck == null ? null : new TruckDto
-                {
-                    Id = cg.Truck.Id,
-                    Name = cg.Truck.Name,
-                    RegistrationNumber = cg.Truck.RegistrationNumber
-                }
-            })
-            .FirstOrDefaultAsync();
+                Id = entity.School.Id,
+                Name = entity.School.Name,
+                ShortName = entity.School.ShortName
+            } : null,
+            Truck = entity.Truck != null ? new TruckDto
+            {
+                Id = entity.Truck.Id,
+                Name = entity.Truck.Name,
+                RegistrationNumber = entity.Truck.RegistrationNumber
+            } : null
+        };
 
         if (classGroup == null)
         {

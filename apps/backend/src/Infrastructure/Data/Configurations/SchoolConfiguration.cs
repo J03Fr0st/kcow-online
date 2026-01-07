@@ -28,6 +28,11 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
             .HasColumnName("short_name")
             .HasMaxLength(50);
 
+        // XSD Field: "School Description" (50 chars max)
+        builder.Property(s => s.SchoolDescription)
+            .HasColumnName("school_description")
+            .HasMaxLength(50);
+
         builder.Property(s => s.TruckId)
             .HasColumnName("truck_id");
 
@@ -139,6 +144,11 @@ public class SchoolConfiguration : IEntityTypeConfiguration<School>
         builder.Property(s => s.WebPage)
             .HasColumnName("web_page")
             .HasMaxLength(500);
+
+        // XSD Field: "omsendbriewe" (255 chars max)
+        builder.Property(s => s.Omsendbriewe)
+            .HasColumnName("omsendbriewe")
+            .HasMaxLength(255);
 
         builder.Property(s => s.KcowWebPageLink)
             .HasColumnName("kcow_web_page_link")
