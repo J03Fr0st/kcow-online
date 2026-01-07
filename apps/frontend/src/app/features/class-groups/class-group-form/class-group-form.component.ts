@@ -81,13 +81,22 @@ export class ClassGroupFormComponent implements OnInit {
   private initForm(): void {
     this.form = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(10)]], // XSD: 10 chars max
+      dayTruck: ['', Validators.maxLength(6)], // XSD: 6 chars max
+      description: ['', Validators.maxLength(35)], // XSD: 35 chars max
       schoolId: [null, [Validators.required]],
       truckId: [null],
       dayOfWeek: [1, [Validators.required]], // Default to Monday (1)
       startTime: ['', [Validators.required]],
       endTime: ['', [Validators.required]],
       sequence: [1, [Validators.required, Validators.min(1)]],
+      evaluate: [false], // XSD: boolean, default false
       notes: ['', Validators.maxLength(255)], // XSD: 255 chars max
+      importFlag: [false], // XSD: boolean, default false
+      groupMessage: ['', Validators.maxLength(255)], // XSD: 255 chars max
+      sendCertificates: ['', Validators.maxLength(255)], // XSD: 255 chars max
+      moneyMessage: ['', Validators.maxLength(50)], // XSD: 50 chars max
+      ixl: ['', Validators.maxLength(3)], // XSD: 3 chars max
+      isActive: [true], // For updates only
     });
 
     // Watch for value changes to trigger conflict checks
@@ -191,13 +200,22 @@ export class ClassGroupFormComponent implements OnInit {
       next: (classGroup) => {
         this.form.patchValue({
           name: classGroup.name,
+          dayTruck: classGroup.dayTruck || '',
+          description: classGroup.description || '',
           schoolId: classGroup.schoolId,
           truckId: classGroup.truckId || null,
           dayOfWeek: classGroup.dayOfWeek,
           startTime: classGroup.startTime.substring(0, 5), // "HH:mm:ss" -> "HH:mm"
           endTime: classGroup.endTime.substring(0, 5),
           sequence: classGroup.sequence,
+          evaluate: classGroup.evaluate ?? false,
           notes: classGroup.notes || '',
+          importFlag: classGroup.importFlag ?? false,
+          groupMessage: classGroup.groupMessage || '',
+          sendCertificates: classGroup.sendCertificates || '',
+          moneyMessage: classGroup.moneyMessage || '',
+          ixl: classGroup.ixl || '',
+          isActive: classGroup.isActive ?? true,
         });
         // Trigger conflict check after loading
         this.triggerConflictCheck();
@@ -242,14 +260,22 @@ export class ClassGroupFormComponent implements OnInit {
       // Update existing class group
       const updateRequest: UpdateClassGroupRequest = {
         name: formValue.name,
+        dayTruck: formValue.dayTruck || undefined,
+        description: formValue.description || undefined,
         schoolId: formValue.schoolId,
         truckId: formValue.truckId || undefined,
         dayOfWeek: formValue.dayOfWeek,
         startTime: `${formValue.startTime}:00`,
         endTime: `${formValue.endTime}:00`,
         sequence: formValue.sequence,
+        evaluate: formValue.evaluate ?? false,
         notes: formValue.notes || undefined,
-        isActive: true,
+        importFlag: formValue.importFlag ?? false,
+        groupMessage: formValue.groupMessage || undefined,
+        sendCertificates: formValue.sendCertificates || undefined,
+        moneyMessage: formValue.moneyMessage || undefined,
+        ixl: formValue.ixl || undefined,
+        isActive: formValue.isActive ?? true,
       };
 
       this.classGroupService.updateClassGroup(this.classGroupId()!, updateRequest).pipe(
@@ -269,13 +295,21 @@ export class ClassGroupFormComponent implements OnInit {
       // Create new class group
       const createRequest: CreateClassGroupRequest = {
         name: formValue.name,
+        dayTruck: formValue.dayTruck || undefined,
+        description: formValue.description || undefined,
         schoolId: formValue.schoolId,
         truckId: formValue.truckId || undefined,
         dayOfWeek: formValue.dayOfWeek,
         startTime: `${formValue.startTime}:00`,
         endTime: `${formValue.endTime}:00`,
         sequence: formValue.sequence,
+        evaluate: formValue.evaluate ?? false,
         notes: formValue.notes || undefined,
+        importFlag: formValue.importFlag ?? false,
+        groupMessage: formValue.groupMessage || undefined,
+        sendCertificates: formValue.sendCertificates || undefined,
+        moneyMessage: formValue.moneyMessage || undefined,
+        ixl: formValue.ixl || undefined,
       };
 
       this.classGroupService.createClassGroup(createRequest).pipe(
@@ -325,6 +359,10 @@ export class ClassGroupFormComponent implements OnInit {
     }
     if (field.hasError('min')) {
       return 'Value must be at least 1';
+    }
+    if (field.hasError('minlength')) {
+      const minLength = field.errors?.['minlength']?.requiredLength || 0;
+      return `Minimum length is ${minLength} characters`;
     }
 
     return 'Invalid input';

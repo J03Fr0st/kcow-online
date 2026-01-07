@@ -43,6 +43,50 @@
           }
         </div>
 
+        <!-- Day Truck (Legacy) -->
+        <div class="form-control">
+          <label class="label" for="dayTruck">
+            <span class="label-text">Day Truck (Legacy)</span>
+            <span class="label-text-alt">Optional</span>
+          </label>
+          <input
+            id="dayTruck"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="dayTruck"
+            [class]="{ 'input-error': hasError('dayTruck') }"
+            placeholder="6 chars max"
+            maxlength="6"
+          />
+          @if (hasError('dayTruck')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('dayTruck') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Description -->
+        <div class="form-control">
+          <label class="label" for="description">
+            <span class="label-text">Description</span>
+            <span class="label-text-alt">Optional</span>
+          </label>
+          <input
+            id="description"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="description"
+            [class]="{ 'input-error': hasError('description') }"
+            placeholder="35 chars max"
+            maxlength="35"
+          />
+          @if (hasError('description')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('description') }}</span>
+            </label>
+          }
+        </div>
+
         <!-- School Dropdown -->
         <div class="form-control">
           <label class="label" for="schoolId">
@@ -172,6 +216,30 @@
           }
         </div>
 
+        <!-- Evaluate Checkbox -->
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Evaluate</span>
+            <input
+              type="checkbox"
+              class="checkbox"
+              formControlName="evaluate"
+            />
+          </label>
+        </div>
+
+        <!-- Import Flag Checkbox -->
+        <div class="form-control">
+          <label class="label cursor-pointer">
+            <span class="label-text">Import Flag</span>
+            <input
+              type="checkbox"
+              class="checkbox"
+              formControlName="importFlag"
+            />
+          </label>
+        </div>
+
         <!-- Notes -->
         <div class="form-control">
           <label class="label" for="notes">
@@ -183,8 +251,101 @@
             formControlName="notes"
             placeholder="Additional notes about this class group"
             rows="3"
+            maxlength="255"
           ></textarea>
         </div>
+
+        <!-- Group Message -->
+        <div class="form-control">
+          <label class="label" for="groupMessage">
+            <span class="label-text">Group Message (Optional)</span>
+          </label>
+          <textarea
+            id="groupMessage"
+            class="textarea textarea-bordered w-full"
+            formControlName="groupMessage"
+            placeholder="Message for the group"
+            rows="3"
+            maxlength="255"
+          ></textarea>
+        </div>
+
+        <!-- Send Certificates -->
+        <div class="form-control">
+          <label class="label" for="sendCertificates">
+            <span class="label-text">Send Certificates (Optional)</span>
+          </label>
+          <input
+            id="sendCertificates"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="sendCertificates"
+            [class]="{ 'input-error': hasError('sendCertificates') }"
+            placeholder="255 chars max"
+            maxlength="255"
+          />
+          @if (hasError('sendCertificates')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('sendCertificates') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Money Message -->
+        <div class="form-control">
+          <label class="label" for="moneyMessage">
+            <span class="label-text">Money Message (Optional)</span>
+          </label>
+          <input
+            id="moneyMessage"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="moneyMessage"
+            [class]="{ 'input-error': hasError('moneyMessage') }"
+            placeholder="50 chars max"
+            maxlength="50"
+          />
+          @if (hasError('moneyMessage')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('moneyMessage') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- IXL -->
+        <div class="form-control">
+          <label class="label" for="ixl">
+            <span class="label-text">IXL (Optional)</span>
+          </label>
+          <input
+            id="ixl"
+            type="text"
+            class="input input-bordered w-full"
+            formControlName="ixl"
+            [class]="{ 'input-error': hasError('ixl') }"
+            placeholder="3 chars max"
+            maxlength="3"
+          />
+          @if (hasError('ixl')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('ixl') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Is Active (Edit Mode Only) -->
+        @if (classGroupId()) {
+          <div class="form-control">
+            <label class="label cursor-pointer">
+              <span class="label-text">Active</span>
+              <input
+                type="checkbox"
+                class="checkbox"
+                formControlName="isActive"
+              />
+            </label>
+          </div>
+        }
 
         <!-- Form Actions -->
         <div class="card-actions justify-end mt-4">

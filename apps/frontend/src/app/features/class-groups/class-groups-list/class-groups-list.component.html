@@ -98,11 +98,12 @@
     <table class="table table-zebra table-sm" aria-label="Class Groups Registry">
       <thead>
         <tr>
+          <th>Day Truck</th>
           <th>Name</th>
+          <th>Description</th>
           <th>School</th>
-          <th>Truck</th>
-          <th>Day</th>
-          <th>Time</th>
+          <th>Start Time</th>
+          <th>End Time</th>
           <th>Sequence</th>
           <th>Actions</th>
         </tr>
@@ -114,10 +115,13 @@
           (click)="openEditForm(classGroup)"
           [class.opacity-50]="deletingId() === classGroup.id">
           <td>
+            <span class="text-sm">{{ classGroup.dayTruck || '-' }}</span>
+          </td>
+          <td>
             <div class="font-medium">{{ classGroup.name }}</div>
-            @if (classGroup.notes) {
-            <div class="text-xs text-base-content/60">{{ classGroup.notes }}</div>
-            }
+          </td>
+          <td>
+            <span class="text-sm">{{ classGroup.description || '-' }}</span>
           </td>
           <td>
             @if (classGroup.school) {
@@ -130,18 +134,10 @@
             }
           </td>
           <td>
-            @if (classGroup.truck) {
-              <div>{{ classGroup.truck.name }}</div>
-              <div class="text-xs text-base-content/60">{{ classGroup.truck.registrationNumber }}</div>
-            } @else {
-              <span class="text-base-content/40">No truck</span>
-            }
+            <div class="font-mono text-sm">{{ formatTime(classGroup.startTime) }}</div>
           </td>
           <td>
-            <span class="badge badge-ghost">{{ getDayOfWeekName(classGroup.dayOfWeek) }}</span>
-          </td>
-          <td>
-            <div class="font-mono text-sm">{{ formatTime(classGroup.startTime) }} - {{ formatTime(classGroup.endTime) }}</div>
+            <div class="font-mono text-sm">{{ formatTime(classGroup.endTime) }}</div>
           </td>
           <td>
             <span class="badge badge-outline">#{{ classGroup.sequence }}</span>
