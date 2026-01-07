@@ -88,6 +88,8 @@ public static class DependencyInjection
 
         // Seed authentication data
         await AuthSeeder.SeedAsync(dbContext, logger);
+        // Seed truck data
+        await TruckSeeder.SeedAsync(dbContext, logger);
 
         // Seed test data if in E2E test mode
         var seedTestData = Environment.GetEnvironmentVariable("DOTNET_SEED_TEST_DATA");

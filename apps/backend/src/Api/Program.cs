@@ -10,31 +10,6 @@ using Serilog;
 using System.Text;
 using System.Text.Json;
 
-// #region agent log
-static void AgentDebugLog(string runId, string hypothesisId, string location, string message, object data)
-{
-    try
-    {
-        const string logPath = @"d:\Source\kcow-online\.cursor\debug.log";
-        var payload = new
-        {
-            sessionId = "debug-session",
-            runId,
-            hypothesisId,
-            location,
-            message,
-            data,
-            timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
-        };
-        File.AppendAllText(logPath, JsonSerializer.Serialize(payload) + Environment.NewLine);
-    }
-    catch
-    {
-        // ignore logging failures
-    }
-}
-// #endregion
-
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
@@ -43,17 +18,7 @@ Log.Information("Starting KCOW API");
 
 try
 {
-    AgentDebugLog("pre-fix", "H1", "Api/Program.cs:Main", "Process starting", new { argsLength = args?.Length ?? 0 });
-
     var builder = WebApplication.CreateBuilder(args ?? Array.Empty<string>());
-
-    // #region agent log
-    AgentDebugLog("pre-fix", "H3", "Api/Program.cs:Main", "Environment/config snapshot", new
-    {
-        env = builder.Environment.EnvironmentName,
-        defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection")
-    });
-    // #endregion
 
     // Register database initialization hosted service for development and E2E testing
     if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("E2E"))
@@ -238,12 +203,10 @@ catch (Microsoft.Extensions.Hosting.HostAbortedException ex)
 {
     // This is expected for EF Core design-time operations (dotnet-ef uses HostFactoryResolver and aborts the host).
     // Logging as Fatal makes tooling / extensions look like the app crashed even though the command succeeded.
-    AgentDebugLog("pre-fix", "H1", "Api/Program.cs:catch(HostAbortedException)", "Host aborted (expected design-time)", new { exType = ex.GetType().FullName, exMessage = ex.Message });
     Log.Information(ex, "Host aborted (expected for design-time operations)");
 }
 catch (Exception ex)
 {
-    AgentDebugLog("pre-fix", "H2", "Api/Program.cs:catch(Exception)", "Unhandled exception during startup", new { exType = ex.GetType().FullName, exMessage = ex.Message });
     Log.Fatal(ex, "Application terminated unexpectedly");
 }
 finally
