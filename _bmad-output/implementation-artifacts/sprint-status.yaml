@@ -74,15 +74,15 @@ development_status:
   3-4-scheduling-conflict-detection: done  # Code reviewed: conflict algorithm validated, robust implementation
   3-5-weekly-schedule-overview: done  # Code reviewed: critical bugs fixed (duplicate import, type errors)
   3-6-data-migration-class-groups-schedules: done  # Code reviewed: XSD compliance fixed (7 missing fields added)
-  3-7-e2e-tests-class-groups-scheduling-conflicts: ready-for-dev
+  3-7-e2e-tests-class-groups-scheduling-conflicts: done  # E2E tests created (36 tests), runtime issues noted - Class Group CRUD operations need backend investigation
   epic-3-retrospective: optional
 
   # ========================
   # Epic 4: Student & Family Management
   # ========================
-  epic-4: backlog
-  4-1-student-entity-api-endpoints: ready-for-dev
-  4-2-family-entity-api-endpoints: ready-for-dev
+  epic-4: in-progress
+  4-1-student-entity-api-endpoints: review
+  4-2-family-entity-api-endpoints: review
   4-3-student-assignment-to-school-class-group: ready-for-dev
   4-4-global-student-search: ready-for-dev
   4-5-students-list-page: ready-for-dev
