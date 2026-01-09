@@ -323,6 +323,7 @@ kcow-online/
 │   │   │   │   │   ├── class-groups/   # scheduling (FR4-6)
 │   │   │   │   │   ├── students/       # student management (FR7-11)
 │   │   │   │   │   ├── families/       # family/guardian contacts
+│   │   │   │   │   ├── activities/     # activity management (Epic 8)
 │   │   │   │   │   ├── attendance/     # attendance tracking
 │   │   │   │   │   ├── evaluations/    # progress evaluations
 │   │   │   │   │   ├── billing/        # billing/financials
@@ -345,6 +346,7 @@ kcow-online/
 │       │   │   ├── ClassGroups/
 │       │   │   ├── Students/
 │       │   │   ├── Families/
+│       │   │   ├── Activities/
 │       │   │   ├── Attendance/
 │       │   │   ├── Evaluations/
 │       │   │   ├── Billing/
@@ -409,12 +411,13 @@ kcow-online/
 - FR2-3 Schools Management -> `features/schools`, `Application/Schools`
 - FR4-6 Class Groups & Scheduling -> `features/class-groups`, `Application/ClassGroups`
 - FR7-11 Student Management -> `features/students`, `features/families`, `Application/Students`, `Application/Families`
+- **Activity Management -> `features/activities`, `Application/Activities`** ← NEW (Epic 8)
 - FR12 Data Migration -> `features/import`, `Application/Import`
 - FR13-14 Data Integrity -> Shared validation services + audit trail middleware
 
 **Supporting Features (derived from FRs):**
 - Attendance -> `features/attendance`, `Application/Attendance`
-- Evaluations -> `features/evaluations`, `Application/Evaluations`
+- Evaluations -> `features/evaluations`, `Application/Evaluations` (depends on Activity)
 - Billing -> `features/billing`, `Application/Billing`
 
 **Cross-Cutting Concerns:**

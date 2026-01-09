@@ -14,8 +14,8 @@ user_name: 'Joe'
 date: '2026-01-03'
 status: 'complete'
 completedAt: '2026-01-03'
-totalEpics: 7
-totalStories: 53
+totalEpics: 8
+totalStories: 57
 ---
 
 # kcow-online - Epic Breakdown
@@ -252,6 +252,21 @@ Developer can import legacy XML/XSD data with preview, exception handling, and a
 
 ---
 
+### Epic 8: Activity Management
+Admin can manage the educational program catalog (activities) that are delivered during class sessions and evaluated in student progress tracking.
+
+**FRs covered:** Foundation for Epic 5 (Evaluations - Activity reference)
+
+**Implementation Notes:**
+- Activity CRUD with program code, grade level, folder, and curriculum info
+- Icon field: OLE Object from legacy XML stored as base64 string
+- API endpoints + frontend feature module
+- Legacy data migration from Activity XML/XSD (11.8MB with embedded images)
+- Simple maintenance entity following Epic 2 patterns
+- **Prerequisite for Epic 5** (Evaluations depend on Activity entity)
+
+---
+
 ## Epic 1: Project Foundation & Authentication
 
 Admin can securely log in to the system and access a protected dashboard with the core application shell.
@@ -339,7 +354,7 @@ Admin can securely log in to the system and access a protected dashboard with th
 **Given** I am authenticated
 **When** I access the root path (`/`)
 **Then** I see the AdminLayout with:
-- Sidebar navigation with module links (Dashboard, Trucks, Schools, Class Groups, Students)
+- Sidebar navigation with module links (Dashboard, Trucks, Schools, Class Groups, Students, Activities, Billing)
 - Top navbar with user info and logout button
 - Main content area showing the Dashboard
 
@@ -1668,5 +1683,151 @@ Developer can import legacy XML/XSD data with preview, exception handling, and a
 **Note:** No E2E UI tests needed - this is developer CLI tooling
 
 
+---
+
+### Epic 8: Activity Management
+
+Admin can manage the educational program catalog (activities) that are delivered during class sessions and evaluated in student progress tracking.
+
+**FRs covered:** Foundation for Epic 5 (Evaluations - Activity reference)
+
+**Implementation Notes:**
+- Activity CRUD with program code, grade level, folder, and curriculum info
+- Icon field: OLE Object from legacy XML stored as base64 string
+- API endpoints + frontend feature module
+- Legacy data migration from Activity XML/XSD (11.8MB with embedded images)
+- Simple maintenance entity following Epic 2 patterns
+
+---
+
+## Epic 8: Activity Management
+
+Admin can manage the educational program catalog (activities) that are delivered during class sessions.
+
+### Story 8.1: Activity Entity & API Endpoints
+
+**As a** developer,
+**I want** the Activity domain entity and REST API endpoints,
+**So that** activity data can be managed through the API.
+
+**Acceptance Criteria:**
+
+**Given** the backend project
+**When** the Activity entity is created
+**Then** the `Activity` entity exists with properties from XSD:
+- Id (ActivityID)
+- Code (Program)
+- Name (ProgramName)
+- Description (Educational_Focus)
+- Folder
+- GradeLevel (Grade)
+- Icon (base64Binary - OleObject image stored as base64 string)
+
+**And** EF Core configuration and migration create the `activities` table
+**And** the Icon field is stored as TEXT/base64 string in SQLite (large enough for OLE object data)
+**And** `/api/activities` endpoints support:
+- GET (list all activities)
+- GET `/:id` (get single activity)
+- POST (create activity)
+- PUT `/:id` (update activity)
+- DELETE `/:id` (archive activity)
+
+**And** endpoints require authentication
+**And** ProblemDetails errors for validation failures (FR13)
+
+---
+
+### Story 8.2: Activities Management UI
+
+**As an** admin,
+**I want** an activities management page to view and manage the program catalog,
+**So that** I can maintain the educational activities offered.
+
+**Acceptance Criteria:**
+
+**Given** I am authenticated and click "Activities" in sidebar
+**When** the Activities page loads
+**Then** I see a table listing activities with Icon thumbnail, Code, Name, Grade Level, Folder, Status columns
+**And** I see "Add Activity" button
+
+**Given** I click "Add Activity"
+**When** the create form appears
+**Then** I can enter activity details including:
+- Code, Name, Description, Folder, Grade Level
+- Icon upload (image file converted to base64 on save)
+**And** the new activity appears in the list with icon thumbnail
+
+**Given** I click an activity row
+**When** the edit form appears
+**Then** I can update activity details and save
+**And** I see a success confirmation
+
+**Given** I click delete on an activity
+**When** I confirm the action
+**Then** the activity is archived (soft-deleted) and removed from the active list
+
+**And** validation errors display inline
+**And** loading states are shown during API calls
+
+---
+
+### Story 8.3: Data Migration - Activities
+
+**As a** developer,
+**I want** legacy Activity data parsed, mapped, and imported into the database,
+**So that** the activities catalog is populated with existing programs.
+
+**Acceptance Criteria:**
+
+**Given** legacy XML/XSD data for Activities (docs/legacy/3_Activity/)
+**When** the migration import executes for Activities
+**Then** all valid Activity records are inserted into the database
+**And** field mappings transform legacy data to new schema:
+  - ActivityID → Id
+  - Program → Code
+  - ProgramName → Name
+  - Educational_Focus → Description
+  - Folder → Folder
+  - Grade → GradeLevel
+  - Icon (OleObject/base64Binary) → Icon (base64 string)
+**And** the Icon OLE object data is extracted and stored as base64 string
+**And** validation errors are captured and logged to the migration audit log
+**And** a summary report shows imported count, skipped count, and error count
+**And** the imported data is available in the UI and API
+
+---
+
+### Story 8.4: E2E Tests - Activities CRUD
+
+**As a** developer,
+**I want** E2E tests covering activity management workflows,
+**So that** CRUD operations and validation are validated end-to-end.
+
+**Acceptance Criteria:**
+
+**Given** the application is running and authenticated as admin
+**When** I run E2E tests for activities
+**Then** the following scenarios are covered:
+
+**Activities Management:**
+- User can navigate to Activities page and see activity list
+- User can create a new activity with valid data
+- User can edit existing activity details
+- User can soft-delete an activity (removed from active list)
+- Validation errors display inline for invalid data
+
+**Data Integrity:**
+- Activity code uniqueness is enforced
+- Grade level mapping persists correctly
+- Search and filtering work on list page
+- Icon base64 data is correctly stored and retrieved
+- Icon thumbnails display correctly in the list
+
+**And** E2E tests are organized in `e2e/activities/`
+**And** Tests use seeded test data (multiple activities)
+**And** Tests clean up test data after completion
+**And** All tests must pass for Epic 8 completion
+
+---
 
 

@@ -133,3 +133,13 @@ development_status:
   7-6-import-re-run-capability: ready-for-dev
   epic-7-retrospective: optional
 
+  # ========================
+  # Epic 8: Activity Management
+  # ========================
+  epic-8: backlog
+  8-1-activity-entity-api-endpoints: ready-for-dev  # Includes Icon field (base64 string from OLE Object)
+  8-2-activities-management-ui: ready-for-dev
+  8-3-data-migration-activities: ready-for-dev  # Import from 11.8MB Activity.xml with embedded images
+  8-4-e2e-tests-activities-crud: ready-for-dev
+  epic-8-retrospective: optional
+
