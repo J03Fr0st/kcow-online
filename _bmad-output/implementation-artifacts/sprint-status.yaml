@@ -43,7 +43,7 @@ development_status:
   # ========================
   # Epic 1: Project Foundation & Authentication
   # ========================
-  epic-1: in-progress
+  epic-1: done
   1-1-backend-project-scaffold: done
   1-2-jwt-authentication-integration: done
   1-3-frontend-auth-service-login-page: done
@@ -54,7 +54,7 @@ development_status:
   # ========================
   # Epic 2: Trucks & Schools Management
   # ========================
-  epic-2: backlog
+  epic-2: done
   2-1-truck-entity-api-endpoints: done
   2-2-trucks-management-ui: done
   2-3-school-entity-api-endpoints: done
@@ -67,7 +67,7 @@ development_status:
   # ========================
   # Epic 3: Class Groups & Scheduling
   # ========================
-  epic-3: in-progress
+  epic-3: done
   3-1-class-group-entity-api-endpoints: done  # Completed: XSD compliance, migration, comprehensive tests (12 unit + 25+ integration)
   3-2-class-groups-management-ui: done  # Code reviewed: XSD fields added, validation fixed
   3-3-schedule-time-slot-configuration: done  # Code reviewed: sorting logic validated, documentation complete
