@@ -1,7 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivityService, type Activity } from '@core/services/activity.service';
+import { ActivityService } from '@core/services/activity.service';
+import type { Activity } from '@features/activities/models/activity.model';
 import { NotificationService } from '@core/services/notification.service';
 import { ActivityFormComponent } from '../activity-form/activity-form.component';
 

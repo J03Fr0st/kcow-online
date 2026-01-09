@@ -1,6 +1,6 @@
 # Story 8.2: Activities Management UI
 
-Status: review
+Status: done
 
 ## Story
 
@@ -95,11 +95,11 @@ so that I can maintain the educational activities offered.
 
 | Component | Path |
 |-----------|------|
-| Routes | `apps/frontend/src/app/features/activities/activities.routes.ts` |
 | Models | `apps/frontend/src/app/features/activities/models/activity.model.ts` |
 | Service | `apps/frontend/src/app/core/services/activity.service.ts` |
 | List Component | `apps/frontend/src/app/features/activities/activities-list/` |
 | Form Component | `apps/frontend/src/app/features/activities/activity-form/` |
+| Route | Added to `apps/frontend/src/app/app.routes.ts` using `loadComponent` |
 
 ### Model Definitions (activity.model.ts)
 
@@ -179,19 +179,19 @@ onIconSelected(event: Event): void {
 ### Routing Configuration
 
 ```typescript
-// activities.routes.ts
-export const ACTIVITIES_ROUTES: Routes = [
-  {
-    path: '',
-    component: ActivitiesListComponent,
-  },
-];
-
-// app.routes.ts - add lazy loading
+// app.routes.ts - using loadComponent for lazy loading
 {
   path: 'activities',
-  loadChildren: () => import('./features/activities/activities.routes')
-    .then(m => m.ACTIVITIES_ROUTES),
+  loadComponent: () =>
+    import('@features/activities/activities-list/activities-list.component')
+      .then((m) => m.ActivitiesListComponent),
+  data: {
+    breadcrumb: 'Activities',
+    breadcrumbIcon: '🧩',
+    title: 'Activities Management',
+    description: 'Manage and view all educational activities',
+    keywords: 'activities, education, programs, management',
+  },
 },
 ```
 
@@ -249,9 +249,17 @@ No issues encountered during implementation.
 - Icon upload with base64 conversion and preview
 - Inline delete confirmation (no modal)
 - Icon thumbnails in table with placeholder for missing icons
-- Route added to app.routes.ts with lazy loading
+- Route added to app.routes.ts using loadComponent for lazy loading
 - Sidebar navigation updated with Activities link and puzzle icon (🧩)
 - Status indicator shows Active/Inactive badge
+- **Code Review Fixes (2026-01-09):**
+  - Fixed component imports to import types directly from model file (removed implicit service dependency)
+  - Added unit test files for both components (activities-list.component.spec.ts, activity-form.component.spec.ts)
+  - Updated documentation to reflect actual implementation (loadComponent instead of separate routes file)
+  - **Review Follow-up (Auto-fixes):**
+    - Removed redundant `shareReplay` from `ActivityService`
+    - Reset file input value in `ActivityFormComponent` to allow re-selection
+    - Added spec files to git tracking
 
 ### File List
 
@@ -259,12 +267,14 @@ No issues encountered during implementation.
 - `apps/frontend/src/app/features/activities/models/activity.model.ts`
 - `apps/frontend/src/app/features/activities/activities-list/activities-list.component.ts`
 - `apps/frontend/src/app/features/activities/activities-list/activities-list.component.html`
+- `apps/frontend/src/app/features/activities/activities-list/activities-list.component.spec.ts`
 - `apps/frontend/src/app/features/activities/activity-form/activity-form.component.ts`
 - `apps/frontend/src/app/features/activities/activity-form/activity-form.component.html`
+- `apps/frontend/src/app/features/activities/activity-form/activity-form.component.spec.ts`
 - `apps/frontend/src/app/core/services/activity.service.ts`
 
 **Modified files:**
-- `apps/frontend/src/app/app.routes.ts` - Added activities route
+- `apps/frontend/src/app/app.routes.ts` - Added activities route using loadComponent
 - `apps/frontend/src/app/models/menu-item.model.ts` - Added Activities menu item
 - `apps/frontend/src/app/core/constants/icons.constants.ts` - Added activities icon
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` - Updated story status to in-progress
@@ -279,3 +289,9 @@ No issues encountered during implementation.
 - Created ActivityFormComponent with Reactive Forms and icon upload
 - Added route and sidebar navigation
 - All acceptance criteria met
+
+2026-01-09: Code review fixes applied
+- Fixed component imports to use direct type imports from model file
+- Created unit tests for activities-list.component and activity-form.component
+- Updated documentation to reflect actual routing implementation
+- Applied auto-fixes: removed shareReplay, fixed file input reset, tracked spec files

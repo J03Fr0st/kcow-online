@@ -2,7 +2,8 @@ import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, sign
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivityService, type Activity, type CreateActivityRequest, type UpdateActivityRequest } from '@core/services/activity.service';
+import { ActivityService } from '@core/services/activity.service';
+import type { Activity, CreateActivityRequest, UpdateActivityRequest } from '@features/activities/models/activity.model';
 import { NotificationService } from '@core/services/notification.service';
 import { finalize } from 'rxjs';
 
@@ -101,12 +102,14 @@ export class ActivityFormComponent implements OnInit {
       // Validate file type
       if (!file.type.startsWith('image/')) {
         this.notificationService.error('Please select an image file');
+        input.value = ''; // Reset input
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         this.notificationService.error('Image file must be less than 5MB');
+        input.value = ''; // Reset input
         return;
       }
 
@@ -117,9 +120,11 @@ export class ActivityFormComponent implements OnInit {
         const base64 = result.split(',')[1];
         this.form.patchValue({ icon: base64 });
         this.iconPreview.set(result);
+        input.value = ''; // Reset input so same file can be selected again if needed
       };
       reader.onerror = () => {
         this.notificationService.error('Failed to read image file');
+        input.value = ''; // Reset input
       };
       reader.readAsDataURL(file);
     }

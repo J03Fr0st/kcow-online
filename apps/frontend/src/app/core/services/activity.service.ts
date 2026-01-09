@@ -26,8 +26,7 @@ export class ActivityService {
         console.error('Error loading activities:', error);
         return throwError(() => error);
       }),
-      finalize(() => this.loading.set(false)),
-      shareReplay({ bufferSize: 1, refCount: true })
+      finalize(() => this.loading.set(false))
     ).subscribe();
   }
 
