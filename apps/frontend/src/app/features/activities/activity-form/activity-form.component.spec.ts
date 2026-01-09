@@ -162,25 +162,25 @@ describe('ActivityFormComponent', () => {
       component.ngOnInit();
     });
 
-    it('should reject non-image files', () => {
+    it('should reject non-PNG files', () => {
       const errorSpy = jest.spyOn(notificationService, 'error');
-      const file = new File(['content'], 'test.txt', { type: 'text/plain' });
+      const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' });
       const input = { files: [file] } as HTMLInputElement;
 
       component.onIconSelected({ target: input } as Event);
 
-      expect(errorSpy).toHaveBeenCalledWith('Please select an image file');
+      expect(errorSpy).toHaveBeenCalledWith('Please select a PNG image file');
     });
 
-    it('should reject files larger than 5MB', () => {
+    it('should reject files larger than 2MB', () => {
       const errorSpy = jest.spyOn(notificationService, 'error');
-      const largeContent = new Array(6 * 1024 * 1024).fill('x').join('');
+      const largeContent = new Array(3 * 1024 * 1024).fill('x').join('');
       const file = new File([largeContent], 'large.png', { type: 'image/png' });
       const input = { files: [file] } as HTMLInputElement;
 
       component.onIconSelected({ target: input } as Event);
 
-      expect(errorSpy).toHaveBeenCalledWith('Image file must be less than 5MB');
+      expect(errorSpy).toHaveBeenCalledWith('Image file must be less than 2MB');
     });
 
     it('should accept valid image file and set preview', (done) => {

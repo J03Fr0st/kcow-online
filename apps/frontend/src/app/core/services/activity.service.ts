@@ -87,9 +87,14 @@ export class ActivityService {
   deleteActivity(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       tap(() => {
-        // Remove from local state
+        // Mark as inactive in local state instead of removing
         const current = this.activities();
-        this.activities.set(current.filter((a) => a.id !== id));
+        const index = current.findIndex((a) => a.id === id);
+        if (index !== -1) {
+          const updated = [...current];
+          updated[index] = { ...updated[index], isActive: false };
+          this.activities.set(updated);
+        }
       }),
       catchError((error: HttpErrorResponse) => {
         console.error(`Error deleting activity ${id}:`, error);

@@ -56,7 +56,7 @@
           <input
             id="icon"
             type="file"
-            accept="image/*"
+            accept="image/png"
             class="file-input file-input-bordered w-full"
             (change)="onIconSelected($event)"
             [disabled]="isSaving()"
@@ -71,7 +71,7 @@
           </button>
           }
           <p id="icon-help" class="text-xs text-base-content/60">
-            Upload an image file (max 5MB). Recommended size: 200x200px.
+            Upload a PNG image file (max 2MB). Recommended size: 200x200px.
           </p>
         </div>
       </div>

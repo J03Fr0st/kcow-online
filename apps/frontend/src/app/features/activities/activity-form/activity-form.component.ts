@@ -100,15 +100,15 @@ export class ActivityFormComponent implements OnInit {
       const file = input.files[0];
 
       // Validate file type
-      if (!file.type.startsWith('image/')) {
-        this.notificationService.error('Please select an image file');
+      if (file.type !== 'image/png') {
+        this.notificationService.error('Please select a PNG image file');
         input.value = ''; // Reset input
         return;
       }
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.notificationService.error('Image file must be less than 5MB');
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        this.notificationService.error('Image file must be less than 2MB');
         input.value = ''; // Reset input
         return;
       }
