@@ -26,6 +26,7 @@ public sealed class LegacyActivityImportService
         string xsdPath,
         string? auditLogPath,
         string? summaryOutputPath,
+        bool preview = false,
         CancellationToken cancellationToken = default)
     {
         var result = _parser.Parse(xmlPath, xsdPath);
@@ -59,7 +60,10 @@ public sealed class LegacyActivityImportService
                     continue;
                 }
 
-                _context.Activities.Add(mapping.Activity);
+                if (!preview)
+                {
+                    _context.Activities.Add(mapping.Activity);
+                }
                 imported++;
             }
             catch (Exception ex)
@@ -70,7 +74,10 @@ public sealed class LegacyActivityImportService
             }
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        if (!preview)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
 
         if (!string.IsNullOrWhiteSpace(auditLogPath))
         {

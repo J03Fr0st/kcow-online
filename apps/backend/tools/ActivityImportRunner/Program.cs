@@ -79,7 +79,7 @@ if (preview)
 
 // Run import
 var importer = new LegacyActivityImportService(context);
-var summary = await importer.ImportAsync(xmlPath, xsdPath, preview ? null : auditPath, preview ? null : summaryPath);
+var summary = await importer.ImportAsync(xmlPath, xsdPath, preview ? null : auditPath, preview ? null : summaryPath, preview);
 
 Console.WriteLine();
 Console.WriteLine("Legacy activity import complete.");

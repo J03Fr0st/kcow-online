@@ -45,10 +45,20 @@ public sealed class LegacyActivityMapper
         }
 
         // Log large icon sizes for awareness
-        if (!string.IsNullOrEmpty(record.Icon) && record.Icon.Length > 100_000) // ~100KB base64 = ~75KB image
+        if (!string.IsNullOrEmpty(record.Icon))
         {
-            var sizeKB = record.Icon.Length / 1024;
-            warnings.Add($"Activity {record.ActivityId}: Large icon data detected ({sizeKB}KB base64).");
+            if (record.Icon.Length > 100_000) // ~100KB base64 = ~75KB image
+            {
+                var sizeKB = record.Icon.Length / 1024;
+                warnings.Add($"Activity {record.ActivityId}: Large icon data detected ({sizeKB}KB base64).");
+            }
+            
+            // Warning for potential OLE header (simple heuristic: valid images usually start with /9j/ (JPG) or iVBOR (PNG))
+            // OLE wrappers often make the string start differently.
+            if (!record.Icon.StartsWith("/9j/") && !record.Icon.StartsWith("iVBOR"))
+            {
+                warnings.Add($"Activity {record.ActivityId}: Icon data may contain OLE wrapper (does not start with standard JPG/PNG signature). Verify rendering.");
+            }
         }
 
         var activity = new Activity
