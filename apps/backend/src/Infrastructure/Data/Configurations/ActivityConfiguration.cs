@@ -19,27 +19,45 @@ public class ActivityConfiguration : IEntityTypeConfiguration<Activity>
             .HasColumnName("id")
             .ValueGeneratedNever();
 
-        builder.Property(a => a.Program)
-            .HasColumnName("program")
+        builder.Property(a => a.Code)
+            .HasColumnName("code")
             .HasMaxLength(255);
 
-        builder.Property(a => a.ProgramName)
-            .HasColumnName("program_name")
+        builder.Property(a => a.Name)
+            .HasColumnName("name")
             .HasMaxLength(255);
 
-        builder.Property(a => a.EducationalFocus)
-            .HasColumnName("educational_focus");
+        builder.Property(a => a.Description)
+            .HasColumnName("description");
 
         builder.Property(a => a.Folder)
             .HasColumnName("folder")
             .HasMaxLength(255);
 
-        builder.Property(a => a.Grade)
-            .HasColumnName("grade")
+        builder.Property(a => a.GradeLevel)
+            .HasColumnName("grade_level")
             .HasMaxLength(255);
 
         builder.Property(a => a.Icon)
-            .HasColumnName("icon");
+            .HasColumnName("icon")
+            .HasColumnType("TEXT");
+
+        builder.Property(a => a.IsActive)
+            .HasColumnName("is_active")
+            .IsRequired();
+
+        builder.Property(a => a.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
+        builder.Property(a => a.UpdatedAt)
+            .HasColumnName("updated_at");
+
+        // Soft-delete query filter
+        builder.HasQueryFilter(a => a.IsActive);
+
+        // Index for Code uniqueness (optional, but good for duplicate checking)
+        builder.HasIndex(a => a.Code);
     }
 }
 

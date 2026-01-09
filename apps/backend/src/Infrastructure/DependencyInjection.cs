@@ -1,9 +1,11 @@
+using Kcow.Application.Activities;
 using Kcow.Application.Auth;
 using Kcow.Application.ClassGroups;
 using Kcow.Application.Families;
 using Kcow.Application.Schools;
 using Kcow.Application.Students;
 using Kcow.Application.Trucks;
+using Kcow.Infrastructure.Activities;
 using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.ClassGroups;
 using Kcow.Infrastructure.Data;
@@ -54,6 +56,9 @@ public static class DependencyInjection
 
         // Register family services
         services.AddScoped<IFamilyService, FamilyService>();
+
+        // Register activity services
+        services.AddScoped<IActivityService, ActivityService>();
 
         return services;
     }
