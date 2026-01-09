@@ -1,6 +1,6 @@
 # Story 4.5: Students List Page
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -25,23 +25,23 @@ so that **I can find students by various criteria**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create StudentService for frontend (AC: #1)
-  - [ ] Implement getStudents with pagination and filters
-  - [ ] Add loading state
-- [ ] Task 2: Create Students list page (AC: #1)
-  - [ ] Create students-list component
-  - [ ] Display table with Name, School, Grade, Class Group
-  - [ ] Add pagination controls
-  - [ ] Add school and class group filter dropdowns
-- [ ] Task 3: Create Student form component (AC: #2)
-  - [ ] Create student-form with all fields
-  - [ ] Include assignment section (school, class group, seat)
-  - [ ] Add validation
-- [ ] Task 4: Implement navigation to profile (AC: #3)
-  - [ ] On row click, navigate to `/students/{id}`
-- [ ] Task 5: Configure routing
-  - [ ] Add students feature routes
-  - [ ] Include profile route
+- [x] Task 1: Create StudentService for frontend (AC: #1)
+  - [x] Implement getStudents with pagination and filters
+  - [x] Add loading state
+- [x] Task 2: Create Students list page (AC: #1)
+  - [x] Create students-list component
+  - [x] Display table with Name, School, Grade, Class Group
+  - [x] Add pagination controls
+  - [x] Add school and class group filter dropdowns
+- [x] Task 3: Create Student form component (AC: #2)
+  - [x] Create student-form with all fields
+  - [x] Include assignment section (school, class group, seat)
+  - [x] Add validation
+- [x] Task 4: Implement navigation to profile (AC: #3)
+  - [x] On row click, navigate to `/students/{id}`
+- [x] Task 5: Configure routing
+  - [x] Add students feature routes
+  - [x] Include profile route
 
 ## Dev Notes
 
@@ -91,10 +91,35 @@ apps/frontend/src/app/features/students/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+glm-4.7
 
 ### Debug Log References
 
+No issues encountered during implementation.
+
 ### Completion Notes List
 
-### File List
+**Implementation Summary:**
+- Student list page already existed with pagination and sorting from previous development
+- Added school and class group filters to existing student-list component
+- Updated StudentService to pass filter parameters to backend
+- Made table rows clickable to navigate to student profile
+- Backend already supported schoolId/classGroupId filtering - only frontend needed updates
+
+**Acceptance Criteria Status:**
+1. AC #1: Paginated table with filters ✅ - Added school and class group filter dropdowns
+2. AC #2: Add Student button ✅ - Already existed, student-form component already in place
+3. AC #3: Row click navigation ✅ - Added navigateToProfile() method
+
+**Technical Decisions:**
+- Used Angular signals for reactive filter state
+- Filter dropdowns reset appropriately (class group resets when school changes)
+- Table rows have cursor-pointer hover effect
+- Edit button has stopPropagation to prevent navigation when clicking edit
+
+**File List:**
+
+**Frontend:**
+- `apps/frontend/src/app/features/students/student-list/student-list.component.ts` (MODIFIED - added filter state and methods)
+- `apps/frontend/src/app/features/students/student-list/student-list.component.html` (MODIFIED - added filter dropdowns and row click)
+- `apps/frontend/src/app/core/services/student.service.ts` (MODIFIED - extended GetStudentsParams with schoolId, classGroupId)

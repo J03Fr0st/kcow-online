@@ -26,7 +26,7 @@ describe('StudentFormComponent', () => {
         gender: 'M',
         language: 'en',
         grade: '5',
-        referenceNumber: 'REF001',
+        reference: 'REF001',
         photoUrl: 'https://example.com/photo.jpg',
         schoolId: 1,
         familyId: 1,
@@ -99,7 +99,7 @@ describe('StudentFormComponent', () => {
             const genderSelect = fixture.debugElement.query(By.css('select[formControlName="gender"]'));
             const languageSelect = fixture.debugElement.query(By.css('select[formControlName="language"]'));
             const gradeInput = fixture.debugElement.query(By.css('input[formControlName="grade"]'));
-            const referenceNumberInput = fixture.debugElement.query(By.css('input[formControlName="referenceNumber"]'));
+            const referenceInput = fixture.debugElement.query(By.css('input[formControlName="reference"]'));
 
             expect(firstNameInput).toBeTruthy();
             expect(lastNameInput).toBeTruthy();
@@ -108,7 +108,7 @@ describe('StudentFormComponent', () => {
             expect(languageSelect).toBeTruthy();
             // Grade is in Class Groups tab, checked separately
             // expect(gradeInput).toBeTruthy(); 
-            expect(referenceNumberInput).toBeTruthy();
+            expect(referenceInput).toBeTruthy();
         });
 
         it('should render grade field when Class Groups tab is active', () => {

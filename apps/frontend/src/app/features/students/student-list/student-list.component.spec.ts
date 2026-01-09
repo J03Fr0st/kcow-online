@@ -28,7 +28,7 @@ describe('StudentListComponent', () => {
             lastName: 'Doe',
             grade: '5',
             schoolName: 'Test School',
-            referenceNumber: 'REF001',
+            reference: 'REF001',
             isActive: true,
             status: 'Active'
         },
@@ -38,7 +38,7 @@ describe('StudentListComponent', () => {
             lastName: 'Smith',
             grade: '6',
             schoolName: 'Another School',
-            referenceNumber: 'REF002',
+            reference: 'REF002',
             isActive: true,
             status: 'Active'
         }

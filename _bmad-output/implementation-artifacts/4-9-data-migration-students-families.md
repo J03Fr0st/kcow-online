@@ -1,6 +1,6 @@
 # Story 4.9: Data Migration - Students & Families
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -144,7 +144,66 @@ See `docs/domain-models.md` for complete Afrikaans → English translations:
 
 ### Completion Notes List
 
-### File List
+**Implementation Summary:**
+- Created LegacyChildXmlParser to parse Children.xml against Children.xsd (92 fields)
+- Created LegacyChildMapper to map legacy records to Student entities with all fields
+- Created LegacyChildImportRunner to orchestrate the import process
+- Created LegacyChildImportService in Infrastructure for consistency
+- Created ChildImportRunner CLI tool for running imports
+- Automatic Family creation and linking from the "Family" field in Children records
+- School and ClassGroup linking via existing imported IDs
+- Comprehensive audit logging and summary reporting
+
+**Acceptance Criteria Status:**
+1. AC #1: Legacy Schema Parser ✅
+   - Reads and validates Children.xml against Children.xsd
+   - Extracts all 92 fields from Children XSD
+   - Handles encoding and format variations
+   - Parses nested contact/guardian structures
+2. AC #2: Family Record Creation ✅
+   - Extracts family/guardian data from Children records (Family field)
+   - Creates Family entities with contact info
+   - Links families to students via StudentFamily join table
+   - Sets relationship type (Parent as default)
+3. AC #3: School/Class Group Assignment Linking ✅
+   - Maps legacy School names to imported School records
+   - Maps legacy ClassGroup names to imported ClassGroup records
+   - Handles orphaned students (logs association errors)
+4. AC #4: Contact and Medical Info Mapping ✅
+   - Maps legacy contact fields (phone, email, address)
+   - Maps guardian information (Mother, Father, Account Person)
+   - All 92 XSD fields mapped to Student entity
+5. AC #5: Validation and Error Logging ✅
+   - Validates imported records against XSD constraints
+   - Creates audit log entries for validation errors
+   - Includes file/line information in error logs
+6. AC #6: Import Summary Report ✅
+   - Tracks imported, skipped, and error counts
+   - Separate counts for Students and Families
+   - Includes association errors in report
+7. AC #7: Search and Profile Visibility ✅
+   - Imported Students appear in GET /api/students
+   - Global search returns imported students
+   - Student profile displays all imported data
+   - Family Grid shows linked families
+
+**Technical Decisions:**
+- Reused existing import infrastructure (LegacyImportAuditLog, LegacyImportSummaryReport)
+- Created CLI tool: `dotnet run --project tools/ChildImportRunner -- [xmlPath] [xsdPath]`
+- Supports `--count` and `--sample N` flags for data inspection
+- Families created based on "Family" field in Children records
+- Student-Family linking via StudentFamily join table with RelationshipType.Parent
+- Skips duplicates based on Reference field
+
+**File List:**
+
+**Backend:**
+- `apps/backend/src/Application/Import/LegacyChildXmlParser.cs` (NEW)
+- `apps/backend/src/Application/Import/LegacyChildMapper.cs` (NEW)
+- `apps/backend/src/Application/Import/LegacyChildImportRunner.cs` (NEW)
+- `apps/backend/src/Infrastructure/Import/LegacyChildImportService.cs` (NEW)
+- `apps/backend/tools/ChildImportRunner/Program.cs` (NEW)
+- `apps/backend/tools/ChildImportRunner/ChildImportRunner.csproj` (NEW)
 
 ## Change Log
 

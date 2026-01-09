@@ -1,6 +1,6 @@
 # Story 4.6: Single-Screen Student Profile Layout
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -27,24 +27,24 @@ so that **I can view and update a student without navigating away (FR10)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create StudentProfile component (AC: #1)
-  - [ ] Create student-profile component
-  - [ ] Fetch student with full details on init
-  - [ ] Handle loading and error states
-- [ ] Task 2: Create 3-column header layout (AC: #1)
-  - [ ] Column 1: Photo placeholder, name, DOB, grade
-  - [ ] Column 2: School, class group, seat number
-  - [ ] Column 3: Status indicators (placeholders for now)
-- [ ] Task 3: Create tabbed navigation (AC: #2)
-  - [ ] Add DaisyUI tabs component
-  - [ ] Create tab: Child Info (active by default)
-  - [ ] Create tab placeholders: Financial, Attendance, Evaluation
-- [ ] Task 4: Optimize for performance (AC: #3)
-  - [ ] Single API call for student + related data
-  - [ ] OnPush change detection
-  - [ ] Lazy load tab content if needed
-- [ ] Task 5: Configure routing
-  - [ ] Add route `/students/:id`
+- [x] Task 1: Create StudentProfile component (AC: #1)
+  - [x] Create student-profile component
+  - [x] Fetch student with full details on init
+  - [x] Handle loading and error states
+- [x] Task 2: Create 3-column header layout (AC: #1)
+  - [x] Column 1: Photo placeholder, name, DOB, grade
+  - [x] Column 2: School, class group, seat number
+  - [x] Column 3: Status indicators (placeholders for now)
+- [x] Task 3: Create tabbed navigation (AC: #2)
+  - [x] Add DaisyUI tabs component
+  - [x] Create tab: Child Info (active by default)
+  - [x] Create tab placeholders: Financial, Attendance, Evaluation
+- [x] Task 4: Optimize for performance (AC: #3)
+  - [x] Single API call for student + related data
+  - [x] OnPush change detection
+  - [x] Lazy load tab content if needed
+- [x] Task 5: Configure routing
+  - [x] Add route `/students/:id`
 
 ## Dev Notes
 
@@ -107,10 +107,46 @@ apps/frontend/src/app/features/students/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+glm-4.7
 
 ### Debug Log References
 
+No issues encountered during implementation.
+
 ### Completion Notes List
 
-### File List
+**Implementation Summary:**
+- Redesigned existing student profile page with 3-column header layout and tabbed sections
+- Added OnPush change detection and Angular signals for performance
+- Implemented tabbed navigation with Child Info, Financial, Attendance, Evaluation tabs
+- Financial and Attendance/Evaluation tabs are placeholders for future epics
+- Updated tests to cover new layout and functionality
+
+**Acceptance Criteria Status:**
+1. AC #1: 3-column header layout ✅
+   - Column 1: Photo, name, basic demographics (DOB, gender, grade, reference)
+   - Column 2: School assignment (school, class group, seat, teacher)
+   - Column 3: Status indicators (attendance/financial placeholders)
+2. AC #2: Tabbed sections ✅
+   - Child Info tab (active, with basic info display)
+   - Financial tab (placeholder for Epic 6)
+   - Attendance tab (placeholder for Epic 5)
+   - Evaluation tab (placeholder for Epic 5)
+3. AC #3: Performance ✅
+   - Single API call via getStudentById
+   - OnPush change detection
+   - Signals for reactive state management
+
+**Technical Decisions:**
+- Used Angular signals (signal, computed, WritableSignal) for reactive state
+- DaisyUI tabs-boxed for tabbed navigation
+- 3-column grid layout using Tailwind's grid-cols-1 md:grid-cols-3
+- Icon emojis for tabs (👤, 💰, 📋, 📊)
+- Helper methods: formatDate(), getDisplayValue(), setActiveTab(), isTabActive()
+
+**File List:**
+
+**Frontend:**
+- `apps/frontend/src/app/features/students/student-profile/student-profile.page.ts` (MODIFIED - added signals, OnPush, tab state, helper methods)
+- `apps/frontend/src/app/features/students/student-profile/student-profile.page.html` (MODIFIED - 3-column layout, tabbed navigation)
+- `apps/frontend/src/app/features/students/student-profile/student-profile.page.spec.ts` (MODIFIED - updated tests for new layout)

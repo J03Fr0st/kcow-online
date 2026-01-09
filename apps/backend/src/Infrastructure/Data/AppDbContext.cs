@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<School> Schools => Set<School>();
     public DbSet<ClassGroup> ClassGroups => Set<ClassGroup>();
     public DbSet<Student> Students => Set<Student>();
+    public DbSet<Family> Families => Set<Family>();
+    public DbSet<StudentFamily> StudentFamilies => Set<StudentFamily>();
     public DbSet<Activity> Activities => Set<Activity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

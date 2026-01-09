@@ -3,6 +3,7 @@ using System;
 using Kcow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kcow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260107121215_AddFamilies")]
+    partial class AddFamilies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -896,11 +899,7 @@ namespace Kcow.Infrastructure.Migrations
 
                     b.HasKey("StudentId", "FamilyId");
 
-                    b.HasIndex("FamilyId")
-                        .HasDatabaseName("ix_student_families_family_id");
-
-                    b.HasIndex("StudentId")
-                        .HasDatabaseName("ix_student_families_student_id");
+                    b.HasIndex("FamilyId");
 
                     b.ToTable("student_families", (string)null);
                 });

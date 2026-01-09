@@ -24,6 +24,11 @@ public class StudentConfiguration : IEntityTypeConfiguration<Student>
             .HasMaxLength(10)
             .IsRequired();
 
+        // Add unique index on Reference to prevent duplicates at database level
+        builder.HasIndex(s => s.Reference)
+            .IsUnique()
+            .HasDatabaseName("ix_students_reference_unique");
+
         // XSD Field: "Child_Name" (50 chars max)
         builder.Property(s => s.FirstName)
             .HasColumnName("first_name")

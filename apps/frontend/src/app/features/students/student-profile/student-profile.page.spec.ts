@@ -24,7 +24,7 @@ describe('StudentProfilePage', () => {
         schoolName: 'Test School',
         grade: 'Grade 5',
         language: 'English',
-        referenceNumber: 'REF001',
+        reference: 'REF001',
         photoUrl: 'https://example.com/photo.jpg',
         isActive: true,
         createdAt: '2024-01-01T00:00:00Z',
@@ -250,7 +250,7 @@ describe('StudentProfilePage', () => {
         });
 
         it('should not display reference number section when not set', () => {
-            mockStudentService.getStudentById.mockReturnValue(of({ ...mockStudent, referenceNumber: undefined }));
+            mockStudentService.getStudentById.mockReturnValue(of({ ...mockStudent, reference: undefined }));
 
             fixture = TestBed.createComponent(StudentProfilePage);
             fixture.detectChanges();

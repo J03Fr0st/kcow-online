@@ -1,12 +1,16 @@
 using Kcow.Application.Auth;
 using Kcow.Application.ClassGroups;
+using Kcow.Application.Families;
 using Kcow.Application.Schools;
+using Kcow.Application.Students;
 using Kcow.Application.Trucks;
 using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.ClassGroups;
 using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Data.Seeders;
+using Kcow.Infrastructure.Families;
 using Kcow.Infrastructure.Schools;
+using Kcow.Infrastructure.Students;
 using Kcow.Infrastructure.Trucks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -44,6 +48,12 @@ public static class DependencyInjection
 
         // Register class group services
         services.AddScoped<IClassGroupService, ClassGroupService>();
+
+        // Register student services
+        services.AddScoped<IStudentService, StudentService>();
+
+        // Register family services
+        services.AddScoped<IFamilyService, FamilyService>();
 
         return services;
     }

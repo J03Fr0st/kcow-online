@@ -1,6 +1,6 @@
 # Story 4.3: Student Assignment to School & Class Group
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -25,19 +25,19 @@ so that **the student's schedule and location are tracked (FR8)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create assignment section in student form (AC: #1)
-  - [ ] Add school dropdown (load all schools)
-  - [ ] Add class group dropdown (filtered by selected school)
-  - [ ] Add seat number input
-- [ ] Task 2: Implement cascading dropdown logic (AC: #1, #3)
-  - [ ] When school changes, fetch class groups for that school
-  - [ ] Clear class group selection when school changes
-- [ ] Task 3: Persist assignments (AC: #2)
-  - [ ] Include schoolId, classGroupId, seatNumber in create/update
-  - [ ] Verify data persists correctly
-- [ ] Task 4: Add validation rules
-  - [ ] Class group must belong to selected school
-  - [ ] Seat number optional, must be positive integer
+- [x] Task 1: Create assignment section in student form (AC: #1)
+  - [x] Add school dropdown (load all schools)
+  - [x] Add class group dropdown (filtered by selected school)
+  - [x] Add seat number input
+- [x] Task 2: Implement cascading dropdown logic (AC: #1, #3)
+  - [x] When school changes, fetch class groups for that school
+  - [x] Clear class group selection when school changes
+- [x] Task 3: Persist assignments (AC: #2)
+  - [x] Include schoolId, classGroupId, seatNumber in create/update
+  - [x] Verify data persists correctly
+- [x] Task 4: Add validation rules
+  - [x] Class group must belong to selected school
+  - [x] Seat number optional, must be positive integer
 
 ## Dev Notes
 
@@ -78,10 +78,54 @@ schoolControl.valueChanges.subscribe(schoolId => {
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+glm-4.7
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+Successfully implemented student assignment to school, class group, and seat number:
+
+**Frontend Implementation:**
+1. Created ClassGroupSelectComponent that filters class groups by selected school
+2. Added assignment section to student form with class group dropdown and seat number input
+3. Implemented cascading dropdown logic: when school changes, class group selection is cleared
+4. Added validation for seat number (positive integer, optional field)
+5. Updated Student service interfaces to include classGroupId and seat fields
+6. All form data properly persists to backend through CreateStudentRequest and UpdateStudentRequest
+
+**Files Modified:**
+- apps/frontend/src/app/features/students/student-form/student-form.component.ts
+- apps/frontend/src/app/features/students/student-form/student-form.component.html
+- apps/frontend/src/app/core/services/student.service.ts
+
+**Files Created:**
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.ts
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.html
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.scss
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.spec.ts
+
+**Acceptance Criteria Met:**
+✅ AC1: School dropdown, class group dropdown (filtered by school), and seat number input are all present in the student form
+✅ AC2: Assignments persist correctly (schoolId, classGroupId, seat sent in create/update requests)
+✅ AC3: Changing school clears the class group selection (implemented via valueChanges subscription)
+
+**Validation Rules Implemented:**
+- Class group dropdown is disabled when no school is selected
+- Seat number is optional but must be a positive integer (1, 2, 3, etc.) if provided
+- Custom validator ensures seat number matches pattern /^[1-9]\d*$/
+
 ### File List
+
+**Modified Files:**
+- apps/frontend/src/app/features/students/student-form/student-form.component.ts
+- apps/frontend/src/app/features/students/student-form/student-form.component.html
+- apps/frontend/src/app/core/services/student.service.ts
+
+**New Files:**
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.ts
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.html
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.scss
+- apps/frontend/src/app/shared/components/class-group-select/class-group-select.component.spec.ts

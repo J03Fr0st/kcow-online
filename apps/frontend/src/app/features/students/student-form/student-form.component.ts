@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, DestroyRef, output, input, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StudentService, type Student, type CreateStudentRequest, type UpdateStudentRequest, type ProblemDetails } from '@core/services/student.service';
 import { SchoolSelectComponent } from '@shared/components/school-select/school-select.component';
+import { ClassGroupSelectComponent } from '@shared/components/class-group-select/class-group-select.component';
 import { FamilySelectComponent } from '@shared/components/family-select/family-select.component';
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
 import { NotificationService } from '@core/services/notification.service';
@@ -12,6 +13,26 @@ import { ModalService } from '@core/services/modal.service';
 import { CreateFamilyModalComponent } from '@shared/components/create-family-modal/create-family-modal.component';
 import { FamilyService, type Family } from '@core/services/family.service';
 import { firstValueFrom } from 'rxjs';
+
+/**
+ * Custom validator for positive integer (seat number)
+ */
+function positiveIntegerValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        if (!control.value) {
+            return null; // Empty is valid (optional field)
+        }
+
+        const value = control.value;
+        const num = Number(value);
+
+        if (isNaN(num) || !/^[1-9]\d*$/.test(value)) {
+            return { positiveInteger: true };
+        }
+
+        return null;
+    };
+}
 
 @Component({
     selector: 'app-student-form',
@@ -22,6 +43,7 @@ import { firstValueFrom } from 'rxjs';
         FormsModule,
         RouterLink,
         SchoolSelectComponent,
+        ClassGroupSelectComponent,
         FamilySelectComponent,
         StudentAvatarComponent
     ],
@@ -93,8 +115,9 @@ export class StudentFormComponent implements OnInit {
             // Required fields
             firstName: ['', [Validators.required, Validators.maxLength(100)]],
             lastName: ['', [Validators.required, Validators.maxLength(100)]],
-            referenceNumber: ['', [Validators.maxLength(50)]],
+            reference: ['', [Validators.required, Validators.maxLength(10)]],
             schoolId: [null, Validators.required],
+            classGroupId: [null], // Class group linked to school
             familyId: [null],
 
             // Basic fields
@@ -117,7 +140,7 @@ export class StudentFormComponent implements OnInit {
             attendingKcowAt: [''],
             aftercare: [''],
             truck: [''],
-            seat: [''],
+            seat: ['', positiveIntegerValidator()], // String to match XSD, but validated as positive integer
             homeTime: [''],
             terms: [''],
             extra: [''],
@@ -147,6 +170,15 @@ export class StudentFormComponent implements OnInit {
             indicator2: [''],
             printIdCard: [false],
         });
+
+        // Setup cascading dropdown: when school changes, clear class group
+        this.form.get('schoolId')?.valueChanges.subscribe((schoolId) => {
+            const classGroupControl = this.form.get('classGroupId');
+            if (!schoolId) {
+                classGroupControl?.setValue(null);
+                classGroupControl?.updateValueAndValidity();
+            }
+        });
     }
 
     /**
@@ -171,9 +203,10 @@ export class StudentFormComponent implements OnInit {
                     language: student.language || '',
                     grade: student.grade || '',
                     schoolName: student.schoolName || '', // Legacy XSD field
-                    referenceNumber: student.referenceNumber || '',
+                    reference: student.reference || '',
                     photoUrl: student.photoUrl || '',
                     schoolId: student.schoolId,
+                    classGroupId: student.classGroupId || null,
                     familyId: student.familyId || null,
                     status: student.status || '',
                 });
@@ -351,6 +384,10 @@ export class StudentFormComponent implements OnInit {
 
         if (field.errors['required']) {
             return 'This field is required';
+        }
+
+        if (field.errors['positiveInteger']) {
+            return 'Must be a positive integer';
         }
 
         return 'Invalid value';

@@ -1,0 +1,31 @@
+<div class="class-group-select">
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text">Class Group</span>
+    </label>
+    <select
+      class="select select-bordered select-sm w-full"
+      [disabled]="isDisabled || !schoolId()"
+      (change)="selectClassGroup(+$event.target.value)"
+      [value]="classGroupId() || ''"
+    >
+      <option value="">Select class group...</option>
+      @if (isLoading) {
+        <option disabled>Loading...</option>
+      } @else if (filteredClassGroups.length === 0 && schoolId()) {
+        <option disabled>No class groups found</option>
+      } @else if (!schoolId()) {
+        <option disabled>Select a school first</option>
+      } @else {
+        @for (classGroup of filteredClassGroups; track classGroup.id) {
+          <option [value]="classGroup.id" [selected]="classGroupId() === classGroup.id">
+            {{ classGroup.name }} ({{ classGroup.code }})
+          </option>
+        }
+      }
+    </select>
+    @if (!schoolId()) {
+      <span class="label-text-alt text-base-content/50">Please select a school first</span>
+    }
+  </div>
+</div>

@@ -292,6 +292,5 @@ public class Student
     // Navigation properties
     public School? School { get; set; }
     public ClassGroup? ClassGroup { get; set; }
-    // TODO: Implement StudentFamily entity in future story
-    // public ICollection<StudentFamily> StudentFamilies { get; set; } = new List<StudentFamily>();
+    public ICollection<StudentFamily> StudentFamilies { get; set; } = new List<StudentFamily>();
 }

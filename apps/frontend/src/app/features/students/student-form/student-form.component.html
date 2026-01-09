@@ -118,8 +118,9 @@
                 placeholder="Active/Inactive" />
             </div>
             <div class="form-control">
-              <label class="label py-1"><span class="label-text text-xs">Reference Number</span></label>
-              <input type="text" class="input input-sm input-bordered" formControlName="referenceNumber" />
+              <label class="label py-1"><span class="label-text text-xs">Reference</span></label>
+              <input type="text" class="input input-sm input-bordered" formControlName="reference" maxlength="10" />
+              @if (hasError('reference')) { <span class="text-error text-xs">{{ getErrorMessage('reference') }}</span> }
             </div>
 
             <!-- School Selection -->
@@ -250,6 +251,24 @@
       <div class="card bg-base-100 border border-base-200 animate-fade-in">
         <div class="card-body p-4">
           <h4 class="font-bold text-sm mb-4">Academic & Transportation Details</h4>
+
+          <!-- Assignment Section -->
+          <div class="bg-base-200/30 p-4 rounded-lg mb-4">
+            <h5 class="text-xs font-bold uppercase tracking-wider text-base-content/60 mb-3">Assignment</h5>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label py-1"><span class="label-text text-xs">Class Group</span></label>
+                <app-class-group-select [schoolId]="form.value.schoolId" formControlName="classGroupId" />
+              </div>
+              <div class="form-control">
+                <label class="label py-1"><span class="label-text text-xs">Seat Number</span></label>
+                <input type="number" class="input input-sm input-bordered" formControlName="seat" placeholder="Optional" min="1" step="1" />
+                @if (hasError('seat')) { <span class="text-error text-xs">{{ getErrorMessage('seat') }}</span> }
+                <span class="label-text-alt text-base-content/50">Optional: Enter a positive integer</span>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="form-control">
               <label class="label py-1"><span class="label-text text-xs">Grade</span></label>
@@ -282,10 +301,6 @@
             <div class="form-control">
               <label class="label py-1"><span class="label-text text-xs">Truck</span></label>
               <input type="text" class="input input-sm input-bordered" formControlName="truck" />
-            </div>
-            <div class="form-control">
-              <label class="label py-1"><span class="label-text text-xs">Seat</span></label>
-              <input type="text" class="input input-sm input-bordered" formControlName="seat" />
             </div>
             <div class="form-control">
               <label class="label py-1"><span class="label-text text-xs">Home Time</span></label>
