@@ -33,6 +33,11 @@ export const MENU_ITEMS: MenuItem[] = [
     route: '/students',
   },
   {
+    label: 'Activities',
+    icon: 'activities',
+    route: '/activities',
+  },
+  {
     label: 'Attendance',
     icon: 'attendance',
     route: '/attendance',

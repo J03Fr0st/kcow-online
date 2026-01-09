@@ -4,6 +4,7 @@ export const MENU_ICONS: Record<string, string> = {
   school: '🏫',
   students: '👥',
   'class-groups': '📚',
+  activities: '🧩',
   attendance: '✅',
   evaluations: '📊',
   billing: '💰',

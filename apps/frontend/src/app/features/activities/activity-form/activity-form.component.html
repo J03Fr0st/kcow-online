@@ -1,0 +1,212 @@
+<div class="h-full flex flex-col">
+  <!-- Header -->
+  <div class="flex items-center justify-between p-6 border-b border-base-300 bg-base-100">
+    <h2 class="text-xl font-semibold text-base-content">{{ title }}</h2>
+    <button
+      class="btn btn-ghost btn-sm btn-circle"
+      (click)="onCancel()"
+      aria-label="Close form">
+      ✕
+    </button>
+  </div>
+
+  <!-- Error State -->
+  @if (error(); as err) {
+  <div role="alert" class="mx-6 mt-4 alert alert-error shadow-sm">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <h3 class="font-bold">Error</h3>
+      <div class="text-xs">{{ err }}</div>
+    </div>
+  </div>
+  }
+
+  <!-- Form -->
+  <form [formGroup]="form" (ngSubmit)="submitForm()" class="flex-1 overflow-y-auto p-6 space-y-6">
+    <!-- Loading State -->
+    @if (isLoading()) {
+    <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading activity data">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+    } @else {
+    <!-- Icon Upload -->
+    <div class="form-control">
+      <label for="icon" class="label">
+        <span class="label-text font-medium">Icon</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+
+      <div class="flex items-start gap-4">
+        <!-- Icon Preview -->
+        <div class="avatar">
+          <div class="w-20 h-20 rounded-lg mask mask-squircle bg-base-200 flex items-center justify-center">
+            @if (iconPreview(); as preview) {
+            <img [src]="preview" alt="Activity icon preview" class="w-full h-full object-cover" />
+            } @else {
+            <span class="text-4xl opacity-30">🧩</span>
+            }
+          </div>
+        </div>
+
+        <!-- Upload Controls -->
+        <div class="flex-1 space-y-2">
+          <input
+            id="icon"
+            type="file"
+            accept="image/*"
+            class="file-input file-input-bordered w-full"
+            (change)="onIconSelected($event)"
+            [disabled]="isSaving()"
+            aria-describedby="icon-help" />
+          @if (iconPreview()) {
+          <button
+            type="button"
+            class="btn btn-xs btn-ghost"
+            (click)="clearIcon()"
+            [disabled]="isSaving()">
+            Clear Icon
+          </button>
+          }
+          <p id="icon-help" class="text-xs text-base-content/60">
+            Upload an image file (max 5MB). Recommended size: 200x200px.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Field -->
+    <div class="form-control">
+      <label for="code" class="label">
+        <span class="label-text font-medium">Code</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <input
+        id="code"
+        type="text"
+        formControlName="code"
+        class="input input-bordered w-full"
+        [class.input-error]="hasError('code')"
+        placeholder="e.g., ACT001"
+        aria-describedby="code-error"
+        [disabled]="isSaving()" />
+      @if (hasError('code')) {
+      <span id="code-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('code') }}
+      </span>
+      }
+    </div>
+
+    <!-- Name Field -->
+    <div class="form-control">
+      <label for="name" class="label">
+        <span class="label-text font-medium">Name</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        class="input input-bordered w-full"
+        [class.input-error]="hasError('name')"
+        placeholder="e.g., Math Activities"
+        aria-describedby="name-error"
+        [disabled]="isSaving()" />
+      @if (hasError('name')) {
+      <span id="name-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('name') }}
+      </span>
+      }
+    </div>
+
+    <!-- Description Field -->
+    <div class="form-control">
+      <label for="description" class="label">
+        <span class="label-text font-medium">Description</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <textarea
+        id="description"
+        formControlName="description"
+        class="textarea textarea-bordered w-full h-24"
+        [class.textarea-error]="hasError('description')"
+        placeholder="Describe the activity..."
+        aria-describedby="description-error"
+        [disabled]="isSaving()"></textarea>
+      @if (hasError('description')) {
+      <span id="description-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('description') }}
+      </span>
+      }
+    </div>
+
+    <!-- Folder Field -->
+    <div class="form-control">
+      <label for="folder" class="label">
+        <span class="label-text font-medium">Folder</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <input
+        id="folder"
+        type="text"
+        formControlName="folder"
+        class="input input-bordered w-full"
+        [class.input-error]="hasError('folder')"
+        placeholder="e.g., /Activities/Math"
+        aria-describedby="folder-error"
+        [disabled]="isSaving()" />
+      @if (hasError('folder')) {
+      <span id="folder-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('folder') }}
+      </span>
+      }
+    </div>
+
+    <!-- Grade Level Field -->
+    <div class="form-control">
+      <label for="gradeLevel" class="label">
+        <span class="label-text font-medium">Grade Level</span>
+        <span class="label-text-alt">(Optional)</span>
+      </label>
+      <input
+        id="gradeLevel"
+        type="text"
+        formControlName="gradeLevel"
+        class="input input-bordered w-full"
+        [class.input-error]="hasError('gradeLevel')"
+        placeholder="e.g., Grade 1-3"
+        aria-describedby="gradeLevel-error"
+        [disabled]="isSaving()" />
+      @if (hasError('gradeLevel')) {
+      <span id="gradeLevel-error" class="text-error text-sm mt-1" role="alert">
+        {{ getErrorMessage('gradeLevel') }}
+      </span>
+      }
+    </div>
+    }
+  </form>
+
+  <!-- Footer Actions -->
+  <div class="flex justify-end space-x-2 p-6 border-t border-base-300 bg-base-100">
+    <button
+      type="button"
+      class="btn btn-ghost"
+      (click)="onCancel()"
+      [disabled]="isSaving()">
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      (click)="submitForm()"
+      [disabled]="isLoading() || isSaving()"
+      [attr.aria-busy]="isSaving()">
+      @if (isSaving()) {
+      <span class="loading loading-spinner loading-sm mr-2"></span>
+      }
+      {{ submitButtonText }}
+    </button>
+  </div>
+</div>

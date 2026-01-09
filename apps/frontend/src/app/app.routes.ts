@@ -178,6 +178,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'activities',
+        loadComponent: () =>
+          import('@features/activities/activities-list/activities-list.component').then((m) => m.ActivitiesListComponent),
+        data: {
+          breadcrumb: 'Activities',
+          breadcrumbIcon: '🧩',
+          title: 'Activities Management',
+          description: 'Manage and view all educational activities',
+          keywords: 'activities, education, programs, management',
+        },
+      },
+      {
         path: 'attendance',
         loadComponent: () =>
           import('@features/attendance/attendance-placeholder.component').then(

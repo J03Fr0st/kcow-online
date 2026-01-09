@@ -1,0 +1,138 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-bold text-base-content">Activities</h1>
+      <p class="text-base-content/60">Manage and view all educational activities</p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        <span class="mr-2" aria-hidden="true">➕</span> Add Activity
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+  <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading activities">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  } @else {
+  <!-- Empty State -->
+  @if (activities().length === 0) {
+    <div
+      class="empty-state flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+      <div class="text-6xl mb-4" aria-hidden="true">🧩</div>
+      <h3 class="text-xl font-semibold">No activities found</h3>
+      <p class="text-base-content/60 mb-6 text-center max-w-sm">
+        It looks like you haven't added any activities yet. Start by creating your first activity record.
+      </p>
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        Add Your First Activity
+      </button>
+    </div>
+  } @else if (activities().length > 0) {
+  <!-- Table -->
+  <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+    <table class="table table-zebra table-sm" aria-label="Activities Registry">
+      <thead>
+        <tr>
+          <th>Icon</th>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Grade Level</th>
+          <th>Folder</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (activity of activities(); track activity.id) {
+        <tr
+          class="hover cursor-pointer"
+          (click)="openEditForm(activity)"
+          [class.opacity-50]="deletingId() === activity.id">
+          <td>
+            <div class="avatar">
+              <div class="w-10 h-10 rounded mask mask-squircle">
+                <img [src]="getIconSrc(activity)" alt="Activity icon" />
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="font-mono text-sm">{{ activity.code ?? '-' }}</span>
+          </td>
+          <td>
+            <div class="font-medium">{{ activity.name ?? '-' }}</div>
+            @if (activity.description) {
+            <div class="text-xs text-base-content/60 line-clamp-1">{{ activity.description }}</div>
+            }
+          </td>
+          <td>
+            <span class="text-sm">{{ activity.gradeLevel ?? '-' }}</span>
+          </td>
+          <td>
+            <span class="text-sm">{{ activity.folder ?? '-' }}</span>
+          </td>
+          <td>
+            @if (activity.isActive) {
+            <span class="badge badge-success">Active</span>
+            } @else {
+            <span class="badge badge-ghost">Inactive</span>
+            }
+          </td>
+          <td (click)="$event.stopPropagation()">
+            @if (deletingId() === activity.id) {
+            <!-- Inline Confirmation -->
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-warning">Archive this activity?</span>
+              <button
+                class="btn btn-xs btn-error"
+                (click)="confirmDelete(activity)"
+                aria-label="Confirm archive">
+                ✓
+              </button>
+              <button
+                class="btn btn-xs btn-ghost"
+                (click)="cancelDelete()"
+                aria-label="Cancel archive">
+                ✗
+              </button>
+            </div>
+            } @else {
+            <!-- Regular Actions -->
+            <button
+              class="btn btn-ghost btn-xs"
+              (click)="startDelete(activity)"
+              aria-label="Archive activity"
+              title="Archive activity">
+              🗑️
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <!-- Inline Form Drawer (Create/Edit) -->
+  @if (showForm() && deletingId() === null) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 bg-base-300/50 backdrop-blur-sm transition-opacity"
+      (click)="closeForm()"></div>
+
+    <!-- Drawer Panel -->
+    <div class="relative w-full max-w-md bg-base-100 shadow-xl h-full overflow-y-auto">
+      <app-activity-form
+        [activityId]="editingId()"
+        (submit)="onFormSubmit($event)"
+        (cancel)="closeForm()"
+      />
+    </div>
+  </div>
+  }
+}
