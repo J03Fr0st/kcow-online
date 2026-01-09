@@ -1,0 +1,52 @@
+<div class="global-search-container relative">
+  <!-- Search Input -->
+  <div class="form-control">
+    <input
+      type="text"
+      placeholder="Search students..."
+      class="input input-bordered input-sm w-64 md:w-80"
+      [value]="searchTerm()"
+      (input)="onSearchChange(($event.target as HTMLInputElement)?.value || '')"
+      (keydown)="onKeyDown($event)"
+      (focus)="onFocus()"
+      autocomplete="off"
+    />
+    @if (isLoading()) {
+      <span class="loading loading-spinner loading-sm absolute right-3 top-1/2 -translate-y-1/2"></span>
+    }
+  </div>
+
+  <!-- Results Dropdown -->
+  @if (isOpen()) {
+    <ul
+      class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-full max-h-96 overflow-y-auto absolute z-50 top-full mt-1"
+      [class.open]="true">
+      @if (isLoading()) {
+        <li class="disabled"><a>Searching...</a></li>
+      } @else if (hasResults()) {
+        @for (result of results(); track result.id; let i = $index) {
+          <li>
+            <a
+              (click)="selectResult(result)"
+              [class.active]="highlightedIndex() === i"
+              class="flex flex-col items-start gap-1 py-2">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold" [innerHTML]="highlightMatch(result.fullName, searchTerm())"></span>
+                <span class="badge badge-ghost badge-sm">{{ result.grade }}</span>
+              </div>
+              <div class="text-xs opacity-70 flex gap-2">
+                <span>{{ result.schoolName }}</span>
+                @if (result.classGroupName !== 'No Class') {
+                  <span>•</span>
+                  <span>{{ result.classGroupName }}</span>
+                }
+              </div>
+            </a>
+          </li>
+        }
+      } @else if (showNoResults()) {
+        <li class="disabled"><a>No results found</a></li>
+      }
+    </ul>
+  }
+</div>

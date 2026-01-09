@@ -307,6 +307,41 @@ public class StudentsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Searches for students by name (global search for typeahead).
+    /// </summary>
+    [HttpGet("search")]
+    [ProducesResponseType(typeof(List<StudentSearchResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Search(
+        [FromQuery] string q,
+        [FromQuery] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid search query",
+                Status = 400,
+                Detail = "Search query 'q' parameter is required"
+            });
+        }
+
+        try
+        {
+            var results = await _studentService.SearchAsync(q, limit);
+            return Ok(results);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching students with query '{Query}'", q);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while searching for students"));
+        }
+    }
+
     private ProblemDetails CreateServerErrorProblemDetails(string title)
     {
         var problemDetails = new ProblemDetails

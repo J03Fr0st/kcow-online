@@ -12,6 +12,50 @@
     </div>
   </div>
 
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-4 items-end bg-base-200 p-4 rounded-lg">
+    <div class="form-control">
+      <label class="label label-text" for="school-filter">School</label>
+      <select
+        id="school-filter"
+        class="select select-bordered select-sm w-48"
+        [disabled]="studentService.isLoading()"
+        (change)="onSchoolFilterChange(($event.target as HTMLSelectElement).valueAsNumber)">
+        <option [value]="0">All Schools</option>
+        @for (school of schools(); track school.id) {
+          <option [value]="school.id" [selected]="schoolFilter() === school.id">
+            {{ school.name }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="form-control">
+      <label class="label label-text" for="class-group-filter">Class Group</label>
+      <select
+        id="class-group-filter"
+        class="select select-bordered select-sm w-48"
+        [disabled]="studentService.isLoading() || !schoolFilter()"
+        (change)="onClassGroupFilterChange(($event.target as HTMLSelectElement).valueAsNumber)">
+        <option [value]="0">All Classes</option>
+        @for (classGroup of classGroups(); track classGroup.id) {
+          @if (!schoolFilter() || classGroup.schoolId === schoolFilter()) {
+            <option [value]="classGroup.id" [selected]="classGroupFilter() === classGroup.id">
+              {{ classGroup.name }} ({{ classGroup.grade }})
+            </option>
+          }
+        }
+      </select>
+    </div>
+
+    <button
+      class="btn btn-outline btn-sm"
+      [disabled]="studentService.isLoading()"
+      (click)="schoolFilter.set(null); classGroupFilter.set(null); loadStudents();">
+      Clear Filters
+    </button>
+  </div>
+
   <!-- Error State -->
   @if (studentService.error(); as error) {
   <div role="alert" class="alert alert-error shadow-sm">
@@ -81,7 +125,7 @@
       </thead>
       <tbody>
         @for (student of students(); track student.id) {
-        <tr class="hover">
+        <tr class="hover cursor-pointer" (click)="navigateToProfile(student.id)">
           <td>
             <app-student-avatar
               [firstName]="student.firstName"
@@ -106,7 +150,7 @@
               class="btn btn-ghost btn-xs"
               [routerLink]="['/students', student.id, 'edit']"
               [attr.aria-label]="'Edit ' + getStudentName(student)"
-            >
+              (click)="$event.stopPropagation()">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>

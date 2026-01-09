@@ -1,0 +1,15 @@
+.global-search-container {
+  position: relative;
+
+  mark {
+    @apply bg-yellow-200 text-base-content rounded px-0.5;
+  }
+
+  .dropdown-content {
+    display: block;
+  }
+
+  li a.active {
+    @apply bg-base-200;
+  }
+}

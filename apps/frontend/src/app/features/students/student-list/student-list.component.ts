@@ -1,8 +1,10 @@
 import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { StudentService, type StudentListItem } from '@core/services/student.service';
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
+import { SchoolService, type School } from '@core/services/school.service';
+import { ClassGroupService, type ClassGroup } from '@core/services/class-group.service';
 
 interface SortConfig {
     key: 'name' | 'school';
@@ -19,10 +21,21 @@ interface SortConfig {
 })
 export class StudentListComponent implements OnInit {
     protected studentService = inject(StudentService);
+    private readonly schoolService = inject(SchoolService);
+    private readonly classGroupService = inject(ClassGroupService);
+    private readonly router = inject(Router);
 
     // Pagination state
     protected currentPage = signal<number>(1);
     protected pageSize = signal<number>(25);
+
+    // Filter state
+    protected schoolFilter = signal<number | null>(null);
+    protected classGroupFilter = signal<number | null>(null);
+
+    // Filter options
+    protected schools = signal<School[]>([]);
+    protected classGroups = signal<ClassGroup[]>([]);
 
     // Sorting state
     protected sortColumn = signal<'name' | 'school' | null>(null);
@@ -53,16 +66,44 @@ export class StudentListComponent implements OnInit {
     });
 
     ngOnInit(): void {
+        this.loadFilterOptions();
         this.loadStudents();
+    }
+
+    private loadFilterOptions(): void {
+        // Load schools for filter dropdown
+        this.schoolService.getAllSchools().subscribe(schools => {
+            this.schools.set(schools);
+        });
+
+        // Load class groups for filter dropdown
+        this.classGroupService.getAllClassGroups().subscribe(classGroups => {
+            this.classGroups.set(classGroups);
+        });
     }
 
     protected loadStudents(): void {
         this.studentService.getStudents({
             page: this.currentPage(),
             pageSize: this.pageSize(),
+            schoolId: this.schoolFilter() ?? undefined,
+            classGroupId: this.classGroupFilter() ?? undefined,
             sortBy: this.sortColumn() || undefined,
             sortDirection: this.sortDirection(),
         }).subscribe();
+    }
+
+    protected onSchoolFilterChange(schoolId: number): void {
+        this.schoolFilter.set(schoolId === 0 ? null : schoolId);
+        this.classGroupFilter.set(null); // Reset class group when school changes
+        this.currentPage.set(1);
+        this.loadStudents();
+    }
+
+    protected onClassGroupFilterChange(classGroupId: number): void {
+        this.classGroupFilter.set(classGroupId === 0 ? null : classGroupId);
+        this.currentPage.set(1);
+        this.loadStudents();
     }
 
     /**
@@ -112,5 +153,12 @@ export class StudentListComponent implements OnInit {
      */
     protected getDisplayValue(value: string | null | undefined): string {
         return value || '-';
+    }
+
+    /**
+     * Navigate to student profile page
+     */
+    protected navigateToProfile(studentId: number): void {
+        this.router.navigate(['/students', studentId]);
     }
 }

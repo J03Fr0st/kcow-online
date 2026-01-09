@@ -46,4 +46,12 @@ public interface IStudentService
     /// <param name="id">Student ID</param>
     /// <returns>True if student was archived, false if not found</returns>
     Task<bool> ArchiveAsync(int id);
+
+    /// <summary>
+    /// Searches for students by name (case-insensitive contains search).
+    /// </summary>
+    /// <param name="query">Search term to match against first name or last name</param>
+    /// <param name="limit">Maximum number of results to return</param>
+    /// <returns>List of student search result DTOs</returns>
+    Task<List<StudentSearchResultDto>> SearchAsync(string query, int limit = 10);
 }

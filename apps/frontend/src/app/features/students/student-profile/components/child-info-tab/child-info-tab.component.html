@@ -1,0 +1,230 @@
+<div class="child-info-tab space-y-6">
+  <!-- Error Message -->
+  @if (error()) {
+    <div role="alert" class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error()?.detail || 'An error occurred' }}</span>
+    </div>
+  }
+
+  <!-- Edit Button (when not editing) -->
+  @if (!isEditing()) {
+    <div class="flex justify-end">
+      <button class="btn btn-primary btn-sm" (click)="enableEdit()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        Edit Information
+      </button>
+    </div>
+  }
+
+  <!-- Form -->
+  <form [formGroup]="form" class="space-y-6">
+    <!-- Personal Information Section -->
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <h3 class="card-title text-lg">Personal Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- First Name -->
+          <div class="form-control">
+            <label class="label" for="firstName">
+              <span class="label-text">First Name *</span>
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              class="input input-bordered"
+              formControlName="firstName"
+              [disabled]="!isEditing()"
+            />
+            @if (hasError('firstName', 'required')) {
+              <label class="label label-text-alt text-error">
+                First name is required
+              </label>
+            }
+            @if (hasError('firstName', 'maxlength')) {
+              <label class="label label-text-alt text-error">
+                {{ getErrorMessage('firstName') }}
+              </label>
+            }
+          </div>
+
+          <!-- Last Name -->
+          <div class="form-control">
+            <label class="label" for="lastName">
+              <span class="label-text">Last Name *</span>
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              class="input input-bordered"
+              formControlName="lastName"
+              [disabled]="!isEditing()"
+            />
+            @if (hasError('lastName', 'required')) {
+              <label class="label label-text-alt text-error">
+                Last name is required
+              </label>
+            }
+            @if (hasError('lastName', 'maxlength')) {
+              <label class="label label-text-alt text-error">
+                {{ getErrorMessage('lastName') }}
+              </label>
+            }
+          </div>
+
+          <!-- Date of Birth -->
+          <div class="form-control">
+            <label class="label" for="dateOfBirth">
+              <span class="label-text">Date of Birth</span>
+            </label>
+            <input
+              id="dateOfBirth"
+              type="date"
+              class="input input-bordered"
+              formControlName="dateOfBirth"
+              [disabled]="!isEditing()"
+            />
+          </div>
+
+          <!-- Gender -->
+          <div class="form-control">
+            <label class="label" for="gender">
+              <span class="label-text">Gender</span>
+            </label>
+            <select
+              id="gender"
+              class="select select-bordered"
+              formControlName="gender"
+              [disabled]="!isEditing()"
+            >
+              <option value="">Select gender</option>
+              @for (option of genderOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Language -->
+          <div class="form-control">
+            <label class="label" for="language">
+              <span class="label-text">Language</span>
+            </label>
+            <select
+              id="language"
+              class="select select-bordered"
+              formControlName="language"
+              [disabled]="!isEditing()"
+            >
+              <option value="">Select language</option>
+              @for (option of languageOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Grade -->
+          <div class="form-control">
+            <label class="label" for="grade">
+              <span class="label-text">Grade</span>
+            </label>
+            <input
+              id="grade"
+              type="text"
+              class="input input-bordered"
+              formControlName="grade"
+              [disabled]="!isEditing()"
+              maxlength="5"
+            />
+            @if (hasError('grade', 'maxlength')) {
+              <label class="label label-text-alt text-error">
+                {{ getErrorMessage('grade') }}
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <h3 class="card-title text-lg">Notes</h3>
+        <div class="form-control">
+          <label class="label" for="generalNote">
+            <span class="label-text">General Notes</span>
+            <span class="label-text-alt">Maximum 255 characters</span>
+          </label>
+          <textarea
+            id="generalNote"
+            class="textarea textarea-bordered"
+            formControlName="generalNote"
+            [disabled]="!isEditing()"
+            rows="4"
+          ></textarea>
+          @if (hasError('generalNote', 'maxlength')) {
+            <label class="label label-text-alt text-error">
+              {{ getErrorMessage('generalNote') }}
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Assignment Display (read-only) -->
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <h3 class="card-title text-lg">School Assignment</h3>
+        <p class="text-sm text-base-content/60 mb-4">
+          To change school assignment, use the Edit Student button or edit the assignment section.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          @if (student().schoolName) {
+            <div class="stat bg-base-100 rounded-lg">
+              <div class="stat-title">School</div>
+              <div class="stat-value text-lg">{{ student().schoolName }}</div>
+            </div>
+          }
+          @if (student().classGroupCode) {
+            <div class="stat bg-base-100 rounded-lg">
+              <div class="stat-title">Class Group</div>
+              <div class="stat-value text-lg">{{ student().classGroupCode }}</div>
+            </div>
+          }
+          @if (student().seat) {
+            <div class="stat bg-base-100 rounded-lg">
+              <div class="stat-title">Seat</div>
+              <div class="stat-value text-lg">{{ student().seat }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons (when editing) -->
+    @if (isEditing()) {
+      <div class="flex justify-end gap-2 pt-4 border-t border-base-300">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          (click)="cancelEdit()"
+          [disabled]="isSaving()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="save()"
+          [disabled]="isSaving() || form.invalid">
+          @if (isSaving()) {
+            <span class="loading loading-spinner loading-sm"></span>
+          }
+          Save Changes
+        </button>
+      </div>
+    }
+  </form>
+</div>

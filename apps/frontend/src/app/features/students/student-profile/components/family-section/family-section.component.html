@@ -1,0 +1,318 @@
+<div class="family-section space-y-6">
+  <!-- Error Message -->
+  @if (error()) {
+    <div role="alert" class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error()?.detail || 'An error occurred' }}</span>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="flex justify-center p-12" aria-busy="true">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  }
+
+  <!-- No Family Linked -->
+  @if (!family() && !isLoading()) {
+    <div class="card bg-base-200">
+      <div class="card-body text-center">
+        <div class="text-6xl mb-4" aria-hidden="true">👨‍👩‍👧‍👦</div>
+        <h3 class="text-xl font-semibold mb-2">No Family Linked</h3>
+        <p class="text-base-content/60 mb-4">This student is not linked to any family yet.</p>
+        <button class="btn btn-primary" (click)="addNewFamily()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create Family
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Family Display -->
+  @if (family()) {
+    const f = family();
+    <!-- Family Header -->
+    <div class="card bg-base-100">
+      <div class="card-body">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="card-title text-xl">{{ f.familyName }}</h3>
+            @if (f.notes) {
+              <p class="text-sm text-base-content/60 mt-1">{{ f.notes }}</p>
+            }
+          </div>
+          @if (!isEditingFamily()) {
+            <button class="btn btn-ghost btn-sm" (click)="editFamily()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Family
+            </button>
+          }
+        </div>
+
+        <!-- Family Edit Form -->
+        @if (isEditingFamily()) {
+          <form [formGroup]="familyForm" class="mt-4 space-y-4">
+            <div class="form-control">
+              <label class="label" for="familyName">
+                <span class="label-text">Family Name *</span>
+              </label>
+              <input
+                id="familyName"
+                type="text"
+                class="input input-bordered"
+                formControlName="familyName"
+              />
+              @if (familyForm.get('familyName')?.invalid && familyForm.get('familyName')?.touched) {
+                <label class="label label-text-alt text-error">
+                  Family name is required
+                </label>
+              }
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="notes">
+                <span class="label-text">Notes</span>
+              </label>
+              <textarea
+                id="notes"
+                class="textarea textarea-bordered"
+                formControlName="notes"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="btn btn-ghost"
+                (click)="cancelFamilyEdit()"
+                [disabled]="isLoading()">
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="saveFamily()"
+                [disabled]="isLoading() || familyForm.invalid">
+                @if (isLoading()) {
+                  <span class="loading loading-spinner loading-sm"></span>
+                }
+                Save
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+
+    <!-- Guardians Section -->
+    <div class="card bg-base-100">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">Guardians</h3>
+          @if (!isAddingGuardian() && !isEditingGuardian()) {
+            <button class="btn btn-primary btn-sm" (click)="showAddGuardian()">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Guardian
+            </button>
+          }
+        </div>
+
+        <!-- Guardian Edit Form -->
+        @if (isAddingGuardian() || isEditingGuardian()) {
+          <form [formGroup]="guardianForm" class="card bg-base-200 p-4 mb-4 space-y-4">
+            <h4 class="font-semibold">{{ isEditingGuardian() ? 'Edit Guardian' : 'Add Guardian' }}</h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="form-control">
+                <label class="label" for="g-firstName">
+                  <span class="label-text">First Name *</span>
+                </label>
+                <input
+                  id="g-firstName"
+                  type="text"
+                  class="input input-bordered input-sm"
+                  formControlName="firstName"
+                />
+                @if (guardianHasError('firstName', 'required')) {
+                  <label class="label label-text-alt text-error">Required</label>
+                }
+              </div>
+
+              <div class="form-control">
+                <label class="label" for="g-lastName">
+                  <span class="label-text">Last Name *</span>
+                </label>
+                <input
+                  id="g-lastName"
+                  type="text"
+                  class="input input-bordered input-sm"
+                  formControlName="lastName"
+                />
+                @if (guardianHasError('lastName', 'required')) {
+                  <label class="label label-text-alt text-error">Required</label>
+                }
+              </div>
+
+              <div class="form-control">
+                <label class="label" for="g-relationship">
+                  <span class="label-text">Relationship</span>
+                </label>
+                <input
+                  id="g-relationship"
+                  type="text"
+                  class="input input-bordered input-sm"
+                  formControlName="relationship"
+                  placeholder="e.g., Parent, Guardian"
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label" for="g-phone">
+                  <span class="label-text">Phone</span>
+                </label>
+                <input
+                  id="g-phone"
+                  type="tel"
+                  class="input input-bordered input-sm"
+                  formControlName="phone"
+                />
+              </div>
+
+              <div class="form-control md:col-span-2">
+                <label class="label" for="g-email">
+                  <span class="label-text">Email</span>
+                </label>
+                <input
+                  id="g-email"
+                  type="email"
+                  class="input input-bordered input-sm"
+                  formControlName="email"
+                />
+                @if (guardianHasError('email', 'email')) {
+                  <label class="label label-text-alt text-error">Invalid email</label>
+                }
+              </div>
+
+              <div class="form-control">
+                <label class="label" for="g-isPrimaryContact">
+                  <span class="label-text">Primary Billing Contact</span>
+                </label>
+                <input
+                  id="g-isPrimaryContact"
+                  type="checkbox"
+                  class="checkbox checkbox-sm"
+                  formControlName="isPrimaryContact"
+                />
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                (click)="cancelGuardianEdit()"
+                [disabled]="isLoading()">
+                Cancel
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                (click)="saveGuardian()"
+                [disabled]="isLoading() || guardianForm.invalid">
+                @if (isLoading()) {
+                  <span class="loading loading-spinner loading-sm"></span>
+                }
+                Save
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- Guardians List -->
+        @if (guardians().length > 0) {
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Relationship</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Primary</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (guardian of guardians(); track guardian.id) {
+                  <tr class="hover">
+                    <td class="font-medium">{{ guardian.firstName }} {{ guardian.lastName }}</td>
+                    <td>{{ guardian.relationship || '-' }}</td>
+                    <td>{{ guardian.phone || '-' }}</td>
+                    <td>{{ guardian.email || '-' }}</td>
+                    <td>
+                      @if (guardian.isPrimaryContact) {
+                        <span class="badge badge-success badge-sm">Yes</span>
+                      } @else {
+                        <span class="badge badge-ghost badge-sm">No</span>
+                      }
+                    </td>
+                    <td>
+                      <div class="flex gap-1">
+                        @if (!isAddingGuardian() && !isEditingGuardian()) {
+                          <button class="btn btn-ghost btn-xs" (click)="editGuardian(guardian)">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button class="btn btn-ghost btn-xs text-error" (click)="deleteGuardian(guardian.id)">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 011-1h2a1 1 0 011 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else if (!isAddingGuardian()) {
+          <p class="text-sm text-base-content/60 text-center py-4">No guardians added yet. Click "Add Guardian" to create one.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Siblings Section -->
+    @if (siblings().length > 0) {
+      <div class="card bg-base-100">
+        <div class="card-body">
+          <h3 class="text-lg font-semibold mb-4">Siblings</h3>
+          <div class="flex flex-wrap gap-2">
+            @for (sibling of siblings(); track sibling.id) {
+              <button
+                class="btn btn-outline btn-sm"
+                (click)="viewSibling(sibling)"
+                [class.btn-primary]="!sibling.isActive">
+                {{ sibling.firstName }} {{ sibling.lastName }}
+                @if (sibling.grade) {
+                  <span class="text-xs">({{ sibling.grade }})</span>
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

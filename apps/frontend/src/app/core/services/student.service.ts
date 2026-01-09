@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
-import { Observable, tap, catchError, finalize, throwError, map } from 'rxjs';
+import { Observable, tap, catchError, finalize, throwError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Student {
@@ -325,6 +325,8 @@ export interface GetStudentsParams {
     pageSize?: number;
     sortBy?: string;
     sortDirection?: 'asc' | 'desc';
+    schoolId?: number;
+    classGroupId?: number;
 }
 
 export interface CreateStudentRequest {
@@ -366,6 +368,14 @@ export interface UpdateStudentRequest {
     [key: string]: unknown;
 }
 
+export interface StudentSearchResult {
+    id: number;
+    fullName: string;
+    schoolName: string;
+    grade: string;
+    classGroupName: string;
+}
+
 @Injectable({
     providedIn: 'root',
 })
@@ -403,6 +413,12 @@ export class StudentService {
         }
         if (params.pageSize !== undefined) {
             httpParams = httpParams.set('pageSize', params.pageSize.toString());
+        }
+        if (params.schoolId !== undefined) {
+            httpParams = httpParams.set('schoolId', params.schoolId.toString());
+        }
+        if (params.classGroupId !== undefined) {
+            httpParams = httpParams.set('classGroupId', params.classGroupId.toString());
         }
         if (params.sortBy) {
             httpParams = httpParams.set('sortBy', params.sortBy);
@@ -536,5 +552,27 @@ export class StudentService {
         }
 
         return throwError(() => problemDetails);
+    }
+
+    /**
+     * Search for students by name (global search)
+     */
+    searchStudents(query: string, limit: number = 10): Observable<StudentSearchResult[]> {
+        if (!query || query.trim().length < 2) {
+            return of([]);
+        }
+
+        let httpParams = new HttpParams()
+            .set('q', query.trim())
+            .set('limit', limit.toString());
+
+        return this.http.get<StudentSearchResult[]>(`${this.apiUrl}/search`, {
+            withCredentials: true,
+            params: httpParams
+        }).pipe(
+            catchError((error: HttpErrorResponse) => {
+                return this.handleError(error);
+            })
+        );
     }
 }

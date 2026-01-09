@@ -6,12 +6,13 @@ import { PageMetadataService } from '@core/services/page-metadata.service';
 import { SidebarService } from '@core/services/sidebar.service';
 import { AuthService } from '@core/services/auth.service';
 import { type Theme, ThemeService } from '@core/services/theme.service';
+import { GlobalSearchComponent } from './global-search/global-search.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, GlobalSearchComponent],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css'],
 })

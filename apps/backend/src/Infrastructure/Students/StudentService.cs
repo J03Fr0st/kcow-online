@@ -347,6 +347,47 @@ public class StudentService : IStudentService
         return true;
     }
 
+    /// <summary>
+    /// Searches for students by name (case-insensitive contains search).
+    /// </summary>
+    public async Task<List<StudentSearchResultDto>> SearchAsync(string query, int limit = 10)
+    {
+        // Enforce reasonable limit to prevent DoS
+        const int maxLimit = 50;
+        if (limit < 1) limit = 10;
+        if (limit > maxLimit) limit = maxLimit;
+
+        // Escape LIKE special characters to prevent SQL injection
+        var escapedQuery = query.Replace("%", "\\%")
+                               .Replace("_", "\\_")
+                               .Replace("[", "\\[")
+                               .Replace("]", "\\]");
+
+        var results = await _context.Students
+            .Include(s => s.School)
+            .Include(s => s.ClassGroup)
+            .Where(s => s.IsActive &&
+                       ((s.FirstName != null && EF.Functions.Like(s.FirstName, $"%{escapedQuery}%")) ||
+                        (s.LastName != null && EF.Functions.Like(s.LastName, $"%{escapedQuery}%"))))
+            .OrderBy(s => s.LastName)
+            .ThenBy(s => s.FirstName)
+            .Take(limit)
+            .AsNoTracking()
+            .Select(s => new StudentSearchResultDto
+            {
+                Id = s.Id,
+                FullName = $"{s.FirstName} {s.LastName}".Trim(),
+                SchoolName = s.School != null ? s.School.Name : "No School",
+                Grade = s.Grade ?? "No Grade",
+                ClassGroupName = s.ClassGroup != null ? s.ClassGroup.Name : "No Class"
+            })
+            .ToListAsync();
+
+        _logger.LogInformation("Student search for '{Query}' returned {Count} results", query, results.Count);
+
+        return results;
+    }
+
     private static StudentDto MapToDto(Student s)
     {
         return new StudentDto
