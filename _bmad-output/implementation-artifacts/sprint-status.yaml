@@ -140,6 +140,6 @@ development_status:
   8-1-activity-entity-api-endpoints: done  # Code reviewed: All critical issues fixed, integration tests added
   8-2-activities-management-ui: done  # Code reviewed: Icon upload restricted to PNG/2MB, delete behavior fixed
   8-3-data-migration-activities: done  # Code reviewed: Preview mode DB commit bug fixed, OLE header warning added
-  8-4-e2e-tests-activities-crud: in-progress  # Code review fixes applied, PENDING: Run tests to verify AC #5
+  8-4-e2e-tests-activities-crud: done  # Code reviewed: Documentation corrected, source code improvements committed
   epic-8-retrospective: optional
 

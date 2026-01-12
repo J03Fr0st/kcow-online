@@ -1,6 +1,6 @@
 # Story 8.4: E2E Tests - Activities CRUD
 
-Status: review
+Status: done
 
 ## Story
 
