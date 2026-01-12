@@ -104,7 +104,7 @@ public sealed class LegacyActivityXmlParser
             IgnoreWhitespace = true,
         };
 
-        settings.ValidationEvents += (sender, e) =>
+        settings.ValidationEventHandler += (sender, e) =>
         {
             errors.Add(new LegacyXmlValidationError(e.Message, null, null));
         };

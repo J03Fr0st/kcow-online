@@ -1,5 +1,6 @@
 using Kcow.Application.Import;
 using Kcow.Infrastructure.Data;
+using Kcow.Infrastructure.Import;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Import;
@@ -12,11 +13,13 @@ public sealed class LegacyChildImportService
 {
     private readonly AppDbContext _context;
     private readonly ILogger<LegacyChildImportService> _logger;
+    private readonly ILoggerFactory _loggerFactory;
 
-    public LegacyChildImportService(AppDbContext context, ILogger<LegacyChildImportService> logger)
+    public LegacyChildImportService(AppDbContext context, ILogger<LegacyChildImportService> logger, ILoggerFactory loggerFactory)
     {
         _context = context;
         _logger = logger;
+        _loggerFactory = loggerFactory;
     }
 
     public async Task<LegacyImportSummary> ImportAsync(
@@ -26,7 +29,8 @@ public sealed class LegacyChildImportService
         string? summaryOutputPath,
         CancellationToken cancellationToken = default)
     {
-        var runner = new LegacyChildImportRunner(_context, _logger);
+        var runnerLogger = _loggerFactory.CreateLogger<LegacyChildImportRunner>();
+        var runner = new LegacyChildImportRunner(_context, runnerLogger);
         var summary = await runner.RunAsync(xmlPath, xsdPath);
 
         return summary;

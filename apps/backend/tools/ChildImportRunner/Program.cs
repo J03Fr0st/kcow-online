@@ -1,5 +1,5 @@
-using Kcow.Application.Import;
 using Kcow.Infrastructure.Data;
+using Kcow.Infrastructure.Import;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

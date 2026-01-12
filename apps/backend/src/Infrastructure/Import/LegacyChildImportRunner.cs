@@ -1,10 +1,11 @@
+using Kcow.Application.Import;
 using Kcow.Domain.Entities;
 using Kcow.Domain.Enums;
 using Kcow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Kcow.Application.Import;
+namespace Kcow.Infrastructure.Import;
 
 public sealed class LegacyChildImportRunner
 {
