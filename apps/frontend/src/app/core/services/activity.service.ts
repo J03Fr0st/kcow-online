@@ -48,9 +48,8 @@ export class ActivityService {
   createActivity(data: CreateActivityRequest): Observable<Activity> {
     return this.http.post<Activity>(this.apiUrl, data).pipe(
       tap((newActivity) => {
-        // Add to local state
-        const current = this.activities();
-        this.activities.set([...current, newActivity]);
+        // Reload activities to ensure consistency with server
+        this.loadActivities();
       }),
       catchError((error: HttpErrorResponse) => {
         console.error('Error creating activity:', error);
@@ -64,15 +63,9 @@ export class ActivityService {
    */
   updateActivity(id: number, data: UpdateActivityRequest): Observable<Activity> {
     return this.http.put<Activity>(`${this.apiUrl}/${id}`, data).pipe(
-      tap((updatedActivity) => {
-        // Update local state
-        const current = this.activities();
-        const index = current.findIndex((a) => a.id === id);
-        if (index !== -1) {
-          const updated = [...current];
-          updated[index] = updatedActivity;
-          this.activities.set(updated);
-        }
+      tap(() => {
+        // Reload activities to ensure consistency with server
+        this.loadActivities();
       }),
       catchError((error: HttpErrorResponse) => {
         console.error(`Error updating activity ${id}:`, error);
@@ -87,14 +80,8 @@ export class ActivityService {
   deleteActivity(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       tap(() => {
-        // Mark as inactive in local state instead of removing
-        const current = this.activities();
-        const index = current.findIndex((a) => a.id === id);
-        if (index !== -1) {
-          const updated = [...current];
-          updated[index] = { ...updated[index], isActive: false };
-          this.activities.set(updated);
-        }
+        // Reload activities to ensure consistency with server
+        this.loadActivities();
       }),
       catchError((error: HttpErrorResponse) => {
         console.error(`Error deleting activity ${id}:`, error);

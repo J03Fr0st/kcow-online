@@ -6,7 +6,7 @@
       placeholder="Search students..."
       class="input input-bordered input-sm w-64 md:w-80"
       [value]="searchTerm()"
-      (input)="onSearchChange(($event.target as HTMLInputElement)?.value || '')"
+      (input)="onSearchChange($any($event.target).value || '')"
       (keydown)="onKeyDown($event)"
       (focus)="onFocus()"
       autocomplete="off"

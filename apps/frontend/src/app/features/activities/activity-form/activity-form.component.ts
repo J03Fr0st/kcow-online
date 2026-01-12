@@ -24,7 +24,7 @@ export class ActivityFormComponent implements OnInit {
   readonly activityId = input<number | null>(null);
 
   // Outputs
-  readonly submit = output<Event>();
+  readonly submit = output<CustomEvent<{ mode: 'create' | 'update'; activity?: Activity }>>();
   readonly cancel = output<void>();
 
   // Form state
