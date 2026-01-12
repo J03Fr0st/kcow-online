@@ -271,3 +271,6 @@ No issues encountered during implementation. Note: Build validation blocked by N
 - Handles encoded XML element names (Educational_x0020_Focus)
 - Icon base64Binary data stored directly as string
 - Large icon size logging (>100KB base64 triggers warning)
+- **Review Follow-up (Manual Fixes):**
+  - Fixed dangerous preview mode bug: `ImportAsync` now accepts a `preview` flag to prevent DB commits
+  - Added warning in `LegacyActivityMapper` for potential OLE header wrappers in base64 icon data

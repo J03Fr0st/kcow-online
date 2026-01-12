@@ -295,3 +295,8 @@ No issues encountered during implementation.
 - Created unit tests for activities-list.component and activity-form.component
 - Updated documentation to reflect actual routing implementation
 - Applied auto-fixes: removed shareReplay, fixed file input reset, tracked spec files
+- **Review Follow-up (Manual Fixes):**
+  - Restricted icon upload to PNG only (was accepting all images)
+  - Lowered max upload size to 2MB (was 5MB) to prevent API payload issues
+  - Updated `deleteActivity` to set `isActive=false` locally instead of removing the item, ensuring the "Inactive" badge is visible
+  - Updated unit tests to enforce new constraints
