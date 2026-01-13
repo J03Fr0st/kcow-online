@@ -14,8 +14,8 @@ user_name: 'Joe'
 date: '2026-01-03'
 status: 'complete'
 completedAt: '2026-01-03'
-totalEpics: 8
-totalStories: 57
+totalEpics: 9
+totalStories: 58
 ---
 
 # kcow-online - Epic Breakdown
@@ -84,7 +84,8 @@ These setup tasks are prerequisites for all feature development and must be comp
 
 1. **Backend Base Setup**: Create ASP.NET Core Web API project (net10.0) in `apps/backend/` with:
    - Clean Architecture folder structure (Api, Application, Domain, Infrastructure)
-   - EF Core + SQLite database configuration
+   - Dapper + SQLite database configuration with repository pattern
+   - DbUp migration runner with versioned SQL scripts
    - ASP.NET Core JWT Bearer Authentication
    - ProblemDetails error handling middleware
    - Serilog logging configuration
@@ -102,7 +103,8 @@ These setup tasks are prerequisites for all feature development and must be comp
 
 - **Starter Template**: Existing Angular 21 scaffold in `apps/frontend/` is retained (no re-initialization required).
 - **Database**: SQLite for v1, migration path to PostgreSQL post-MVP.
-- **ORM**: EF Core with entities in Domain layer, configurations in Infrastructure/Data.
+- **Data Access**: Dapper with repository pattern; entities in Domain layer, repositories in Infrastructure/Repositories.
+- **Migrations**: DbUp with versioned SQL scripts in Infrastructure/Migrations/Scripts.
 - **Authorization**: Role-based checks at API endpoints (Admin role).
 - **API Style**: RESTful JSON endpoints with plural kebab-case paths (e.g., `/students`, `/class-groups`).
 - **Frontend State**: Angular Signals for UI state; RxJS for async flows.
@@ -112,7 +114,7 @@ These setup tasks are prerequisites for all feature development and must be comp
 - **Legacy Import**: XML/XSD import workflow with preview, exception handling, and audit log.
 
 **Implementation Sequence (Updated):**
-1. **Backend base setup** + EF Core + JWT Authentication server-side.
+1. **Backend base setup** + Dapper + DbUp + JWT Authentication server-side.
 2. **Frontend Auth integration** (login/logout, guards, interceptors).
 3. Legacy import workflow + audit log.
 4. Core API endpoints (students, families, class groups, schools).
@@ -160,7 +162,7 @@ Admin can securely log in to the system and access a protected dashboard with th
 **FRs covered:** NFR4, NFR5, NFR6 (Security), NFR9 (Accessibility baseline)
 
 **Implementation Notes:**
-- Backend scaffold (ASP.NET Core + EF Core + SQLite)
+- Backend scaffold (ASP.NET Core + Dapper + DbUp + SQLite)
 - JWT Bearer Authentication (server + client)
 - AdminLayout shell with sidebar navigation
 - Basic dashboard placeholder
@@ -267,6 +269,78 @@ Admin can manage the educational program catalog (activities) that are delivered
 
 ---
 
+## Epic 0: Infrastructure & Architectural Foundation
+
+**Goal:** Handle architectural changes and infrastructure migrations that span multiple features.
+
+**Rationale:** This epic provides a dedicated space for cross-cutting infrastructure work that doesn't fit neatly into feature epics. It allows architectural decisions to be implemented without disrupting feature-focused sprint planning.
+
+**Stories:**
+- **0.1:** Migrate Data Access from EF Core to Dapper + DbUp
+
+---
+
+### Story 0.1: Migrate Data Access from EF Core to Dapper + DbUp
+
+**Priority:** High (Blocking - should be completed before new backend stories)
+
+**Description:**
+As a developer, I want to migrate the data access layer from Entity Framework Core to Dapper with DbUp migrations, so that I have explicit SQL control, simpler debugging, and reduced ORM complexity.
+
+**Acceptance Criteria:**
+
+**Given** the existing EF Core implementation
+**When** the migration is complete
+**Then** all existing functionality continues to work with the new data access layer
+
+**Backend Changes:**
+
+**And** `Infrastructure/Data/` is replaced with:
+- `Infrastructure/Repositories/` - Dapper repository implementations
+- `Infrastructure/Database/` - IDbConnectionFactory, DbUp bootstrapper
+- `Infrastructure/Sql/` - Complex SQL queries as constants
+- `Infrastructure/Migrations/Scripts/` - Versioned SQL scripts
+
+**And** `AppDbContext` is removed and replaced with `IDbConnectionFactory`
+**And** all entity configurations are converted to DbUp SQL migration scripts
+**And** repository pattern is implemented with interfaces in `Application/` and implementations in `Infrastructure/Repositories/`
+**And** existing EF Core migrations are converted to DbUp scripts with naming: `YYYYMMDD_NN_Description.sql`
+
+**Repository Implementation:**
+
+**And** each entity has a corresponding repository:
+- `ITruckRepository` / `TruckRepository`
+- `ISchoolRepository` / `SchoolRepository`
+- `IClassGroupRepository` / `ClassGroupRepository`
+- `IStudentRepository` / `StudentRepository`
+- `IFamilyRepository` / `FamilyRepository`
+- `IActivityRepository` / `ActivityRepository`
+- `IAttendanceRepository` / `AttendanceRepository` (if implemented)
+- `IEvaluationRepository` / `EvaluationRepository` (if implemented)
+- `IBillingRepository` / `BillingRepository` (if implemented)
+
+**And** repositories use Dapper's `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync`
+**And** all queries use parameterized SQL (no string concatenation)
+
+**Migration Scripts:**
+
+**And** DbUp is configured to run on application startup in Development
+**And** existing database schema is preserved (data migration not required)
+**And** migration scripts are idempotent where possible
+
+**Testing:**
+
+**And** all existing API endpoints continue to work
+**And** all existing integration tests pass
+**And** all existing E2E tests pass
+
+**Technical Notes:**
+- Reference: Architecture document "Data Access Patterns" section
+- NuGet packages needed: `Dapper`, `DbUp`, `DbUp.SQLite`
+- Connection string configuration remains in `appsettings.json`
+
+---
+
 ## Epic 1: Project Foundation & Authentication
 
 Admin can securely log in to the system and access a protected dashboard with the core application shell.
@@ -288,7 +362,8 @@ Admin can securely log in to the system and access a protected dashboard with th
 - `src/Infrastructure/` for data access and external services
 - `tests/Unit/` and `tests/Integration/` for testing
 
-**And** EF Core with SQLite is configured with a DbContext
+**And** Dapper with SQLite is configured with IDbConnectionFactory
+**And** DbUp migration runner is configured with initial schema script
 **And** Serilog logging is configured
 **And** ProblemDetails error handling middleware is added
 **And** CORS is configured to allow the frontend origin
@@ -440,8 +515,8 @@ Admin can manage the core reference data - trucks and schools - that underpin al
 **Then** the `Truck` entity exists in `Domain/Entities` with properties:
 - Id, Name, RegistrationNumber, Status, Notes
 
-**And** EF Core configuration exists in `Infrastructure/Data`
-**And** migration creates the `trucks` table
+**And** TruckRepository exists in `Infrastructure/Repositories`
+**And** DbUp migration script creates the `trucks` table
 **And** `/api/trucks` endpoints support:
 - GET (list all trucks)
 - GET `/:id` (get single truck)
@@ -499,7 +574,7 @@ Admin can manage the core reference data - trucks and schools - that underpin al
 **Then** the `School` entity exists with properties:
 - Id, Name, Address, ContactName, ContactPhone, ContactEmail, BillingSettings (JSON or relation), IsActive, Notes
 
-**And** EF Core configuration and migration create the `schools` table
+**And** SchoolRepository and DbUp migration script create the `schools` table
 **And** `/api/schools` endpoints support:
 - GET (list schools)
 - GET `/:id` (single school with contacts)
@@ -632,8 +707,8 @@ Admin can create and manage class group schedules, assign trucks to schools, and
 **Then** the `ClassGroup` entity exists with properties:
 - Id, Name, SchoolId (FK), TruckId (FK), DayOfWeek, StartTime, EndTime, Sequence, IsActive, Notes
 
-**And** EF Core configuration with foreign key relationships to School and Truck
-**And** migration creates the `class_groups` table
+**And** ClassGroupRepository with methods handling School and Truck relationships
+**And** DbUp migration script creates the `class_groups` table with foreign keys
 **And** `/api/class-groups` endpoints support:
 - GET (list class groups with optional school/truck filters)
 - GET `/:id` (single class group with school and truck details)
@@ -823,8 +898,8 @@ Admin can create, search, and manage student records with family/guardian relati
 - Id, FirstName, LastName, DateOfBirth, Grade, SchoolId (FK), ClassGroupId (FK), SeatNumber, IsActive, Notes
 - Additional fields from legacy XSD: Gender, Language, etc.
 
-**And** EF Core configuration with foreign key relationships
-**And** migration creates the `students` table
+**And** StudentRepository with methods handling foreign key relationships
+**And** DbUp migration script creates the `students` table
 **And** `/api/students` endpoints support:
 - GET (list with pagination and filters)
 - GET `/:id` (single student with school, class group, family details)
@@ -849,7 +924,8 @@ Admin can create, search, and manage student records with family/guardian relati
 **Then** the `Family` entity exists with properties:
 - Id, FamilyName, PrimaryContactName, Phone, Email, Address, Notes
 
-**And** a `StudentFamily` join table links students to families with a relationship type (parent, guardian, sibling)
+**And** DbUp migration creates `student_family` join table linking students to families with relationship type
+**And** FamilyRepository handles family queries and student-family links
 **And** `/api/families` endpoints support CRUD
 **And** `/api/students/:id/families` returns families linked to a student
 **And** POST `/api/students/:id/families` links a family to a student
@@ -1085,8 +1161,8 @@ Admin can track student attendance per class session, record progress evaluation
 **Then** the `Attendance` entity exists with properties:
 - Id, StudentId (FK), ClassGroupId (FK), SessionDate, Status (Present/Absent/Late), Notes, CreatedAt, ModifiedAt
 
-**And** EF Core configuration with foreign key relationships
-**And** migration creates the `attendance` table
+**And** AttendanceRepository with methods handling student and class group relationships
+**And** DbUp migration script creates the `attendance` table
 **And** `/api/attendance` endpoints support:
 - GET (list with student/class group/date filters)
 - GET `/:id` (single attendance record)
@@ -1159,7 +1235,7 @@ Admin can track student attendance per class session, record progress evaluation
 - Id, StudentId (FK), ActivityId (FK), EvaluationDate, Score, SpeedMetric, AccuracyMetric, Notes, CreatedAt, ModifiedAt
 
 **And** Activity entity exists with basic activity/curriculum info
-**And** EF Core configuration and migrations
+**And** EvaluationRepository and DbUp migration scripts
 **And** `/api/evaluations` endpoints support CRUD
 **And** GET `/api/students/:id/evaluations` returns evaluation history
 
@@ -1296,7 +1372,7 @@ Admin can manage student billing records, track payments, and view financial sta
 - `Payment`: Id, StudentId (FK), InvoiceId (FK, optional), PaymentDate, Amount, PaymentMethod, ReceiptNumber, Notes
 - `Receipt`: Id, PaymentId (FK), ReceiptDate, ReceiptNumber
 
-**And** EF Core configuration and migrations create the billing tables
+**And** BillingRepository and DbUp migration scripts create the billing tables
 **And** `/api/billing` endpoints support:
 - GET `/api/students/:id/billing` (billing summary with balance)
 - GET `/api/students/:id/invoices` (list invoices)
@@ -1723,7 +1799,7 @@ Admin can manage the educational program catalog (activities) that are delivered
 - GradeLevel (Grade)
 - Icon (base64Binary - OleObject image stored as base64 string)
 
-**And** EF Core configuration and migration create the `activities` table
+**And** ActivityRepository and DbUp migration script create the `activities` table
 **And** the Icon field is stored as TEXT/base64 string in SQLite (large enough for OLE object data)
 **And** `/api/activities` endpoints support:
 - GET (list all activities)

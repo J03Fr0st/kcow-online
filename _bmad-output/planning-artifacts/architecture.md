@@ -73,7 +73,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Technical Constraints & Dependencies
 
 - Frontend: Angular 21 SPA with Tailwind + DaisyUI.
-- Backend: planned ASP.NET Core API with EF Core + SQLite (migration path).
+- Backend: planned ASP.NET Core API with Dapper + DbUp + SQLite (migration path to PostgreSQL).
 - Legacy data sources: Access XML/XSD schemas.
 
 ### Cross-Cutting Concerns Identified
@@ -132,7 +132,7 @@ Web application (SPA + planned API) based on project requirements and existing c
 ### Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
-- SQLite for v1 with EF Core and migration path.
+- SQLite for v1 with Dapper + DbUp and migration path to PostgreSQL.
 - ASP.NET Core JWT Bearer Authentication (Admin role).
 - RESTful API with ProblemDetails error handling.
 - Angular Signals + RxJS; Reactive Forms only.
@@ -141,6 +141,7 @@ Web application (SPA + planned API) based on project requirements and existing c
 - Legacy XML/XSD import workflow with preview/exception audit.
 - OnPush change detection + lazy-loaded feature routes.
 - DaisyUI theme tokens and compact density.
+- Repository pattern for data access with explicit SQL.
 
 **Deferred Decisions (Post-MVP):**
 - Rate limiting (no current requirement).
@@ -150,12 +151,13 @@ Web application (SPA + planned API) based on project requirements and existing c
 ### Data Architecture
 
 - **Database:** SQLite (v1), migration path to PostgreSQL.
-- **ORM:** EF Core; entities in Domain, configs in Infrastructure/Data.
+- **Data Access:** Dapper (micro-ORM) with repository pattern; entities in Domain, repositories in Infrastructure/Repositories.
 - **Schema Source:** ⚠️ **XSD files are authoritative**—all entity schemas must strictly align with `docs/legacy/*.xsd`.
 - **Validation:** Shared validation (frontend reactive forms + backend validation) enforcing XSD constraints.
-- **Migration:** EF Core migrations in `apps/backend/Migrations`.
+- **Migrations:** DbUp with versioned SQL scripts in `apps/backend/Migrations/Scripts`.
 - **Import:** Legacy XML/XSD import with preview, exceptions, audit log.
 - **Caching:** None initially.
+- **SQL Patterns:** Explicit parameterized SQL; no dynamic query building. Store complex queries in `/Infrastructure/Sql/` as embedded resources or constants.
 
 ### Authentication & Security
 
@@ -188,7 +190,7 @@ Web application (SPA + planned API) based on project requirements and existing c
 ### Decision Impact Analysis
 
 **Implementation Sequence:**
-1. Backend scaffold + EF Core + JWT Authentication baseline.
+1. Backend scaffold + Dapper + DbUp + JWT Authentication baseline.
 2. Legacy import workflow + audit log.
 3. Core API endpoints (students, families, class groups, schools).
 4. Frontend shell + student profile + search flow.
@@ -258,6 +260,46 @@ Naming, file structure, API formats, error handling, loading states, and validat
 **Loading State Patterns:**
 - Service-level loading state + local component spinners
 - Avoid global "page lock" for partial updates
+
+### Data Access Patterns
+
+**Repository Pattern:**
+- One repository interface per aggregate root in `Application/`
+- Repository implementations in `Infrastructure/Repositories/`
+- Repositories receive `IDbConnection` via constructor injection
+
+**SQL Patterns:**
+- Use parameterized queries exclusively (never string concatenation)
+- Simple queries inline in repository methods
+- Complex queries as constants in `Infrastructure/Sql/{Entity}Queries.cs`
+- Use Dapper's `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync`
+
+**Connection Management:**
+- `IDbConnectionFactory` creates connections per request
+- Connections are disposed after each operation (no long-lived connections)
+- Transaction support via `IDbTransaction` passed to repository methods
+
+**Migration Patterns (DbUp):**
+- Scripts in `Migrations/Scripts/` with naming: `YYYYMMDD_NN_Description.sql`
+- Scripts are idempotent where possible
+- DbUp runs automatically on application startup in Development
+- Production migrations run via CLI command
+
+**Example Repository:**
+```csharp
+public class StudentRepository : IStudentRepository
+{
+    private readonly IDbConnectionFactory _connectionFactory;
+
+    public async Task<Student?> GetByIdAsync(int id)
+    {
+        using var connection = _connectionFactory.Create();
+        return await connection.QueryFirstOrDefaultAsync<Student>(
+            "SELECT * FROM students WHERE id = @Id",
+            new { Id = id });
+    }
+}
+```
 
 ### Enforcement Guidelines
 
@@ -355,9 +397,12 @@ kcow-online/
 │       │   │   ├── Entities/           # Truck, School, ClassGroup, Student, Activity
 │       │   │   └── ValueObjects/
 │       │   └── Infrastructure/
-│       │       ├── Data/               # EF Core configs, DbContext
+│       │       ├── Repositories/       # Dapper repositories per entity
+│       │       ├── Database/           # Connection factory, DbUp bootstrapper
+│       │       ├── Sql/                # Complex SQL queries as constants/resources
 │       │       ├── Auth/               # JWT Authentication (JwtService, PasswordHasher)
 │       │       └── Migrations/
+│       │           └── Scripts/        # Versioned SQL scripts (YYYYMMDD_NN_Description.sql)
 │       └── tests/
 │           ├── Unit/
 │           └── Integration/
@@ -400,7 +445,7 @@ kcow-online/
 - Backend application services per domain in `Application/<Domain>`
 
 **Data Boundaries:**
-- EF Core entities in `Domain`
+- Domain entities in `Domain`
 - DB configurations in `Infrastructure/Data`
 - No lazy loading; explicit includes
 
@@ -436,7 +481,7 @@ kcow-online/
 - Legacy XML/XSD import pipeline (no third-party services in v1)
 
 **Data Flow:**
-- UI -> API -> Application -> Domain -> Infrastructure(Data/EF Core) -> SQLite
+- UI -> API -> Application -> Domain -> Infrastructure(Repositories/Dapper) -> SQLite
 
 ### File Organization Patterns
 
@@ -647,7 +692,7 @@ export default defineConfig({
 ### Coherence Validation ✅
 
 **Decision Compatibility:**
-All technology choices work together without conflicts. Angular 21 + Vite + Tailwind/DaisyUI integrates cleanly with the planned ASP.NET Core + EF Core + SQLite backend. ProblemDetails provides consistent error contract across the stack.
+All technology choices work together without conflicts. Angular 21 + Vite + Tailwind/DaisyUI integrates cleanly with the planned ASP.NET Core + Dapper + SQLite backend. ProblemDetails provides consistent error contract across the stack.
 
 **Pattern Consistency:**
 Implementation patterns support all architectural decisions. Naming conventions flow logically from database (`snake_case`) through API (`camelCase` JSON, `kebab-case` paths) to code (`PascalCase` classes, `camelCase` variables). State management (Signals + RxJS) aligns with Angular 21 best practices.
@@ -752,7 +797,7 @@ All potential conflict points addressed through naming, structure, format, commu
 - **Do not add fields not defined in XSD without explicit approval**
 
 **First Implementation Priority:**
-1. Backend scaffold: Create ASP.NET Core API project with EF Core + SQLite + JWT Authentication baseline
+1. Backend scaffold: Create ASP.NET Core API project with Dapper + DbUp + SQLite + JWT Authentication baseline
 2. Domain entities: Define core entities (Student, Family, ClassGroup, School)
 3. API endpoints: Implement Students CRUD as reference implementation
 4. Frontend integration: Connect student feature to new API
@@ -782,7 +827,7 @@ All potential conflict points addressed through naming, structure, format, commu
 - 32 functional requirements fully supported
 
 **📚 AI Agent Implementation Guide**
-- Technology stack with verified versions (Angular 21, ASP.NET Core, EF Core, SQLite)
+- Technology stack with verified versions (Angular 21, ASP.NET Core, Dapper, DbUp, SQLite)
 - Consistency rules that prevent implementation conflicts
 - Project structure with clear boundaries
 - Integration patterns and communication standards
@@ -801,7 +846,7 @@ dotnet new webapi -n Kcow.Api -o apps/backend
 **Development Sequence:**
 1. Initialize backend project using documented architecture
 2. Set up development environment per architecture
-3. Implement core architectural foundations (JWT Authentication, EF Core, domain entities)
+3. Implement core architectural foundations (JWT Authentication, Dapper repositories, domain entities)
 4. Build features following established patterns
 5. Maintain consistency with documented rules
 
