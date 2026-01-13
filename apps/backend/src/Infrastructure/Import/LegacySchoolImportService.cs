@@ -1,20 +1,21 @@
 using Kcow.Application.Import;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Kcow.Application.Interfaces;
 
 namespace Kcow.Infrastructure.Import;
 
 public sealed class LegacySchoolImportService
 {
-    private readonly AppDbContext _context;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly ITruckRepository _truckRepository;
     private readonly LegacySchoolXmlParser _parser = new();
     private readonly LegacySchoolMapper _mapper = new();
     private readonly LegacyImportAuditLog _auditLog = new();
     private readonly LegacyImportSummaryReport _summaryReport = new();
 
-    public LegacySchoolImportService(AppDbContext context)
+    public LegacySchoolImportService(ISchoolRepository schoolRepository, ITruckRepository truckRepository)
     {
-        _context = context;
+        _schoolRepository = schoolRepository;
+        _truckRepository = truckRepository;
     }
 
     public async Task<LegacyImportSummary> ImportAsync(
@@ -28,10 +29,9 @@ public sealed class LegacySchoolImportService
         _auditLog.AddValidationErrors(Path.GetFileName(xmlPath), result.ValidationErrors);
 
         // Load valid truck IDs for foreign key validation
-        var validTruckIds = new HashSet<int>(await _context.Trucks
+        var validTruckIds = new HashSet<int>((await _truckRepository.GetAllAsync(cancellationToken))
             .Where(t => t.IsActive)
-            .Select(t => t.Id)
-            .ToListAsync(cancellationToken));
+            .Select(t => t.Id));
 
         // Create mapper with truck validation
         var mapper = new LegacySchoolMapper(validTruckIds);
@@ -48,7 +48,7 @@ public sealed class LegacySchoolImportService
                 continue;
             }
 
-            var exists = await _context.Schools.AnyAsync(s => s.Id == mapping.School.Id, cancellationToken);
+            var exists = await _schoolRepository.ExistsAsync(mapping.School.Id, cancellationToken);
             if (exists)
             {
                 _auditLog.AddValidationErrors(Path.GetFileName(xmlPath),
@@ -57,11 +57,9 @@ public sealed class LegacySchoolImportService
                 continue;
             }
 
-            _context.Schools.Add(mapping.School);
+            await _schoolRepository.CreateAsync(mapping.School, cancellationToken);
             imported++;
         }
-
-        await _context.SaveChangesAsync(cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(auditLogPath))
         {

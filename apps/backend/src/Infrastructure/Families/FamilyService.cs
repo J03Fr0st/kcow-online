@@ -1,90 +1,58 @@
+using Dapper;
 using Kcow.Application.Families;
+using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
-using Kcow.Domain.Enums;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Kcow.Infrastructure.Database;
 using Microsoft.Extensions.Logging;
+using System.Data;
 
 namespace Kcow.Infrastructure.Families;
 
 public class FamilyService : IFamilyService
 {
-    private readonly AppDbContext _context;
+    private readonly IFamilyRepository _familyRepository;
+    private readonly IStudentRepository _studentRepository;
+    private readonly IDbConnectionFactory _connectionFactory;
     private readonly ILogger<FamilyService> _logger;
 
-    public FamilyService(AppDbContext context, ILogger<FamilyService> logger)
+    public FamilyService(
+        IFamilyRepository familyRepository,
+        IStudentRepository studentRepository,
+        IDbConnectionFactory connectionFactory,
+        ILogger<FamilyService> logger)
     {
-        _context = context;
+        _familyRepository = familyRepository;
+        _studentRepository = studentRepository;
+        _connectionFactory = connectionFactory;
         _logger = logger;
     }
 
     public async Task<List<FamilyDto>> GetAllAsync()
     {
-        // Use projection to avoid N+1 query problem
-        var families = await _context.Families
-            .Where(f => f.IsActive)
+        var families = (await _familyRepository.GetActiveAsync())
             .OrderBy(f => f.FamilyName)
-            .Select(f => new FamilyDto
-            {
-                Id = f.Id,
-                FamilyName = f.FamilyName,
-                PrimaryContactName = f.PrimaryContactName,
-                Phone = f.Phone,
-                Email = f.Email,
-                Address = f.Address,
-                Notes = f.Notes,
-                IsActive = f.IsActive,
-                CreatedAt = f.CreatedAt,
-                UpdatedAt = f.UpdatedAt,
-                Students = f.StudentFamilies
-                    .Select(sf => new StudentFamilyDto
-                    {
-                        StudentId = sf.StudentId,
-                        FirstName = sf.Student.FirstName,
-                        LastName = sf.Student.LastName,
-                        Reference = sf.Student.Reference,
-                        RelationshipType = sf.RelationshipType.ToString()
-                    })
-                    .ToList()
-            })
-            .AsNoTracking()
-            .ToListAsync();
+            .ToList();
 
-        return families;
+        var result = new List<FamilyDto>();
+        foreach (var f in families)
+        {
+            var students = await GetStudentsForFamilyAsync(f.Id);
+            result.Add(MapToDto(f, students));
+        }
+
+        return result;
     }
 
     public async Task<FamilyDto?> GetByIdAsync(int id)
     {
-        // Use projection to avoid N+1 query problem and filter by IsActive
-        var family = await _context.Families
-            .Where(f => f.Id == id && f.IsActive)
-            .Select(f => new FamilyDto
-            {
-                Id = f.Id,
-                FamilyName = f.FamilyName,
-                PrimaryContactName = f.PrimaryContactName,
-                Phone = f.Phone,
-                Email = f.Email,
-                Address = f.Address,
-                Notes = f.Notes,
-                IsActive = f.IsActive,
-                CreatedAt = f.CreatedAt,
-                UpdatedAt = f.UpdatedAt,
-                Students = f.StudentFamilies
-                    .Select(sf => new StudentFamilyDto
-                    {
-                        StudentId = sf.StudentId,
-                        FirstName = sf.Student.FirstName,
-                        LastName = sf.Student.LastName,
-                        Reference = sf.Student.Reference,
-                        RelationshipType = sf.RelationshipType.ToString()
-                    })
-                    .ToList()
-            })
-            .AsNoTracking()
-            .FirstOrDefaultAsync();
+        var family = await _familyRepository.GetByIdAsync(id);
+        if (family == null || !family.IsActive)
+        {
+            return null;
+        }
 
-        return family;
+        var students = await GetStudentsForFamilyAsync(id);
+        return MapToDto(family, students);
     }
 
     public async Task<FamilyDto> CreateAsync(CreateFamilyRequest request)
@@ -101,19 +69,20 @@ public class FamilyService : IFamilyService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Families.Add(family);
-        await _context.SaveChangesAsync();
+        var id = await _familyRepository.CreateAsync(family);
+        family.Id = id;
 
         _logger.LogInformation("Created family with ID {FamilyId}", family.Id);
-
-        return MapToDto(family);
+        return MapToDto(family, new List<StudentFamilyDto>());
     }
 
     public async Task<FamilyDto?> UpdateAsync(int id, UpdateFamilyRequest request)
     {
-        var family = await _context.Families.FirstOrDefaultAsync(f => f.Id == id);
-
-        if (family == null) return null;
+        var family = await _familyRepository.GetByIdAsync(id);
+        if (family == null)
+        {
+            return null;
+        }
 
         family.FamilyName = request.FamilyName;
         family.PrimaryContactName = request.PrimaryContactName;
@@ -124,23 +93,24 @@ public class FamilyService : IFamilyService
         family.IsActive = request.IsActive;
         family.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _familyRepository.UpdateAsync(family);
 
         _logger.LogInformation("Updated family with ID {FamilyId}", id);
-
         return await GetByIdAsync(id);
     }
 
     public async Task<bool> ArchiveAsync(int id)
     {
-        var family = await _context.Families.FirstOrDefaultAsync(f => f.Id == id && f.IsActive);
-
-        if (family == null) return false;
+        var family = await _familyRepository.GetByIdAsync(id);
+        if (family == null || !family.IsActive)
+        {
+            return false;
+        }
 
         family.IsActive = false;
         family.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _familyRepository.UpdateAsync(family);
 
         _logger.LogInformation("Archived family with ID {FamilyId}", id);
         return true;
@@ -148,85 +118,105 @@ public class FamilyService : IFamilyService
 
     public async Task<List<FamilyDto>> GetByStudentIdAsync(int studentId)
     {
-        // Use projection to avoid N+1 query problem
-        var families = await _context.StudentFamilies
-            .Where(sf => sf.StudentId == studentId)
-            .Select(sf => new
-            {
-                sf.Family.Id,
-                sf.Family.FamilyName,
-                sf.Family.PrimaryContactName,
-                sf.Family.Phone,
-                sf.Family.Email,
-                sf.Family.Address,
-                sf.Family.Notes,
-                sf.Family.IsActive,
-                sf.Family.CreatedAt,
-                sf.Family.UpdatedAt,
-                RelationshipType = sf.RelationshipType.ToString()
-            })
-            .ToListAsync();
+        const string sql = @"
+            SELECT f.id, f.family_name, f.primary_contact_name, f.phone, f.email,
+                   f.address, f.notes, f.is_active, f.created_at, f.updated_at,
+                   sf.relationship_type
+            FROM families f
+            INNER JOIN student_families sf ON f.id = sf.family_id
+            WHERE sf.student_id = @StudentId";
 
-        // Project to FamilyDto with empty Students list to avoid N+1
-        return families.Select(f => new FamilyDto
+        using var connection = _connectionFactory.Create();
+        var records = await connection.QueryAsync(sql, new { StudentId = studentId });
+
+        var result = new List<FamilyDto>();
+        foreach (var record in records)
         {
-            Id = f.Id,
-            FamilyName = f.FamilyName,
-            PrimaryContactName = f.PrimaryContactName,
-            Phone = f.Phone,
-            Email = f.Email,
-            Address = f.Address,
-            Notes = f.Notes,
-            IsActive = f.IsActive,
-            CreatedAt = f.CreatedAt,
-            UpdatedAt = f.UpdatedAt,
-            Students = new List<StudentFamilyDto>() // Empty list to avoid N+1 queries
-        }).ToList();
+            result.Add(new FamilyDto
+            {
+                Id = record.id,
+                FamilyName = record.family_name,
+                PrimaryContactName = record.primary_contact_name,
+                Phone = record.phone,
+                Email = record.email,
+                Address = record.address,
+                Notes = record.notes,
+                IsActive = record.is_active,
+                CreatedAt = record.created_at,
+                UpdatedAt = record.updated_at,
+                Students = new List<StudentFamilyDto>() // Empty list to avoid N+1 queries
+            });
+        }
+
+        return result;
     }
 
     public async Task<bool> LinkToStudentAsync(int studentId, LinkFamilyRequest request)
     {
-        var studentExists = await _context.Students.AnyAsync(s => s.Id == studentId);
+        var studentExists = await _studentRepository.ExistsAsync(studentId);
         if (!studentExists) return false;
 
-        var familyExists = await _context.Families.AnyAsync(f => f.Id == request.FamilyId);
+        var familyExists = await _familyRepository.ExistsAsync(request.FamilyId);
         if (!familyExists) return false;
 
-        var alreadyLinked = await _context.StudentFamilies.AnyAsync(sf => sf.StudentId == studentId && sf.FamilyId == request.FamilyId);
-        if (alreadyLinked) return true;
+        // Check if already linked
+        const string checkSql = @"
+            SELECT COUNT(1) FROM student_families
+            WHERE student_id = @StudentId AND family_id = @FamilyId";
 
-        var studentFamily = new StudentFamily
+        using var connection = _connectionFactory.Create();
+        var alreadyLinked = await connection.QuerySingleAsync<int>(checkSql, new { StudentId = studentId, FamilyId = request.FamilyId });
+        if (alreadyLinked > 0) return true;
+
+        // Create the link
+        const string insertSql = @"
+            INSERT INTO student_families (student_id, family_id, relationship_type)
+            VALUES (@StudentId, @FamilyId, @RelationshipType)";
+
+        await connection.ExecuteAsync(insertSql, new
         {
             StudentId = studentId,
             FamilyId = request.FamilyId,
-            RelationshipType = request.RelationshipType
-        };
+            RelationshipType = request.RelationshipType.ToString()
+        });
 
-        _context.StudentFamilies.Add(studentFamily);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Linked student {StudentId} to family {FamilyId} as {RelationshipType}", 
+        _logger.LogInformation("Linked student {StudentId} to family {FamilyId} as {RelationshipType}",
             studentId, request.FamilyId, request.RelationshipType);
-            
+
         return true;
     }
 
     public async Task<bool> UnlinkFromStudentAsync(int studentId, int familyId)
     {
-        var studentFamily = await _context.StudentFamilies
-            .FirstOrDefaultAsync(sf => sf.StudentId == studentId && sf.FamilyId == familyId);
+        const string sql = @"
+            DELETE FROM student_families
+            WHERE student_id = @StudentId AND family_id = @FamilyId";
 
-        if (studentFamily == null) return false;
+        using var connection = _connectionFactory.Create();
+        var rowsAffected = await connection.ExecuteAsync(sql, new { StudentId = studentId, FamilyId = familyId });
 
-        _context.StudentFamilies.Remove(studentFamily);
-        await _context.SaveChangesAsync();
+        if (rowsAffected > 0)
+        {
+            _logger.LogInformation("Unlinked student {StudentId} from family {FamilyId}", studentId, familyId);
+        }
 
-        _logger.LogInformation("Unlinked student {StudentId} from family {FamilyId}", studentId, familyId);
-        
-        return true;
+        return rowsAffected > 0;
     }
 
-    private static FamilyDto MapToDto(Family f)
+    private async Task<List<StudentFamilyDto>> GetStudentsForFamilyAsync(int familyId)
+    {
+        const string sql = @"
+            SELECT s.id as StudentId, s.first_name as FirstName, s.last_name as LastName,
+                   s.reference as Reference, sf.relationship_type as RelationshipType
+            FROM students s
+            INNER JOIN student_families sf ON s.id = sf.student_id
+            WHERE sf.family_id = @FamilyId AND s.is_active = 1";
+
+        using var connection = _connectionFactory.Create();
+        return (await connection.QueryAsync<StudentFamilyDto>(sql, new { FamilyId = familyId })).ToList();
+    }
+
+    private static FamilyDto MapToDto(Family f, List<StudentFamilyDto> students)
     {
         return new FamilyDto
         {
@@ -240,14 +230,7 @@ public class FamilyService : IFamilyService
             IsActive = f.IsActive,
             CreatedAt = f.CreatedAt,
             UpdatedAt = f.UpdatedAt,
-            Students = f.StudentFamilies.Select(sf => new StudentFamilyDto
-            {
-                StudentId = sf.StudentId,
-                FirstName = sf.Student?.FirstName,
-                LastName = sf.Student?.LastName,
-                Reference = sf.Student?.Reference,
-                RelationshipType = sf.RelationshipType.ToString()
-            }).ToList()
+            Students = students
         };
     }
 }

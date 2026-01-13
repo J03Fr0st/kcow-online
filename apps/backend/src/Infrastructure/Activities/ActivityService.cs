@@ -1,22 +1,21 @@
 using Kcow.Application.Activities;
+using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Activities;
 
 /// <summary>
-/// Implementation of activity management service.
+/// Implementation of activity management service using Dapper repositories.
 /// </summary>
 public class ActivityService : IActivityService
 {
-    private readonly AppDbContext _context;
+    private readonly IActivityRepository _activityRepository;
     private readonly ILogger<ActivityService> _logger;
 
-    public ActivityService(AppDbContext context, ILogger<ActivityService> logger)
+    public ActivityService(IActivityRepository activityRepository, ILogger<ActivityService> logger)
     {
-        _context = context;
+        _activityRepository = activityRepository;
         _logger = logger;
     }
 
@@ -25,10 +24,7 @@ public class ActivityService : IActivityService
     /// </summary>
     public async Task<List<ActivityDto>> GetAllAsync()
     {
-        var activities = await _context.Activities
-            .Where(a => a.IsActive)
-            .OrderBy(a => a.Name)
-            .ThenBy(a => a.Code)
+        var activities = (await _activityRepository.GetActiveAsync())
             .Select(a => new ActivityDto
             {
                 Id = a.Id,
@@ -42,7 +38,9 @@ public class ActivityService : IActivityService
                 CreatedAt = a.CreatedAt,
                 UpdatedAt = a.UpdatedAt
             })
-            .ToListAsync();
+            .OrderBy(a => a.Name)
+            .ThenBy(a => a.Code)
+            .ToList();
 
         _logger.LogInformation("Retrieved {Count} active activities", activities.Count);
         return activities;
@@ -53,33 +51,29 @@ public class ActivityService : IActivityService
     /// </summary>
     public async Task<ActivityDto?> GetByIdAsync(int id)
     {
-        var activity = await _context.Activities
-            .Where(a => a.Id == id && a.IsActive)
-            .Select(a => new ActivityDto
-            {
-                Id = a.Id,
-                Code = a.Code,
-                Name = a.Name,
-                Description = a.Description,
-                Folder = a.Folder,
-                GradeLevel = a.GradeLevel,
-                Icon = a.Icon,
-                IsActive = a.IsActive,
-                CreatedAt = a.CreatedAt,
-                UpdatedAt = a.UpdatedAt
-            })
-            .FirstOrDefaultAsync();
+        var activity = await _activityRepository.GetByIdAsync(id);
 
-        if (activity == null)
+        if (activity == null || !activity.IsActive)
         {
             _logger.LogWarning("Activity with ID {ActivityId} not found", id);
-        }
-        else
-        {
-            _logger.LogInformation("Retrieved activity with ID {ActivityId}", id);
+            return null;
         }
 
-        return activity;
+        _logger.LogInformation("Retrieved activity with ID {ActivityId}", id);
+
+        return new ActivityDto
+        {
+            Id = activity.Id,
+            Code = activity.Code,
+            Name = activity.Name,
+            Description = activity.Description,
+            Folder = activity.Folder,
+            GradeLevel = activity.GradeLevel,
+            Icon = activity.Icon,
+            IsActive = activity.IsActive,
+            CreatedAt = activity.CreatedAt,
+            UpdatedAt = activity.UpdatedAt
+        };
     }
 
     /// <summary>
@@ -90,9 +84,7 @@ public class ActivityService : IActivityService
         // Check for duplicate Code (if provided)
         if (!string.IsNullOrWhiteSpace(request.Code))
         {
-            var exists = await _context.Activities
-                .AnyAsync(a => a.Code == request.Code && a.IsActive);
-
+            var exists = await _activityRepository.ExistsByCodeAsync(request.Code);
             if (exists)
             {
                 throw new InvalidOperationException($"Activity with code '{request.Code}' already exists");
@@ -102,10 +94,7 @@ public class ActivityService : IActivityService
         // Check for duplicate ID (if provided for legacy import)
         if (request.Id.HasValue)
         {
-            var idExists = await _context.Activities
-                .IgnoreQueryFilters()
-                .AnyAsync(a => a.Id == request.Id.Value);
-
+            var idExists = await _activityRepository.ExistsAsync(request.Id.Value);
             if (idExists)
             {
                 throw new InvalidOperationException($"Activity with ID '{request.Id.Value}' already exists");
@@ -128,8 +117,8 @@ public class ActivityService : IActivityService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Activities.Add(activity);
-        await _context.SaveChangesAsync();
+        var id = await _activityRepository.CreateAsync(activity);
+        activity.Id = id; // Set the ID returned by repository
 
         _logger.LogInformation("Created activity with ID {ActivityId} and code {Code}",
             activity.Id, activity.Code ?? "(no code)");
@@ -154,10 +143,9 @@ public class ActivityService : IActivityService
     /// </summary>
     public async Task<ActivityDto?> UpdateAsync(int id, UpdateActivityRequest request)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == id && a.IsActive);
+        var activity = await _activityRepository.GetByIdAsync(id);
 
-        if (activity == null)
+        if (activity == null || !activity.IsActive)
         {
             _logger.LogWarning("Cannot update: Activity with ID {ActivityId} not found", id);
             return null;
@@ -166,11 +154,7 @@ public class ActivityService : IActivityService
         // Check for duplicate Code (if provided and changed)
         if (!string.IsNullOrWhiteSpace(request.Code) && request.Code != activity.Code)
         {
-            var duplicateExists = await _context.Activities
-                .AnyAsync(a => a.Code == request.Code
-                           && a.Id != id
-                           && a.IsActive);
-
+            var duplicateExists = await _activityRepository.ExistsByCodeAsync(request.Code);
             if (duplicateExists)
             {
                 throw new InvalidOperationException($"Activity with code '{request.Code}' already exists");
@@ -185,7 +169,7 @@ public class ActivityService : IActivityService
         activity.Icon = request.Icon;
         activity.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _activityRepository.UpdateAsync(activity);
 
         _logger.LogInformation("Updated activity with ID {ActivityId}", id);
 
@@ -209,10 +193,9 @@ public class ActivityService : IActivityService
     /// </summary>
     public async Task<bool> ArchiveAsync(int id)
     {
-        var activity = await _context.Activities
-            .FirstOrDefaultAsync(a => a.Id == id && a.IsActive);
+        var activity = await _activityRepository.GetByIdAsync(id);
 
-        if (activity == null)
+        if (activity == null || !activity.IsActive)
         {
             _logger.LogWarning("Cannot archive: Activity with ID {ActivityId} not found", id);
             return false;
@@ -221,7 +204,7 @@ public class ActivityService : IActivityService
         activity.IsActive = false;
         activity.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _activityRepository.UpdateAsync(activity);
 
         _logger.LogInformation("Archived activity with ID {ActivityId}", id);
         return true;
@@ -233,10 +216,8 @@ public class ActivityService : IActivityService
     /// </summary>
     private async Task<int> GetNextIdAsync()
     {
-        var maxId = await _context.Activities
-            .IgnoreQueryFilters()
-            .MaxAsync(a => (int?)a.Id) ?? 0;
-
+        var allActivities = await _activityRepository.GetAllAsync();
+        var maxId = allActivities.Any() ? allActivities.Max(a => a.Id) : 0;
         return maxId + 1;
     }
 }

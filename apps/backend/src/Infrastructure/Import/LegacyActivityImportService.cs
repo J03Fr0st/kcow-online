@@ -1,6 +1,5 @@
 using Kcow.Application.Import;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Kcow.Application.Interfaces;
 
 namespace Kcow.Infrastructure.Import;
 
@@ -10,15 +9,15 @@ namespace Kcow.Infrastructure.Import;
 /// </summary>
 public sealed class LegacyActivityImportService
 {
-    private readonly AppDbContext _context;
+    private readonly IActivityRepository _activityRepository;
     private readonly LegacyActivityXmlParser _parser = new();
     private readonly LegacyActivityMapper _mapper = new();
     private readonly LegacyImportAuditLog _auditLog = new();
     private readonly LegacyImportSummaryReport _summaryReport = new();
 
-    public LegacyActivityImportService(AppDbContext context)
+    public LegacyActivityImportService(IActivityRepository activityRepository)
     {
-        _context = context;
+        _activityRepository = activityRepository;
     }
 
     public async Task<LegacyImportSummary> ImportAsync(
@@ -49,8 +48,7 @@ public sealed class LegacyActivityImportService
                 }
 
                 // Check for duplicates by ID
-                var exists = await _context.Activities
-                    .AnyAsync(a => a.Id == record.ActivityId, cancellationToken);
+                var exists = await _activityRepository.ExistsAsync(record.ActivityId, cancellationToken);
 
                 if (exists)
                 {
@@ -62,7 +60,7 @@ public sealed class LegacyActivityImportService
 
                 if (!preview)
                 {
-                    _context.Activities.Add(mapping.Activity);
+                    await _activityRepository.CreateAsync(mapping.Activity, cancellationToken);
                 }
                 imported++;
             }
@@ -72,11 +70,6 @@ public sealed class LegacyActivityImportService
                     new[] { new LegacyXmlValidationError($"Error processing activity {record.ActivityId}: {ex.Message}", null, null) });
                 skipped++;
             }
-        }
-
-        if (!preview)
-        {
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         if (!string.IsNullOrWhiteSpace(auditLogPath))

@@ -202,6 +202,7 @@ try
 catch (Microsoft.Extensions.Hosting.HostAbortedException ex)
 {
     // This is expected for EF Core design-time operations (dotnet-ef uses HostFactoryResolver and aborts the host).
+    // NOTE: We're now using DbUp instead of EF Core, but this catch is kept for compatibility.
     // Logging as Fatal makes tooling / extensions look like the app crashed even though the command succeeded.
     Log.Information(ex, "Host aborted (expected for design-time operations)");
 }

@@ -1,23 +1,21 @@
+using Kcow.Application.Interfaces;
 using Kcow.Application.Trucks;
-using Kcow.Domain;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Trucks;
 
 /// <summary>
-/// Implementation of truck management service.
+/// Implementation of truck management service using Dapper repositories.
 /// </summary>
 public class TruckService : ITruckService
 {
-    private readonly AppDbContext _context;
+    private readonly ITruckRepository _truckRepository;
     private readonly ILogger<TruckService> _logger;
 
-    public TruckService(AppDbContext context, ILogger<TruckService> logger)
+    public TruckService(ITruckRepository truckRepository, ILogger<TruckService> logger)
     {
-        _context = context;
+        _truckRepository = truckRepository;
         _logger = logger;
     }
 
@@ -26,9 +24,7 @@ public class TruckService : ITruckService
     /// </summary>
     public async Task<List<TruckDto>> GetAllAsync()
     {
-        var trucks = await _context.Trucks
-            .Where(t => t.IsActive)
-            .OrderBy(t => t.Name)
+        var trucks = (await _truckRepository.GetActiveAsync())
             .Select(t => new TruckDto
             {
                 Id = t.Id,
@@ -40,7 +36,8 @@ public class TruckService : ITruckService
                 CreatedAt = t.CreatedAt,
                 UpdatedAt = t.UpdatedAt
             })
-            .ToListAsync();
+            .OrderBy(t => t.Name)
+            .ToList();
 
         _logger.LogInformation("Retrieved {Count} active trucks", trucks.Count);
         return trucks;
@@ -51,31 +48,27 @@ public class TruckService : ITruckService
     /// </summary>
     public async Task<TruckDto?> GetByIdAsync(int id)
     {
-        var truck = await _context.Trucks
-            .Where(t => t.Id == id && t.IsActive)
-            .Select(t => new TruckDto
-            {
-                Id = t.Id,
-                Name = t.Name,
-                RegistrationNumber = t.RegistrationNumber,
-                Status = t.Status,
-                Notes = t.Notes,
-                IsActive = t.IsActive,
-                CreatedAt = t.CreatedAt,
-                UpdatedAt = t.UpdatedAt
-            })
-            .FirstOrDefaultAsync();
+        var truck = await _truckRepository.GetByIdAsync(id);
 
-        if (truck == null)
+        if (truck == null || !truck.IsActive)
         {
             _logger.LogWarning("Truck with ID {TruckId} not found", id);
-        }
-        else
-        {
-            _logger.LogInformation("Retrieved truck with ID {TruckId}", id);
+            return null;
         }
 
-        return truck;
+        _logger.LogInformation("Retrieved truck with ID {TruckId}", id);
+
+        return new TruckDto
+        {
+            Id = truck.Id,
+            Name = truck.Name,
+            RegistrationNumber = truck.RegistrationNumber,
+            Status = truck.Status,
+            Notes = truck.Notes,
+            IsActive = truck.IsActive,
+            CreatedAt = truck.CreatedAt,
+            UpdatedAt = truck.UpdatedAt
+        };
     }
 
     /// <summary>
@@ -84,8 +77,7 @@ public class TruckService : ITruckService
     public async Task<TruckDto> CreateAsync(CreateTruckRequest request)
     {
         // Check for duplicate registration number
-        var exists = await _context.Trucks
-            .AnyAsync(t => t.RegistrationNumber == request.RegistrationNumber && t.IsActive);
+        var exists = await _truckRepository.ExistsByRegistrationNumberAsync(request.RegistrationNumber);
 
         if (exists)
         {
@@ -102,8 +94,8 @@ public class TruckService : ITruckService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Trucks.Add(truck);
-        await _context.SaveChangesAsync();
+        var id = await _truckRepository.CreateAsync(truck);
+        truck.Id = id; // Set the ID returned by repository
 
         _logger.LogInformation("Created truck with ID {TruckId} and registration {RegistrationNumber}",
             truck.Id, truck.RegistrationNumber);
@@ -126,22 +118,17 @@ public class TruckService : ITruckService
     /// </summary>
     public async Task<TruckDto?> UpdateAsync(int id, UpdateTruckRequest request)
     {
-        var truck = await _context.Trucks
-            .FirstOrDefaultAsync(t => t.Id == id && t.IsActive);
+        var truck = await _truckRepository.GetByIdAsync(id);
 
-        if (truck == null)
+        if (truck == null || !truck.IsActive)
         {
             _logger.LogWarning("Cannot update: Truck with ID {TruckId} not found", id);
             return null;
         }
 
         // Check for duplicate registration number (excluding current truck)
-        var duplicateExists = await _context.Trucks
-            .AnyAsync(t => t.RegistrationNumber == request.RegistrationNumber
-                       && t.Id != id
-                       && t.IsActive);
-
-        if (duplicateExists)
+        var existingTruck = await _truckRepository.GetByRegistrationNumberAsync(request.RegistrationNumber);
+        if (existingTruck != null && existingTruck.Id != id)
         {
             throw new InvalidOperationException($"Truck with registration number '{request.RegistrationNumber}' already exists");
         }
@@ -152,7 +139,7 @@ public class TruckService : ITruckService
         truck.Notes = request.Notes;
         truck.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _truckRepository.UpdateAsync(truck);
 
         _logger.LogInformation("Updated truck with ID {TruckId}", id);
 
@@ -174,10 +161,9 @@ public class TruckService : ITruckService
     /// </summary>
     public async Task<bool> ArchiveAsync(int id)
     {
-        var truck = await _context.Trucks
-            .FirstOrDefaultAsync(t => t.Id == id && t.IsActive);
+        var truck = await _truckRepository.GetByIdAsync(id);
 
-        if (truck == null)
+        if (truck == null || !truck.IsActive)
         {
             _logger.LogWarning("Cannot archive: Truck with ID {TruckId} not found", id);
             return false;
@@ -186,7 +172,7 @@ public class TruckService : ITruckService
         truck.IsActive = false;
         truck.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _truckRepository.UpdateAsync(truck);
 
         _logger.LogInformation("Archived truck with ID {TruckId}", id);
         return true;

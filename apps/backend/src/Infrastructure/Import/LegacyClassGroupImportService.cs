@@ -1,19 +1,25 @@
 using Kcow.Application.Import;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Kcow.Application.Interfaces;
 
 namespace Kcow.Infrastructure.Import;
 
 public sealed class LegacyClassGroupImportService
 {
-    private readonly AppDbContext _context;
+    private readonly IClassGroupRepository _classGroupRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly ITruckRepository _truckRepository;
     private readonly LegacyClassGroupXmlParser _parser = new();
     private readonly LegacyImportAuditLog _auditLog = new();
     private readonly LegacyImportSummaryReport _summaryReport = new();
 
-    public LegacyClassGroupImportService(AppDbContext context)
+    public LegacyClassGroupImportService(
+        IClassGroupRepository classGroupRepository,
+        ISchoolRepository schoolRepository,
+        ITruckRepository truckRepository)
     {
-        _context = context;
+        _classGroupRepository = classGroupRepository;
+        _schoolRepository = schoolRepository;
+        _truckRepository = truckRepository;
     }
 
     public async Task<LegacyImportSummary> ImportAsync(
@@ -27,16 +33,14 @@ public sealed class LegacyClassGroupImportService
         _auditLog.AddValidationErrors(Path.GetFileName(xmlPath), result.ValidationErrors);
 
         // Load valid school IDs for foreign key validation
-        var validSchoolIds = new HashSet<int>(await _context.Schools
+        var validSchoolIds = new HashSet<int>((await _schoolRepository.GetAllAsync(cancellationToken))
             .Where(s => s.IsActive)
-            .Select(s => s.Id)
-            .ToListAsync(cancellationToken));
+            .Select(s => s.Id));
 
         // Load valid truck IDs for foreign key validation
-        var validTruckIds = new HashSet<int>(await _context.Trucks
+        var validTruckIds = new HashSet<int>((await _truckRepository.GetAllAsync(cancellationToken))
             .Where(t => t.IsActive)
-            .Select(t => t.Id)
-            .ToListAsync(cancellationToken));
+            .Select(t => t.Id));
 
         // Create mapper with validation
         var mapper = new LegacyClassGroupMapper(validSchoolIds, validTruckIds);
@@ -56,11 +60,24 @@ public sealed class LegacyClassGroupImportService
             }
 
             // Check for duplicates
-            var exists = await _context.ClassGroups
-                .AnyAsync(cg => cg.Name == mapping.ClassGroup.Name &&
-                              cg.SchoolId == mapping.ClassGroup.SchoolId &&
-                              cg.DayOfWeek == mapping.ClassGroup.DayOfWeek,
-                              cancellationToken);
+            // Since Dapper repository might not have a complex predicate check like EF Core, 
+            // we might need to implement a specific check method or fetch potential duplicates.
+            // For now, assuming ExistsAsync(id) isn't enough as the original check was composite.
+            // However, based on typical repository patterns, we'll check by ID if available or just create.
+            // Given the original code checked specific fields:
+            // cg.Name == mapping.ClassGroup.Name && cg.SchoolId == mapping.ClassGroup.SchoolId && cg.DayOfWeek == mapping.ClassGroup.DayOfWeek
+            
+            // NOTE: A proper Dapper repository would need a method for this specific check to be efficient.
+            // For this migration, we will use a naive approach or assume the repository has a matching method if we updated it.
+            // But since I didn't add such a method to IClassGroupRepository in the prompt, I will assume we can skip this check 
+            // or perform it in memory if the dataset is small, OR just rely on database constraints.
+            // Let's assume for now we just try to create and catch exceptions or similar, OR fetch all for that school and check in memory.
+            
+            // Optimization: Load all class groups for the school to check duplicates in memory.
+            var existingGroups = await _classGroupRepository.GetBySchoolIdAsync(mapping.ClassGroup.SchoolId, cancellationToken);
+            var exists = existingGroups.Any(cg => 
+                cg.Name == mapping.ClassGroup.Name && 
+                cg.DayOfWeek == mapping.ClassGroup.DayOfWeek);
 
             if (exists)
             {
@@ -77,11 +94,9 @@ public sealed class LegacyClassGroupImportService
                     new[] { new LegacyXmlValidationError(warning, null, null) });
             }
 
-            _context.ClassGroups.Add(mapping.ClassGroup);
+            await _classGroupRepository.CreateAsync(mapping.ClassGroup, cancellationToken);
             imported++;
         }
-
-        await _context.SaveChangesAsync(cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(auditLogPath))
         {

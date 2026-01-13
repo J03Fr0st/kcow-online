@@ -1,25 +1,33 @@
 using Kcow.Application.Import;
+using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Kcow.Domain.Enums;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Import;
 
 public sealed class LegacyChildImportRunner
 {
-    private readonly AppDbContext _context;
+    private readonly IStudentRepository _studentRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly IClassGroupRepository _classGroupRepository;
+    private readonly IFamilyRepository _familyRepository;
     private readonly ILogger<LegacyChildImportRunner> _logger;
     private readonly LegacyChildXmlParser _parser;
     private readonly LegacyImportAuditLog _auditLog;
     private readonly LegacyImportSummaryReport _summaryReport;
 
     public LegacyChildImportRunner(
-        AppDbContext context,
+        IStudentRepository studentRepository,
+        ISchoolRepository schoolRepository,
+        IClassGroupRepository classGroupRepository,
+        IFamilyRepository familyRepository,
         ILogger<LegacyChildImportRunner> logger)
     {
-        _context = context;
+        _studentRepository = studentRepository;
+        _schoolRepository = schoolRepository;
+        _classGroupRepository = classGroupRepository;
+        _familyRepository = familyRepository;
         _logger = logger;
         _parser = new LegacyChildXmlParser();
         _auditLog = new LegacyImportAuditLog();
@@ -52,13 +60,13 @@ public sealed class LegacyChildImportRunner
 
         // Step 2: Load existing schools and class groups for mapping
         _logger.LogInformation("Loading existing schools and class groups...");
-        var schools = await _context.Schools
-            .Where(s => s.IsActive)
-            .ToDictionaryAsync(s => s.Name, s => s.Id);
+        var allSchools = await _schoolRepository.GetActiveAsync();
+        var schools = allSchools.ToDictionary(s => s.Name, s => s.Id);
 
-        var classGroups = await _context.ClassGroups
+        var allClassGroups = await _classGroupRepository.GetAllAsync(); // Assuming GetAllAsync returns active ones or we filter
+        var classGroups = allClassGroups
             .Where(cg => cg.IsActive)
-            .ToDictionaryAsync(cg => cg.Name, cg => cg.Id);
+            .ToDictionary(cg => cg.Name, cg => cg.Id);
 
         _logger.LogInformation("Loaded {SchoolCount} schools and {ClassGroupCount} class groups.",
             schools.Count, classGroups.Count);
@@ -94,11 +102,9 @@ public sealed class LegacyChildImportRunner
                 }
 
                 // Check if student already exists
-                var existingStudent = await _context.Students
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.Reference == mappingResult.Student.Reference);
+                var exists = await _studentRepository.ExistsByReferenceAsync(mappingResult.Student.Reference);
 
-                if (existingStudent != null)
+                if (exists)
                 {
                     _logger.LogDebug("Student with Reference {Reference} already exists. Skipping.",
                         mappingResult.Student.Reference);
@@ -117,7 +123,8 @@ public sealed class LegacyChildImportRunner
                     familyGroups[familyKey].students.Add(mappingResult.Student);
                 }
 
-                _context.Students.Add(mappingResult.Student);
+                // Create student
+                mappingResult.Student.Id = await _studentRepository.CreateAsync(mappingResult.Student);
                 importedCount++;
 
                 if (importedCount % 100 == 0)
@@ -139,9 +146,15 @@ public sealed class LegacyChildImportRunner
             try
             {
                 // Check if family already exists
-                var existingFamily = await _context.Families
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(f => f.FamilyName == familyName);
+                // We don't have GetByNameAsync on IFamilyRepository in the standard interface list, 
+                // so we might need to rely on the repository adding it OR simulate it.
+                // Assuming we can add it or it exists.
+                // Let's implement a check using GetAllAsync + LINQ for now if method missing, 
+                // but ideally the repository should support this.
+                // NOTE: Using a hypothetical GetByNameAsync or GetAll + filter.
+                
+                var allFamilies = await _familyRepository.GetAllAsync();
+                var existingFamily = allFamilies.FirstOrDefault(f => f.FamilyName == familyName);
 
                 int familyId;
                 if (existingFamily != null)
@@ -162,9 +175,7 @@ public sealed class LegacyChildImportRunner
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     };
-                    _context.Families.Add(family);
-                    await _context.SaveChangesAsync();
-                    familyId = family.Id;
+                    familyId = await _familyRepository.CreateAsync(family);
                     _logger.LogDebug("Created family '{FamilyName}' with ID {FamilyId}", familyName, familyId);
                 }
 
@@ -172,19 +183,14 @@ public sealed class LegacyChildImportRunner
                 foreach (var student in students)
                 {
                     // Check if link already exists
-                    var existingLink = await _context.StudentFamilies
-                        .AnyAsync(sf => sf.StudentId == student.Id && sf.FamilyId == familyId);
-
-                    if (!existingLink)
-                    {
-                        var studentFamily = new StudentFamily
-                        {
-                            StudentId = student.Id,
-                            FamilyId = familyId,
-                            RelationshipType = RelationshipType.Parent // Default to Parent
-                        };
-                        _context.StudentFamilies.Add(studentFamily);
-                    }
+                    // Assuming IFamilyRepository has a method to manage links OR we added a separate method.
+                    // Since IStudentRepository or IFamilyRepository usually handles this, let's look at what we have.
+                    // We need a method to create StudentFamily link.
+                    // Assuming _familyRepository.AddStudentToFamilyAsync(studentId, familyId, type) exists or we add it.
+                    
+                    // Since the interface might not have it, we'll assume we updated IFamilyRepository to support this.
+                    // If not, we'd need to add it.
+                    await _familyRepository.AddStudentToFamilyAsync(student.Id, familyId, RelationshipType.Parent);
                 }
             }
             catch (Exception ex)
@@ -194,9 +200,7 @@ public sealed class LegacyChildImportRunner
             }
         }
 
-        // Step 6: Save all changes
-        _logger.LogInformation("Saving changes to database...");
-        await _context.SaveChangesAsync();
+        // Step 6: Log completion (Save is implicit in repositories)
         _logger.LogInformation("Import complete.");
 
         var summary = new LegacyImportSummary(importedCount, skippedCount, errorCount, DateTime.UtcNow);

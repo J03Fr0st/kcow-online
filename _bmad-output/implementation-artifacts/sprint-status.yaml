@@ -44,7 +44,7 @@ development_status:
   # Epic 0: Infrastructure & Architectural Foundation
   # ========================
   epic-0: in-progress
-  0-1-migrate-ef-core-to-dapper-dbup: in-progress
+  0-1-migrate-ef-core-to-dapper-dbup: done
   epic-0-retrospective: optional
 
   # ========================

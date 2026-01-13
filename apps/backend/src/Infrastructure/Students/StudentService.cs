@@ -1,23 +1,30 @@
 using Kcow.Application.Common;
+using Kcow.Application.Interfaces;
 using Kcow.Application.Students;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Students;
 
 /// <summary>
-/// Implementation of student management service.
+/// Implementation of student management service using Dapper repositories.
 /// </summary>
 public class StudentService : IStudentService
 {
-    private readonly AppDbContext _context;
+    private readonly IStudentRepository _studentRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly IClassGroupRepository _classGroupRepository;
     private readonly ILogger<StudentService> _logger;
 
-    public StudentService(AppDbContext context, ILogger<StudentService> logger)
+    public StudentService(
+        IStudentRepository studentRepository,
+        ISchoolRepository schoolRepository,
+        IClassGroupRepository classGroupRepository,
+        ILogger<StudentService> logger)
     {
-        _context = context;
+        _studentRepository = studentRepository;
+        _schoolRepository = schoolRepository;
+        _classGroupRepository = classGroupRepository;
         _logger = logger;
     }
 
@@ -26,40 +33,62 @@ public class StudentService : IStudentService
     /// </summary>
     public async Task<PagedResponse<StudentListDto>> GetPagedAsync(int page, int pageSize, int? schoolId = null, int? classGroupId = null, string? search = null)
     {
-        var query = _context.Students
-            .Include(s => s.School)
-            .Include(s => s.ClassGroup)
-            .Where(s => s.IsActive)  // Only show active students
-            .AsNoTracking();
+        // Get base query
+        var students = await _studentRepository.GetActiveAsync();
+        var query = students.ToList();
 
+        // Apply filters
         if (schoolId.HasValue)
-            query = query.Where(s => s.SchoolId == schoolId);
+            query = query.Where(s => s.SchoolId == schoolId).ToList();
 
         if (classGroupId.HasValue)
-            query = query.Where(s => s.ClassGroupId == classGroupId);
+            query = query.Where(s => s.ClassGroupId == classGroupId).ToList();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            // Escape LIKE special characters to prevent SQL injection
-            var escapedSearch = search.Replace("%", "\\%")
-                                     .Replace("_", "\\_")
-                                     .Replace("[", "\\[")
-                                     .Replace("]", "\\]");
-
+            var searchLower = search.ToLower();
             query = query.Where(s =>
-                ((s.FirstName != null && EF.Functions.Like(s.FirstName, $"%{escapedSearch}%")) ||
-                (s.LastName != null && EF.Functions.Like(s.LastName, $"%{escapedSearch}%")) ||
-                EF.Functions.Like(s.Reference, $"%{escapedSearch}%")));
+                (!string.IsNullOrEmpty(s.FirstName) && s.FirstName.ToLower().Contains(searchLower)) ||
+                (!string.IsNullOrEmpty(s.LastName) && s.LastName.ToLower().Contains(searchLower)) ||
+                s.Reference.ToLower().Contains(searchLower))
+            .ToList();
         }
 
-        var totalCount = await query.CountAsync();
+        var totalCount = query.Count;
 
-        var items = await query
+        // Get paginated results
+        var items = query
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(s => new StudentListDto
+            .ToList();
+
+        // Load related entities for each item
+        var result = new List<StudentListDto>();
+        foreach (var s in items)
+        {
+            SchoolDto? schoolDto = null;
+            if (s.SchoolId.HasValue)
+            {
+                var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value);
+                if (school != null)
+                {
+                    schoolDto = new SchoolDto { Id = school.Id, Name = school.Name };
+                }
+            }
+
+            ClassGroupDto? classGroupDto = null;
+            if (s.ClassGroupId.HasValue)
+            {
+                var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value);
+                if (classGroup != null)
+                {
+                    classGroupDto = new ClassGroupDto { Id = classGroup.Id, Name = classGroup.Name };
+                }
+            }
+
+            result.Add(new StudentListDto
             {
                 Id = s.Id,
                 Reference = s.Reference,
@@ -68,14 +97,14 @@ public class StudentService : IStudentService
                 Grade = s.Grade,
                 IsActive = s.IsActive,
                 Status = s.Status,
-                School = s.School != null ? new SchoolDto { Id = s.School.Id, Name = s.School.Name } : null,
-                ClassGroup = s.ClassGroup != null ? new ClassGroupDto { Id = s.ClassGroup.Id, Name = s.ClassGroup.Name } : null
-            })
-            .ToListAsync();
+                School = schoolDto,
+                ClassGroup = classGroupDto
+            });
+        }
 
         _logger.LogInformation("Retrieved paged students: Page {Page}, PageSize {PageSize}, Total {TotalCount}", page, pageSize, totalCount);
 
-        return new PagedResponse<StudentListDto>(items, totalCount, page, pageSize);
+        return new PagedResponse<StudentListDto>(result, totalCount, page, pageSize);
     }
 
     /// <summary>
@@ -83,11 +112,7 @@ public class StudentService : IStudentService
     /// </summary>
     public async Task<StudentDto?> GetByIdAsync(int id)
     {
-        var student = await _context.Students
-            .Include(s => s.School)
-            .Include(s => s.ClassGroup)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == id);
+        var student = await _studentRepository.GetByIdAsync(id);
 
         if (student == null)
         {
@@ -96,8 +121,7 @@ public class StudentService : IStudentService
         }
 
         _logger.LogInformation("Retrieved student with ID {StudentId}", id);
-
-        return MapToDto(student);
+        return await MapToDtoAsync(student);
     }
 
     /// <summary>
@@ -106,7 +130,7 @@ public class StudentService : IStudentService
     public async Task<StudentDto> CreateAsync(CreateStudentRequest request)
     {
         // Optimistic duplicate check for user feedback (still vulnerable to race condition)
-        var exists = await _context.Students.AnyAsync(s => s.Reference == request.Reference && s.IsActive);
+        var exists = await _studentRepository.ExistsByReferenceAsync(request.Reference);
         if (exists)
         {
             throw new InvalidOperationException($"Student with reference '{request.Reference}' already exists");
@@ -195,27 +219,12 @@ public class StudentService : IStudentService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Students.Add(student);
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex) when (ex.InnerException != null)
-        {
-            // Unique constraint violation (race condition detected)
-            // Check if it's a Postgres unique_violation (23505) or SQL Server error 2601
-            var message = ex.InnerException.Message;
-            if (message.Contains("unique") || message.Contains("duplicate") || message.Contains("23505") || message.Contains("2601"))
-            {
-                throw new InvalidOperationException($"Student with reference '{request.Reference}' already exists", ex);
-            }
-            throw; // Re-throw if it's not a unique constraint violation
-        }
+        var id = await _studentRepository.CreateAsync(student);
+        student.Id = id;
 
         _logger.LogInformation("Created student with ID {StudentId} and reference {Reference}", student.Id, student.Reference);
 
-        return await GetByIdAsync(student.Id) ?? MapToDto(student);
+        return await GetByIdAsync(student.Id) ?? await MapToDtoAsync(student);
     }
 
     /// <summary>
@@ -223,7 +232,7 @@ public class StudentService : IStudentService
     /// </summary>
     public async Task<StudentDto?> UpdateAsync(int id, UpdateStudentRequest request)
     {
-        var student = await _context.Students.FirstOrDefaultAsync(s => s.Id == id);
+        var student = await _studentRepository.GetByIdAsync(id);
 
         if (student == null)
         {
@@ -232,8 +241,8 @@ public class StudentService : IStudentService
         }
 
         // Check for duplicate reference (excluding current student)
-        var duplicateExists = await _context.Students.AnyAsync(s => s.Reference == request.Reference && s.Id != id);
-        if (duplicateExists)
+        var existingByRef = await _studentRepository.GetByReferenceAsync(request.Reference);
+        if (existingByRef != null && existingByRef.Id != id)
         {
             throw new InvalidOperationException($"Student with reference '{request.Reference}' already exists");
         }
@@ -318,7 +327,7 @@ public class StudentService : IStudentService
         student.IsActive = request.IsActive;
         student.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _studentRepository.UpdateAsync(student);
 
         _logger.LogInformation("Updated student with ID {StudentId}", id);
 
@@ -330,9 +339,9 @@ public class StudentService : IStudentService
     /// </summary>
     public async Task<bool> ArchiveAsync(int id)
     {
-        var student = await _context.Students.FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
+        var student = await _studentRepository.GetByIdAsync(id);
 
-        if (student == null)
+        if (student == null || !student.IsActive)
         {
             _logger.LogWarning("Cannot archive: Student with ID {StudentId} not found", id);
             return false;
@@ -341,7 +350,7 @@ public class StudentService : IStudentService
         student.IsActive = false;
         student.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _studentRepository.UpdateAsync(student);
 
         _logger.LogInformation("Archived student with ID {StudentId}", id);
         return true;
@@ -357,39 +366,74 @@ public class StudentService : IStudentService
         if (limit < 1) limit = 10;
         if (limit > maxLimit) limit = maxLimit;
 
-        // Escape LIKE special characters to prevent SQL injection
-        var escapedQuery = query.Replace("%", "\\%")
-                               .Replace("_", "\\_")
-                               .Replace("[", "\\[")
-                               .Replace("]", "\\]");
-
-        var results = await _context.Students
-            .Include(s => s.School)
-            .Include(s => s.ClassGroup)
-            .Where(s => s.IsActive &&
-                       ((s.FirstName != null && EF.Functions.Like(s.FirstName, $"%{escapedQuery}%")) ||
-                        (s.LastName != null && EF.Functions.Like(s.LastName, $"%{escapedQuery}%"))))
+        var students = await _studentRepository.SearchByNameAsync(query);
+        var results = students
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
             .Take(limit)
-            .AsNoTracking()
-            .Select(s => new StudentSearchResultDto
+            .ToList();
+
+        // Load related entities
+        var output = new List<StudentSearchResultDto>();
+        foreach (var s in results)
+        {
+            string schoolName = "No School";
+            if (s.SchoolId.HasValue)
+            {
+                var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value);
+                if (school != null)
+                {
+                    schoolName = school.Name;
+                }
+            }
+
+            string className = "No Class";
+            if (s.ClassGroupId.HasValue)
+            {
+                var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value);
+                if (classGroup != null)
+                {
+                    className = classGroup.Name;
+                }
+            }
+
+            output.Add(new StudentSearchResultDto
             {
                 Id = s.Id,
                 FullName = $"{s.FirstName} {s.LastName}".Trim(),
-                SchoolName = s.School != null ? s.School.Name : "No School",
+                SchoolName = schoolName,
                 Grade = s.Grade ?? "No Grade",
-                ClassGroupName = s.ClassGroup != null ? s.ClassGroup.Name : "No Class"
-            })
-            .ToListAsync();
+                ClassGroupName = className
+            });
+        }
 
-        _logger.LogInformation("Student search for '{Query}' returned {Count} results", query, results.Count);
+        _logger.LogInformation("Student search for '{Query}' returned {Count} results", query, output.Count);
 
-        return results;
+        return output;
     }
 
-    private static StudentDto MapToDto(Student s)
+    private async Task<StudentDto> MapToDtoAsync(Student s)
     {
+        SchoolDto? schoolDto = null;
+        if (s.SchoolId.HasValue)
+        {
+            var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value);
+            if (school != null)
+            {
+                schoolDto = new SchoolDto { Id = school.Id, Name = school.Name };
+            }
+        }
+
+        ClassGroupDto? classGroupDto = null;
+        if (s.ClassGroupId.HasValue)
+        {
+            var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value);
+            if (classGroup != null)
+            {
+                classGroupDto = new ClassGroupDto { Id = classGroup.Id, Name = classGroup.Name };
+            }
+        }
+
         return new StudentDto
         {
             Id = s.Id,
@@ -484,8 +528,8 @@ public class StudentService : IStudentService
             IsActive = s.IsActive,
             CreatedAt = s.CreatedAt,
             UpdatedAt = s.UpdatedAt,
-            School = s.School != null ? new SchoolDto { Id = s.School.Id, Name = s.School.Name } : null,
-            ClassGroup = s.ClassGroup != null ? new ClassGroupDto { Id = s.ClassGroup.Id, Name = s.ClassGroup.Name } : null
+            School = schoolDto,
+            ClassGroup = classGroupDto
         };
     }
 }

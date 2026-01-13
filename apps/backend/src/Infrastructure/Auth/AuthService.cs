@@ -1,24 +1,31 @@
 using Kcow.Application.Auth;
+using Kcow.Application.Interfaces;
 using Kcow.Domain;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using Kcow.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Auth;
 
 /// <summary>
-/// Implementation of authentication service.
+/// Implementation of authentication service using Dapper repositories.
 /// </summary>
 public class AuthService : IAuthService
 {
-    private readonly AppDbContext _context;
+    private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
     private readonly JwtService _jwtService;
     private readonly PasswordHasher _passwordHasher;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext context, JwtService jwtService, PasswordHasher passwordHasher, ILogger<AuthService> logger)
+    public AuthService(
+        IUserRepository userRepository,
+        IRoleRepository roleRepository,
+        JwtService jwtService,
+        PasswordHasher passwordHasher,
+        ILogger<AuthService> logger)
     {
-        _context = context;
+        _userRepository = userRepository;
+        _roleRepository = roleRepository;
         _jwtService = jwtService;
         _passwordHasher = passwordHasher;
         _logger = logger;
@@ -32,10 +39,8 @@ public class AuthService : IAuthService
     {
         try
         {
-            // Find user by email with role
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Email == email);
+            // Find user by email
+            var user = await _userRepository.GetByEmailAsync(email);
 
             // Timing attack prevention: Always verify password hash, even for non-existent users
             // Use a dummy hash for non-existent users to maintain consistent timing
@@ -51,12 +56,16 @@ public class AuthService : IAuthService
                 return null;
             }
 
+            // Load role for the user
+            var role = await _roleRepository.GetByIdAsync(user.RoleId);
+            var roleName = role?.Name ?? Constants.Roles.User;
+
             // Generate JWT token
             var token = _jwtService.GenerateToken(
                 user.Id,
                 user.Email,
                 user.Name,
-                user.Role?.Name ?? Constants.Roles.User
+                roleName
             );
 
             _logger.LogInformation("User {Email} logged in successfully", email);
@@ -69,7 +78,7 @@ public class AuthService : IAuthService
                     Id = user.Id,
                     Email = user.Email,
                     Name = user.Name,
-                    Role = user.Role?.Name ?? Constants.Roles.User
+                    Role = roleName
                 }
             };
         }

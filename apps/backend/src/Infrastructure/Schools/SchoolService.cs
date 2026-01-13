@@ -1,22 +1,21 @@
+using Kcow.Application.Interfaces;
 using Kcow.Application.Schools;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.Schools;
 
 /// <summary>
-/// Implementation of school management service.
+/// Implementation of school management service using Dapper repositories.
 /// </summary>
 public class SchoolService : ISchoolService
 {
-    private readonly AppDbContext _context;
+    private readonly ISchoolRepository _schoolRepository;
     private readonly ILogger<SchoolService> _logger;
 
-    public SchoolService(AppDbContext context, ILogger<SchoolService> logger)
+    public SchoolService(ISchoolRepository schoolRepository, ILogger<SchoolService> logger)
     {
-        _context = context;
+        _schoolRepository = schoolRepository;
         _logger = logger;
     }
 
@@ -27,13 +26,12 @@ public class SchoolService : ISchoolService
     {
         try
         {
-            var schools = await _context.Schools
-                .Where(s => s.IsActive)
+            var schools = (await _schoolRepository.GetActiveAsync())
                 .OrderBy(s => s.Name)
-                .ToListAsync();
+                .ToList();
 
             _logger.LogInformation("Retrieved {Count} active schools", schools.Count);
-            
+
             // Map to DTOs with error handling for individual schools
             var dtos = new List<SchoolDto>();
             foreach (var school in schools)
@@ -48,7 +46,7 @@ public class SchoolService : ISchoolService
                     // Continue with other schools even if one fails
                 }
             }
-            
+
             return dtos;
         }
         catch (Exception ex)
@@ -63,10 +61,9 @@ public class SchoolService : ISchoolService
     /// </summary>
     public async Task<SchoolDto?> GetByIdAsync(int id)
     {
-        var school = await _context.Schools
-            .FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
+        var school = await _schoolRepository.GetByIdAsync(id);
 
-        if (school == null)
+        if (school == null || !school.IsActive)
         {
             _logger.LogWarning("School with ID {SchoolId} not found", id);
             return null;
@@ -118,8 +115,8 @@ public class SchoolService : ISchoolService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Schools.Add(school);
-        await _context.SaveChangesAsync();
+        var id = await _schoolRepository.CreateAsync(school);
+        school.Id = id; // Set the ID returned by repository
 
         _logger.LogInformation("Created school with ID {SchoolId} and name '{SchoolName}'",
             school.Id, school.Name);
@@ -132,10 +129,9 @@ public class SchoolService : ISchoolService
     /// </summary>
     public async Task<SchoolDto?> UpdateAsync(int id, UpdateSchoolRequest request)
     {
-        var school = await _context.Schools
-            .FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
+        var school = await _schoolRepository.GetByIdAsync(id);
 
-        if (school == null)
+        if (school == null || !school.IsActive)
         {
             _logger.LogWarning("Cannot update: School with ID {SchoolId} not found", id);
             return null;
@@ -174,7 +170,7 @@ public class SchoolService : ISchoolService
         school.KcowWebPageLink = request.KcowWebPageLink;
         school.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _schoolRepository.UpdateAsync(school);
 
         _logger.LogInformation("Updated school with ID {SchoolId}", id);
 
@@ -186,10 +182,9 @@ public class SchoolService : ISchoolService
     /// </summary>
     public async Task<bool> ArchiveAsync(int id)
     {
-        var school = await _context.Schools
-            .FirstOrDefaultAsync(s => s.Id == id && s.IsActive);
+        var school = await _schoolRepository.GetByIdAsync(id);
 
-        if (school == null)
+        if (school == null || !school.IsActive)
         {
             _logger.LogWarning("Cannot archive: School with ID {SchoolId} not found", id);
             return false;
@@ -198,7 +193,7 @@ public class SchoolService : ISchoolService
         school.IsActive = false;
         school.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _schoolRepository.UpdateAsync(school);
 
         _logger.LogInformation("Archived school with ID {SchoolId}", id);
         return true;

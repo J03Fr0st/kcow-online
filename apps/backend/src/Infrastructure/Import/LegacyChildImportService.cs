@@ -1,5 +1,5 @@
 using Kcow.Application.Import;
-using Kcow.Infrastructure.Data;
+using Kcow.Application.Interfaces;
 using Kcow.Infrastructure.Import;
 using Microsoft.Extensions.Logging;
 
@@ -11,14 +11,23 @@ namespace Kcow.Infrastructure.Import;
 /// </summary>
 public sealed class LegacyChildImportService
 {
-    private readonly AppDbContext _context;
-    private readonly ILogger<LegacyChildImportService> _logger;
+    private readonly IStudentRepository _studentRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly IClassGroupRepository _classGroupRepository;
+    private readonly IFamilyRepository _familyRepository;
     private readonly ILoggerFactory _loggerFactory;
 
-    public LegacyChildImportService(AppDbContext context, ILogger<LegacyChildImportService> logger, ILoggerFactory loggerFactory)
+    public LegacyChildImportService(
+        IStudentRepository studentRepository,
+        ISchoolRepository schoolRepository,
+        IClassGroupRepository classGroupRepository,
+        IFamilyRepository familyRepository,
+        ILoggerFactory loggerFactory)
     {
-        _context = context;
-        _logger = logger;
+        _studentRepository = studentRepository;
+        _schoolRepository = schoolRepository;
+        _classGroupRepository = classGroupRepository;
+        _familyRepository = familyRepository;
         _loggerFactory = loggerFactory;
     }
 
@@ -30,7 +39,13 @@ public sealed class LegacyChildImportService
         CancellationToken cancellationToken = default)
     {
         var runnerLogger = _loggerFactory.CreateLogger<LegacyChildImportRunner>();
-        var runner = new LegacyChildImportRunner(_context, runnerLogger);
+        var runner = new LegacyChildImportRunner(
+            _studentRepository,
+            _schoolRepository,
+            _classGroupRepository,
+            _familyRepository,
+            runnerLogger);
+
         var summary = await runner.RunAsync(xmlPath, xsdPath);
 
         return summary;

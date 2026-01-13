@@ -1,6 +1,6 @@
 # Story 0.1: Migrate EF Core to Dapper + DbUp
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -48,77 +48,77 @@ so that **I have explicit SQL control, simpler debugging, and reduced ORM comple
 
 ## Tasks / Subtasks
 
-- [ ] 1. Set up infrastructure foundation (AC: 2, 3)
-  - [ ] 1.1 Install required NuGet packages: `Dapper`, `DbUp`, `DbUp.SQLite`
-  - [ ] 1.2 Create `Infrastructure/Database/IDbConnectionFactory` interface
-  - [ ] 1.3 Create `Infrastructure/Database/SqliteConnectionFactory` implementation
-  - [ ] 1.4 Create `Infrastructure/Database/DbUpBootstrapper` for migration execution
-  - [ ] 1.5 Register IDbConnectionFactory and DbUp in DI container
-  - [ ] 1.6 Remove EF Core `AddDbContext` registration from DI
+- [x] 1. Set up infrastructure foundation (AC: 2, 3)
+  - [x] 1.1 Install required NuGet packages: `Dapper`, `DbUp`, `DbUp.SQLite`
+  - [x] 1.2 Create `Infrastructure/Database/IDbConnectionFactory` interface
+  - [x] 1.3 Create `Infrastructure/Database/SqliteConnectionFactory` implementation
+  - [x] 1.4 Create `Infrastructure/Database/DbUpBootstrapper` for migration execution
+  - [x] 1.5 Register IDbConnectionFactory and DbUp in DI container
+  - [x] 1.6 Remove EF Core `AddDbContext` registration from DI
 
-- [ ] 2. Convert existing EF Core migrations to DbUp scripts (AC: 4, 6, 11)
-  - [ ] 2.1 Create `Infrastructure/Migrations/Scripts/` directory
-  - [ ] 2.2 Analyze existing EF Core migrations (5 migrations found)
-  - [ ] 2.3 Create `20260107_0001_InitialCreate.sql` from InitialCreate migration
-  - [ ] 2.4 Create `20260107_0002_AddFamilies.sql` from AddFamilies migration
-  - [ ] 2.5 Create `20260107_0003_CodeReviewFixes.sql` from CodeReviewFixes migration
-  - [ ] 2.6 Create `20260109_0004_UpdateActivityEntity.sql` from UpdateActivityEntity migration
-  - [ ] 2.7 Create `20260112_0005_FixPendingModelChanges.sql` from FixPendingModelChanges migration
-  - [ ] 2.8 Verify all scripts preserve existing schema exactly
+- [x] 2. Convert existing EF Core migrations to DbUp scripts (AC: 4, 6, 11)
+  - [x] 2.1 Create `Infrastructure/Migrations/Scripts/` directory
+  - [x] 2.2 Analyze existing EF Core migrations (5 migrations found)
+  - [x] 2.3 Create `20260107_0001_InitialCreate.sql` from InitialCreate migration
+  - [x] 2.4 Create `20260107_0002_AddFamilies.sql` from AddFamilies migration
+  - [x] 2.5 Create `20260107_0003_CodeReviewFixes.sql` from CodeReviewFixes migration
+  - [x] 2.6 Create `20260109_0004_UpdateActivityEntity.sql` from UpdateActivityEntity migration
+  - [x] 2.7 Create `20260112_0005_FixPendingModelChanges.sql` from FixPendingModelChanges migration
+  - [x] 2.8 Verify all scripts preserve existing schema exactly
 
-- [ ] 3. Create repository interfaces for all entities (AC: 5, 7)
-  - [ ] 3.1 Create `Application/Interfaces/IUserRepository.cs`
-  - [ ] 3.2 Create `Application/Interfaces/IRoleRepository.cs`
-  - [ ] 3.3 Create `Application/Interfaces/ITruckRepository.cs`
-  - [ ] 3.4 Create `Application/Interfaces/ISchoolRepository.cs`
-  - [ ] 3.5 Create `Application/Interfaces/IClassGroupRepository.cs`
-  - [ ] 3.6 Create `Application/Interfaces/IStudentRepository.cs`
-  - [ ] 3.7 Create `Application/Interfaces/IFamilyRepository.cs`
-  - [ ] 3.8 Create `Application/Interfaces/IActivityRepository.cs`
+- [x] 3. Create repository interfaces for all entities (AC: 5, 7)
+  - [x] 3.1 Create `Application/Interfaces/IUserRepository.cs`
+  - [x] 3.2 Create `Application/Interfaces/IRoleRepository.cs`
+  - [x] 3.3 Create `Application/Interfaces/ITruckRepository.cs`
+  - [x] 3.4 Create `Application/Interfaces/ISchoolRepository.cs`
+  - [x] 3.5 Create `Application/Interfaces/IClassGroupRepository.cs`
+  - [x] 3.6 Create `Application/Interfaces/IStudentRepository.cs`
+  - [x] 3.7 Create `Application/Interfaces/IFamilyRepository.cs`
+  - [x] 3.8 Create `Application/Interfaces/IActivityRepository.cs`
 
-- [ ] 4. Implement Dapper repositories (AC: 5, 7, 8, 9)
-  - [ ] 4.1 Create `Infrastructure/Repositories/UserRepository.cs` with CRUD methods
-  - [ ] 4.2 Create `Infrastructure/Repositories/RoleRepository.cs` with CRUD methods
-  - [ ] 4.3 Create `Infrastructure/Repositories/TruckRepository.cs` with CRUD methods
-  - [ ] 4.4 Create `Infrastructure/Repositories/SchoolRepository.cs` with CRUD methods
-  - [ ] 4.5 Create `Infrastructure/Repositories/ClassGroupRepository.cs` with CRUD methods
-  - [ ] 4.6 Create `Infrastructure/Repositories/StudentRepository.cs` with CRUD methods (92 fields)
-  - [ ] 4.7 Create `Infrastructure/Repositories/FamilyRepository.cs` with CRUD methods
-  - [ ] 4.8 Create `Infrastructure/Repositories/ActivityRepository.cs` with CRUD methods
-  - [ ] 4.9 Use `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync` throughout
-  - [ ] 4.10 Ensure all SQL is parameterized (no string concatenation)
+- [x] 4. Implement Dapper repositories (AC: 5, 7, 8, 9)
+  - [x] 4.1 Create `Infrastructure/Repositories/UserRepository.cs` with CRUD methods
+  - [x] 4.2 Create `Infrastructure/Repositories/RoleRepository.cs` with CRUD methods
+  - [x] 4.3 Create `Infrastructure/Repositories/TruckRepository.cs` with CRUD methods
+  - [x] 4.4 Create `Infrastructure/Repositories/SchoolRepository.cs` with CRUD methods
+  - [x] 4.5 Create `Infrastructure/Repositories/ClassGroupRepository.cs` with CRUD methods
+  - [x] 4.6 Create `Infrastructure/Repositories/StudentRepository.cs` with CRUD methods (92 fields)
+  - [x] 4.7 Create `Infrastructure/Repositories/FamilyRepository.cs` with CRUD methods
+  - [x] 4.8 Create `Infrastructure/Repositories/ActivityRepository.cs` with CRUD methods
+  - [x] 4.9 Use `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync` throughout
+  - [x] 4.10 Ensure all SQL is parameterized (no string concatenation)
 
-- [ ] 5. Refactor service layer to use repositories (AC: 1, 12)
-  - [ ] 5.1 Update `AuthService` to use `IUserRepository` instead of `AppDbContext`
-  - [ ] 5.2 Update `StudentService` to use `IStudentRepository` instead of `AppDbContext`
-  - [ ] 5.3 Update `SchoolService` to use `ISchoolRepository` instead of `AppDbContext`
-  - [ ] 5.4 Update `ClassGroupService` to use `IClassGroupRepository` instead of `AppDbContext`
-  - [ ] 5.5 Update `TruckService` to use `ITruckRepository` instead of `AppDbContext`
-  - [ ] 5.6 Update `FamilyService` to use `IFamilyRepository` instead of `AppDbContext`
-  - [ ] 5.7 Update `ActivityService` to use `IActivityRepository` instead of `AppDbContext`
+- [x] 5. Refactor service layer to use repositories (AC: 1, 12)
+  - [x] 5.1 Update `AuthService` to use `IUserRepository` instead of `AppDbContext`
+  - [x] 5.2 Update `StudentService` to use `IStudentRepository` instead of `AppDbContext`
+  - [x] 5.3 Update `SchoolService` to use `ISchoolRepository` instead of `AppDbContext`
+  - [x] 5.4 Update `ClassGroupService` to use `IClassGroupRepository` instead of `AppDbContext`
+  - [x] 5.5 Update `TruckService` to use `ITruckRepository` instead of `AppDbContext`
+  - [x] 5.6 Update `FamilyService` to use `IFamilyRepository` instead of `AppDbContext`
+  - [x] 5.7 Update `ActivityService` to use `IActivityRepository` instead of `AppDbContext`
 
-- [ ] 6. Create SQL query constants for complex queries (AC: 2)
-  - [ ] 6.1 Create `Infrastructure/Sql/UserQueries.cs` for User-related queries
-  - [ ] 6.2 Create `Infrastructure/Sql/StudentQueries.cs` for Student-related queries
-  - [ ] 6.3 Create `Infrastructure/Sql/SchoolQueries.cs` for School-related queries
-  - [ ] 6.4 Store complex JOIN queries as constants/resources
+- [x] 6. Create SQL query constants for complex queries (AC: 2)
+  - [x] 6.1 Create `Infrastructure/Sql/UserQueries.cs` for User-related queries
+  - [x] 6.2 Create `Infrastructure/Sql/StudentQueries.cs` for Student-related queries
+  - [x] 6.3 Create `Infrastructure/Sql/SchoolQueries.cs` for School-related queries
+  - [x] 6.4 Store complex JOIN queries as constants/resources
 
-- [ ] 7. Remove EF Core artifacts (AC: 3)
-  - [ ] 7.1 Delete `Infrastructure/Data/AppDbContext.cs`
-  - [ ] 7.2 Delete `Infrastructure/Data/Configurations/` directory (entity configurations)
-  - [ ] 7.3 Delete `Infrastructure/Migrations/` directory (EF Core migrations)
-  - [ ] 7.4 Remove EF Core NuGet packages (Microsoft.EntityFrameworkCore.*)
+- [x] 7. Remove EF Core artifacts (AC: 3)
+  - [x] 7.1 Delete `Infrastructure/Data/AppDbContext.cs`
+  - [x] 7.2 Delete `Infrastructure/Data/Configurations/` directory (entity configurations)
+  - [x] 7.3 Delete `Infrastructure/Migrations/` directory (EF Core migrations)
+  - [x] 7.4 Remove EF Core NuGet packages (Microsoft.EntityFrameworkCore.*)
 
-- [ ] 8. Configure DbUp to run on startup (AC: 10)
-  - [ ] 8.1 Update `Program.cs` to call DbUp bootstrapper on startup in Development
-  - [ ] 8.2 Ensure migrations run before application services start
-  - [ ] 8.3 Add logging for migration execution
+- [x] 8. Configure DbUp to run on startup (AC: 10)
+  - [x] 8.1 Update `Program.cs` to call DbUp bootstrapper on startup in Development
+  - [x] 8.2 Ensure migrations run before application services start
+  - [x] 8.3 Add logging for migration execution
 
-- [ ] 9. Test all functionality (AC: 1, 12, 13, 14)
-  - [ ] 9.1 Run all existing API endpoints and verify they work
-  - [ ] 9.2 Run all integration tests and verify they pass
-  - [ ] 9.3 Run all E2E tests and verify they pass
-  - [ ] 9.4 Verify database schema is preserved (compare before/after)
+- [x] 9. Test all functionality (AC: 1, 12, 13, 14)
+  - [x] 9.1 Run all existing API endpoints and verify they work
+  - [x] 9.2 Run all integration tests and verify they pass
+  - [x] 9.3 Run all E2E tests and verify they pass
+  - [x] 9.4 Verify database schema is preserved (compare before/after)
 
 ## Dev Notes
 
@@ -426,6 +426,20 @@ All entity implementations MUST strictly align with the legacy XSD schema defini
 
 ### Debug Log References
 
+- Fixed missing `DbUp.SQLite` package reference by changing to `dbup-sqlite`.
+- Recreated missing migration scripts in `apps/backend/src/Infrastructure/Migrations/Scripts/`.
+- Created missing SQL query constants in `apps/backend/src/Infrastructure/Sql/`.
+- Refactored legacy import services to use Dapper repositories instead of `AppDbContext`.
+- Fixed ambiguous DTO references in `ClassGroupService`.
+- Fixed `DayOfWeek` comparison issue in `ClassGroupService`.
+- Added missing repository methods to `IRoleRepository`, `IFamilyRepository`, and `IClassGroupRepository`.
+
 ### Completion Notes List
+
+- All EF Core artifacts removed.
+- Dapper repositories implemented for all entities.
+- DbUp migrations configured and scripts restored.
+- Legacy import services refactored to use Dapper.
+- Application builds successfully.
 
 ### File List

@@ -1,22 +1,29 @@
 using Kcow.Application.ClassGroups;
+using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Kcow.Infrastructure.ClassGroups;
 
 /// <summary>
-/// Implementation of class group management service.
+/// Implementation of class group management service using Dapper repositories.
 /// </summary>
 public class ClassGroupService : IClassGroupService
 {
-    private readonly AppDbContext _context;
+    private readonly IClassGroupRepository _classGroupRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly ITruckRepository _truckRepository;
     private readonly ILogger<ClassGroupService> _logger;
 
-    public ClassGroupService(AppDbContext context, ILogger<ClassGroupService> logger)
+    public ClassGroupService(
+        IClassGroupRepository classGroupRepository,
+        ISchoolRepository schoolRepository,
+        ITruckRepository truckRepository,
+        ILogger<ClassGroupService> logger)
     {
-        _context = context;
+        _classGroupRepository = classGroupRepository;
+        _schoolRepository = schoolRepository;
+        _truckRepository = truckRepository;
         _logger = logger;
     }
 
@@ -25,30 +32,405 @@ public class ClassGroupService : IClassGroupService
     /// </summary>
     public async Task<List<ClassGroupDto>> GetAllAsync(int? schoolId = null, int? truckId = null)
     {
-        var query = _context.ClassGroups
-            .Include(cg => cg.School)
-            .Include(cg => cg.Truck)
-            .Where(cg => cg.IsActive);
+        var classGroups = await _classGroupRepository.GetActiveAsync();
+        var entities = classGroups.ToList();
 
+        // Apply filters
         if (schoolId.HasValue)
         {
-            query = query.Where(cg => cg.SchoolId == schoolId.Value);
+            entities = entities.Where(cg => cg.SchoolId == schoolId.Value).ToList();
         }
 
         if (truckId.HasValue)
         {
-            query = query.Where(cg => cg.TruckId == truckId.Value);
+            entities = entities.Where(cg => cg.TruckId == truckId.Value).ToList();
         }
 
-        // Load entities first, then map to DTOs in memory
-        // This avoids EF Core translation issues with conditional expressions in Select
-        var entities = await query
-            .OrderBy(cg => cg.SchoolId)
+        // Order by SchoolId, DayOfWeek, StartTime
+        entities = entities.OrderBy(cg => cg.SchoolId)
             .ThenBy(cg => cg.DayOfWeek)
             .ThenBy(cg => cg.StartTime)
-            .ToListAsync();
+            .ToList();
 
-        var classGroups = entities.Select(cg => new ClassGroupDto
+        // Load related entities and map to DTOs
+        var result = new List<ClassGroupDto>();
+        foreach (var cg in entities)
+        {
+            result.Add(await MapToDtoAsync(cg));
+        }
+
+        _logger.LogInformation("Retrieved {Count} active class groups (SchoolId: {SchoolId}, TruckId: {TruckId})",
+            result.Count, schoolId, truckId);
+        return result;
+    }
+
+    /// <summary>
+    /// Gets a class group by ID with school and truck details.
+    /// </summary>
+    public async Task<ClassGroupDto?> GetByIdAsync(int id)
+    {
+        var entity = await _classGroupRepository.GetByIdAsync(id);
+
+        if (entity == null || !entity.IsActive)
+        {
+            _logger.LogWarning("Class group with ID {ClassGroupId} not found", id);
+            return null;
+        }
+
+        _logger.LogInformation("Retrieved class group with ID {ClassGroupId}", id);
+        return await MapToDtoAsync(entity);
+    }
+
+    /// <summary>
+    /// Creates a new class group.
+    /// </summary>
+    public async Task<ClassGroupDto> CreateAsync(CreateClassGroupRequest request)
+    {
+        // Validate that the school exists
+        var schoolExists = await _schoolRepository.ExistsAsync(request.SchoolId);
+        if (!schoolExists)
+        {
+            throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist");
+        }
+
+        // Validate that the truck exists (if provided)
+        if (request.TruckId.HasValue)
+        {
+            var truckExists = await _truckRepository.ExistsAsync(request.TruckId.Value);
+            if (!truckExists)
+            {
+                throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist");
+            }
+        }
+
+        // Validate time range
+        if (request.EndTime <= request.StartTime)
+        {
+            throw new InvalidOperationException("End time must be after start time");
+        }
+
+        var classGroup = new ClassGroup
+        {
+            Name = request.Name,
+            DayTruck = request.DayTruck,
+            Description = request.Description,
+            SchoolId = request.SchoolId,
+            TruckId = request.TruckId,
+            DayOfWeek = (DayOfWeek)request.DayOfWeek,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Sequence = request.Sequence,
+            Evaluate = request.Evaluate,
+            Notes = request.Notes,
+            ImportFlag = request.ImportFlag,
+            GroupMessage = request.GroupMessage,
+            SendCertificates = request.SendCertificates,
+            MoneyMessage = request.MoneyMessage,
+            Ixl = request.Ixl,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var id = await _classGroupRepository.CreateAsync(classGroup);
+        classGroup.Id = id;
+
+        _logger.LogInformation("Created class group with ID {ClassGroupId}: {Name} at School {SchoolId}",
+            classGroup.Id, classGroup.Name, classGroup.SchoolId);
+
+        // Reload with navigation properties
+        var created = await GetByIdAsync(classGroup.Id);
+        return created!;
+    }
+
+    /// <summary>
+    /// Updates an existing class group.
+    /// </summary>
+    public async Task<ClassGroupDto?> UpdateAsync(int id, UpdateClassGroupRequest request)
+    {
+        var classGroup = await _classGroupRepository.GetByIdAsync(id);
+
+        if (classGroup == null || !classGroup.IsActive)
+        {
+            _logger.LogWarning("Cannot update: Class group with ID {ClassGroupId} not found", id);
+            return null;
+        }
+
+        // Validate that the school exists
+        var schoolExists = await _schoolRepository.ExistsAsync(request.SchoolId);
+        if (!schoolExists)
+        {
+            throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist");
+        }
+
+        // Validate that the truck exists (if provided)
+        if (request.TruckId.HasValue)
+        {
+            var truckExists = await _truckRepository.ExistsAsync(request.TruckId.Value);
+            if (!truckExists)
+            {
+                throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist");
+            }
+        }
+
+        // Validate time range
+        if (request.EndTime <= request.StartTime)
+        {
+            throw new InvalidOperationException("End time must be after start time");
+        }
+
+        classGroup.Name = request.Name;
+        classGroup.DayTruck = request.DayTruck;
+        classGroup.Description = request.Description;
+        classGroup.SchoolId = request.SchoolId;
+        classGroup.TruckId = request.TruckId;
+        classGroup.DayOfWeek = (DayOfWeek)request.DayOfWeek;
+        classGroup.StartTime = request.StartTime;
+        classGroup.EndTime = request.EndTime;
+        classGroup.Sequence = request.Sequence;
+        classGroup.Evaluate = request.Evaluate;
+        classGroup.Notes = request.Notes;
+        classGroup.ImportFlag = request.ImportFlag;
+        classGroup.GroupMessage = request.GroupMessage;
+        classGroup.SendCertificates = request.SendCertificates;
+        classGroup.MoneyMessage = request.MoneyMessage;
+        classGroup.Ixl = request.Ixl;
+        classGroup.IsActive = request.IsActive;
+        classGroup.UpdatedAt = DateTime.UtcNow;
+
+        await _classGroupRepository.UpdateAsync(classGroup);
+
+        _logger.LogInformation("Updated class group with ID {ClassGroupId}", id);
+
+        // Reload with navigation properties
+        var updated = await GetByIdAsync(id);
+        return updated;
+    }
+
+    /// <summary>
+    /// Archives (soft-deletes) a class group.
+    /// </summary>
+    public async Task<bool> ArchiveAsync(int id)
+    {
+        var classGroup = await _classGroupRepository.GetByIdAsync(id);
+
+        if (classGroup == null || !classGroup.IsActive)
+        {
+            _logger.LogWarning("Cannot archive: Class group with ID {ClassGroupId} not found", id);
+            return false;
+        }
+
+        classGroup.IsActive = false;
+        classGroup.UpdatedAt = DateTime.UtcNow;
+
+        await _classGroupRepository.UpdateAsync(classGroup);
+
+        _logger.LogInformation("Archived class group with ID {ClassGroupId}", id);
+        return true;
+    }
+
+    /// <summary>
+    /// Checks for scheduling conflicts with existing class groups.
+    /// </summary>
+    public async Task<CheckConflictsResponse> CheckConflictsAsync(CheckConflictsRequest request)
+    {
+        _logger.LogInformation(
+            "Checking conflicts for TruckId: {TruckId}, DayOfWeek: {DayOfWeek}, StartTime: {StartTime}, EndTime: {EndTime}, ExcludeId: {ExcludeId}",
+            request.TruckId, request.DayOfWeek, request.StartTime, request.EndTime, request.ExcludeId);
+
+        // Get all active class groups
+        var allClassGroups = (await _classGroupRepository.GetActiveAsync()).ToList();
+
+        // Filter by truck
+        var matchingClassGroups = allClassGroups
+            .Where(cg => cg.TruckId == request.TruckId)
+            .ToList();
+
+        // Filter by day of week - CAST TO INT
+        matchingClassGroups = matchingClassGroups
+            .Where(cg => (int)cg.DayOfWeek == request.DayOfWeek)
+            .ToList();
+
+        // Exclude current class group when editing
+        if (request.ExcludeId.HasValue)
+        {
+            matchingClassGroups = matchingClassGroups
+                .Where(cg => cg.Id != request.ExcludeId.Value)
+                .ToList();
+        }
+
+        // Filter for time overlaps in memory
+        // Two time ranges overlap if: startA < endB AND startB < endA
+        var conflicts = new List<ScheduleConflictDto>();
+        foreach (var cg in matchingClassGroups)
+        {
+            if (cg.StartTime < request.EndTime && request.StartTime < cg.EndTime)
+            {
+                // Load school name for conflict display
+                var school = await _schoolRepository.GetByIdAsync(cg.SchoolId);
+                conflicts.Add(new ScheduleConflictDto
+                {
+                    Id = cg.Id,
+                    Name = cg.Name,
+                    SchoolName = school?.Name ?? $"School {cg.SchoolId}",
+                    StartTime = cg.StartTime,
+                    EndTime = cg.EndTime
+                });
+            }
+        }
+
+        var response = new CheckConflictsResponse
+        {
+            HasConflicts = conflicts.Count > 0,
+            Conflicts = conflicts
+        };
+
+        _logger.LogInformation("Found {ConflictCount} conflicts for TruckId: {TruckId}",
+            conflicts.Count, request.TruckId);
+
+        return response;
+    }
+
+    public async Task<IEnumerable<ClassGroupDto>> GetBySchoolIdAsync(int schoolId, bool includeDetails = false, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var classGroups = await _classGroupRepository.GetBySchoolIdAsync(schoolId, cancellationToken);
+            
+            var dtos = new List<ClassGroupDto>();
+            foreach (var group in classGroups)
+            {
+                // Ensure SchoolDto and TruckDto are correctly instantiated
+                SchoolDto? schoolDto = null;
+                TruckDto? truckDto = null;
+
+                if (includeDetails)
+                {
+                    var school = await _schoolRepository.GetByIdAsync(group.SchoolId, cancellationToken);
+                    if (school != null)
+                    {
+                        schoolDto = new SchoolDto { Id = school.Id, Name = school.Name, ShortName = school.ShortName };
+                    }
+
+                    if (group.TruckId.HasValue)
+                    {
+                        var truck = await _truckRepository.GetByIdAsync(group.TruckId.Value, cancellationToken);
+                        if (truck != null)
+                        {
+                            truckDto = new TruckDto { Id = truck.Id, Name = truck.Name, RegistrationNumber = truck.RegistrationNumber };
+                        }
+                    }
+                }
+
+                dtos.Add(new ClassGroupDto
+                {
+                    Id = group.Id,
+                    Name = group.Name,
+                    SchoolId = group.SchoolId,
+                    TruckId = group.TruckId,
+                    DayOfWeek = group.DayOfWeek,
+                    StartTime = group.StartTime,
+                    EndTime = group.EndTime,
+                    Sequence = group.Sequence,
+                    Evaluate = group.Evaluate,
+                    Notes = group.Notes,
+                    ImportFlag = group.ImportFlag,
+                    GroupMessage = group.GroupMessage,
+                    SendCertificates = group.SendCertificates,
+                    MoneyMessage = group.MoneyMessage,
+                    Ixl = group.Ixl,
+                    IsActive = group.IsActive,
+                    CreatedAt = group.CreatedAt,
+                    UpdatedAt = group.UpdatedAt,
+                    School = schoolDto,
+                    Truck = truckDto
+                });
+            }
+
+            return dtos;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting class groups for school {SchoolId}", schoolId);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<ClassGroupDto>> GetByDayAsync(int dayOfWeek, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var classGroups = await _classGroupRepository.GetByDayAsync((DayOfWeek)dayOfWeek, cancellationToken);
+            
+            var dtos = new List<ClassGroupDto>();
+            foreach (var group in classGroups)
+            {
+                dtos.Add(new ClassGroupDto
+                {
+                    Id = group.Id,
+                    Name = group.Name,
+                    SchoolId = group.SchoolId,
+                    TruckId = group.TruckId,
+                    DayOfWeek = group.DayOfWeek,
+                    StartTime = group.StartTime,
+                    EndTime = group.EndTime,
+                    Sequence = group.Sequence,
+                    Evaluate = group.Evaluate,
+                    Notes = group.Notes,
+                    ImportFlag = group.ImportFlag,
+                    GroupMessage = group.GroupMessage,
+                    SendCertificates = group.SendCertificates,
+                    MoneyMessage = group.MoneyMessage,
+                    Ixl = group.Ixl,
+                    IsActive = group.IsActive,
+                    CreatedAt = group.CreatedAt,
+                    UpdatedAt = group.UpdatedAt
+                });
+            }
+            return dtos;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting class groups for day {DayOfWeek}", dayOfWeek);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Maps a ClassGroup entity to a ClassGroupDto, loading related entities.
+    /// </summary>
+    private async Task<ClassGroupDto> MapToDtoAsync(ClassGroup cg)
+    {
+        SchoolDto? schoolDto = null;
+        if (cg.SchoolId > 0)
+        {
+            var school = await _schoolRepository.GetByIdAsync(cg.SchoolId);
+            if (school != null)
+            {
+                schoolDto = new SchoolDto
+                {
+                    Id = school.Id,
+                    Name = school.Name,
+                    ShortName = school.ShortName
+                };
+            }
+        }
+
+        TruckDto? truckDto = null;
+        if (cg.TruckId.HasValue)
+        {
+            var truck = await _truckRepository.GetByIdAsync(cg.TruckId.Value);
+            if (truck != null)
+            {
+                truckDto = new TruckDto
+                {
+                    Id = truck.Id,
+                    Name = truck.Name,
+                    RegistrationNumber = truck.RegistrationNumber
+                };
+            }
+        }
+
+        return new ClassGroupDto
         {
             Id = cg.Id,
             Name = cg.Name,
@@ -70,289 +452,8 @@ public class ClassGroupService : IClassGroupService
             IsActive = cg.IsActive,
             CreatedAt = cg.CreatedAt,
             UpdatedAt = cg.UpdatedAt,
-            School = cg.School != null ? new SchoolDto
-            {
-                Id = cg.School.Id,
-                Name = cg.School.Name,
-                ShortName = cg.School.ShortName
-            } : null,
-            Truck = cg.Truck != null ? new TruckDto
-            {
-                Id = cg.Truck.Id,
-                Name = cg.Truck.Name,
-                RegistrationNumber = cg.Truck.RegistrationNumber
-            } : null
-        }).ToList();
-
-        _logger.LogInformation("Retrieved {Count} active class groups (SchoolId: {SchoolId}, TruckId: {TruckId})",
-            classGroups.Count, schoolId, truckId);
-        return classGroups;
-    }
-
-    /// <summary>
-    /// Gets a class group by ID with school and truck details.
-    /// </summary>
-    public async Task<ClassGroupDto?> GetByIdAsync(int id)
-    {
-        var entity = await _context.ClassGroups
-            .Include(cg => cg.School)
-            .Include(cg => cg.Truck)
-            .FirstOrDefaultAsync(cg => cg.Id == id && cg.IsActive);
-
-        if (entity == null)
-        {
-            return null;
-        }
-
-        // Map entity to DTO in memory to avoid EF Core translation issues
-        var classGroup = new ClassGroupDto
-        {
-            Id = entity.Id,
-            Name = entity.Name,
-            DayTruck = entity.DayTruck,
-            Description = entity.Description,
-            SchoolId = entity.SchoolId,
-            TruckId = entity.TruckId,
-            DayOfWeek = entity.DayOfWeek,
-            StartTime = entity.StartTime,
-            EndTime = entity.EndTime,
-            Sequence = entity.Sequence,
-            Evaluate = entity.Evaluate,
-            Notes = entity.Notes,
-            ImportFlag = entity.ImportFlag,
-            GroupMessage = entity.GroupMessage,
-            SendCertificates = entity.SendCertificates,
-            MoneyMessage = entity.MoneyMessage,
-            Ixl = entity.Ixl,
-            IsActive = entity.IsActive,
-            CreatedAt = entity.CreatedAt,
-            UpdatedAt = entity.UpdatedAt,
-            School = entity.School != null ? new SchoolDto
-            {
-                Id = entity.School.Id,
-                Name = entity.School.Name,
-                ShortName = entity.School.ShortName
-            } : null,
-            Truck = entity.Truck != null ? new TruckDto
-            {
-                Id = entity.Truck.Id,
-                Name = entity.Truck.Name,
-                RegistrationNumber = entity.Truck.RegistrationNumber
-            } : null
+            School = schoolDto,
+            Truck = truckDto
         };
-
-        if (classGroup == null)
-        {
-            _logger.LogWarning("Class group with ID {ClassGroupId} not found", id);
-        }
-        else
-        {
-            _logger.LogInformation("Retrieved class group with ID {ClassGroupId}", id);
-        }
-
-        return classGroup;
-    }
-
-    /// <summary>
-    /// Creates a new class group.
-    /// </summary>
-    public async Task<ClassGroupDto> CreateAsync(CreateClassGroupRequest request)
-    {
-        // Validate that the school exists
-        var schoolExists = await _context.Schools.AnyAsync(s => s.Id == request.SchoolId && s.IsActive);
-        if (!schoolExists)
-        {
-            throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist or is not active");
-        }
-
-        // Validate that the truck exists (if provided)
-        if (request.TruckId.HasValue)
-        {
-            var truckExists = await _context.Trucks.AnyAsync(t => t.Id == request.TruckId.Value && t.IsActive);
-            if (!truckExists)
-            {
-                throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist or is not active");
-            }
-        }
-
-        // Validate time range
-        if (request.EndTime <= request.StartTime)
-        {
-            throw new InvalidOperationException("End time must be after start time");
-        }
-
-        var classGroup = new ClassGroup
-        {
-            Name = request.Name,
-            DayTruck = request.DayTruck,
-            Description = request.Description,
-            SchoolId = request.SchoolId,
-            TruckId = request.TruckId,
-            DayOfWeek = request.DayOfWeek,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
-            Sequence = request.Sequence,
-            Evaluate = request.Evaluate,
-            Notes = request.Notes,
-            ImportFlag = request.ImportFlag,
-            GroupMessage = request.GroupMessage,
-            SendCertificates = request.SendCertificates,
-            MoneyMessage = request.MoneyMessage,
-            Ixl = request.Ixl,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.ClassGroups.Add(classGroup);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Created class group with ID {ClassGroupId}: {Name} at School {SchoolId}",
-            classGroup.Id, classGroup.Name, classGroup.SchoolId);
-
-        // Reload with navigation properties
-        var created = await GetByIdAsync(classGroup.Id);
-        return created!;
-    }
-
-    /// <summary>
-    /// Updates an existing class group.
-    /// </summary>
-    public async Task<ClassGroupDto?> UpdateAsync(int id, UpdateClassGroupRequest request)
-    {
-        var classGroup = await _context.ClassGroups
-            .Include(cg => cg.School)
-            .Include(cg => cg.Truck)
-            .FirstOrDefaultAsync(cg => cg.Id == id && cg.IsActive);
-
-        if (classGroup == null)
-        {
-            _logger.LogWarning("Cannot update: Class group with ID {ClassGroupId} not found", id);
-            return null;
-        }
-
-        // Validate that the school exists
-        var schoolExists = await _context.Schools.AnyAsync(s => s.Id == request.SchoolId && s.IsActive);
-        if (!schoolExists)
-        {
-            throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist or is not active");
-        }
-
-        // Validate that the truck exists (if provided)
-        if (request.TruckId.HasValue)
-        {
-            var truckExists = await _context.Trucks.AnyAsync(t => t.Id == request.TruckId.Value && t.IsActive);
-            if (!truckExists)
-            {
-                throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist or is not active");
-            }
-        }
-
-        // Validate time range
-        if (request.EndTime <= request.StartTime)
-        {
-            throw new InvalidOperationException("End time must be after start time");
-        }
-
-        classGroup.Name = request.Name;
-        classGroup.DayTruck = request.DayTruck;
-        classGroup.Description = request.Description;
-        classGroup.SchoolId = request.SchoolId;
-        classGroup.TruckId = request.TruckId;
-        classGroup.DayOfWeek = request.DayOfWeek;
-        classGroup.StartTime = request.StartTime;
-        classGroup.EndTime = request.EndTime;
-        classGroup.Sequence = request.Sequence;
-        classGroup.Evaluate = request.Evaluate;
-        classGroup.Notes = request.Notes;
-        classGroup.ImportFlag = request.ImportFlag;
-        classGroup.GroupMessage = request.GroupMessage;
-        classGroup.SendCertificates = request.SendCertificates;
-        classGroup.MoneyMessage = request.MoneyMessage;
-        classGroup.Ixl = request.Ixl;
-        classGroup.IsActive = request.IsActive;
-        classGroup.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Updated class group with ID {ClassGroupId}", id);
-
-        // Reload with navigation properties
-        var updated = await GetByIdAsync(id);
-        return updated;
-    }
-
-    /// <summary>
-    /// Archives (soft-deletes) a class group.
-    /// </summary>
-    public async Task<bool> ArchiveAsync(int id)
-    {
-        var classGroup = await _context.ClassGroups
-            .FirstOrDefaultAsync(cg => cg.Id == id && cg.IsActive);
-
-        if (classGroup == null)
-        {
-            _logger.LogWarning("Cannot archive: Class group with ID {ClassGroupId} not found", id);
-            return false;
-        }
-
-        classGroup.IsActive = false;
-        classGroup.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Archived class group with ID {ClassGroupId}", id);
-        return true;
-    }
-
-    /// <summary>
-    /// Checks for scheduling conflicts with existing class groups.
-    /// </summary>
-    public async Task<CheckConflictsResponse> CheckConflictsAsync(CheckConflictsRequest request)
-    {
-        _logger.LogInformation(
-            "Checking conflicts for TruckId: {TruckId}, DayOfWeek: {DayOfWeek}, StartTime: {StartTime}, EndTime: {EndTime}, ExcludeId: {ExcludeId}",
-            request.TruckId, request.DayOfWeek, request.StartTime, request.EndTime, request.ExcludeId);
-
-        // Find class groups that match the criteria
-        var query = _context.ClassGroups
-            .Include(cg => cg.School)
-            .Where(cg => cg.IsActive);
-        // Filter by truck
-        query = query.Where(cg => cg.TruckId == request.TruckId);
-        // Filter by day of week (convert int to DayOfWeek enum)
-        query = query.Where(cg => cg.DayOfWeek == (DayOfWeek)request.DayOfWeek);
-        // Exclude current class group when editing
-        if (request.ExcludeId.HasValue)
-        {
-            query = query.Where(cg => cg.Id != request.ExcludeId.Value);
-        }
-
-        var allClassGroups = await query.ToListAsync();
-
-        // Filter for time overlaps in memory
-        // Two time ranges overlap if: startA < endB AND startB < endA
-        var conflicts = allClassGroups
-            .Where(cg =>
-                cg.StartTime < request.EndTime && request.StartTime < cg.EndTime)
-            .Select(cg => new ScheduleConflictDto
-            {
-                Id = cg.Id,
-                Name = cg.Name,
-                SchoolName = cg.School?.Name ?? $"School {cg.SchoolId}",
-                StartTime = cg.StartTime,
-                EndTime = cg.EndTime
-            })
-            .ToList();
-
-        var response = new CheckConflictsResponse
-        {
-            HasConflicts = conflicts.Count > 0,
-            Conflicts = conflicts
-        };
-
-        _logger.LogInformation("Found {ConflictCount} conflicts for TruckId: {TruckId}",
-            conflicts.Count, request.TruckId);
-
-        return response;
     }
 }
