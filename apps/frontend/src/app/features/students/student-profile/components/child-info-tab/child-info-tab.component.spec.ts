@@ -4,7 +4,7 @@ import { StudentService, type Student, type UpdateStudentRequest, type ProblemDe
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { of, throwError, Observable } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 interface MockStudentService {
     updateStudent: jest.Mock<Observable<Student>, [number, UpdateStudentRequest]>;
@@ -14,7 +14,7 @@ describe('ChildInfoTabComponent', () => {
     let component: ChildInfoTabComponent;
     let fixture: ComponentFixture<ChildInfoTabComponent>;
     let mockStudentService: MockStudentService;
-    let mockSnackBar: jest.Mocked<Partial<MatSnackBar>>;
+    let mockNotificationService: jest.Mocked<Partial<NotificationService>>;
 
     const mockStudent: Student = {
         id: 1,
@@ -41,15 +41,16 @@ describe('ChildInfoTabComponent', () => {
             updateStudent: jest.fn().mockReturnValue(of(mockStudent)),
         };
 
-        mockSnackBar = {
-            open: jest.fn(),
+        mockNotificationService = {
+            success: jest.fn().mockReturnValue('notification-id'),
+            error: jest.fn().mockReturnValue('notification-id'),
         };
 
         await TestBed.configureTestingModule({
-            imports: [ChildInfoTabComponent, ReactiveFormsModule, FormsModule, MatSnackBarModule],
+            imports: [ChildInfoTabComponent, ReactiveFormsModule, FormsModule],
             providers: [
                 { provide: StudentService, useValue: mockStudentService },
-                { provide: MatSnackBar, useValue: mockSnackBar },
+                { provide: NotificationService, useValue: mockNotificationService },
                 FormBuilder,
             ],
         }).compileComponents();
@@ -214,10 +215,10 @@ describe('ChildInfoTabComponent', () => {
             component.save();
             fixture.detectChanges();
 
-            expect(mockSnackBar.open).toHaveBeenCalledWith(
+            expect(mockNotificationService.success).toHaveBeenCalledWith(
                 'Student information updated successfully',
-                'Close',
-                expect.objectContaining({ panelClass: ['snackbar-success'] })
+                undefined,
+                3000
             );
         });
 
@@ -233,10 +234,10 @@ describe('ChildInfoTabComponent', () => {
             fixture.detectChanges();
 
             expect(component.error()).toEqual(errorDetails);
-            expect(mockSnackBar.open).toHaveBeenCalledWith(
+            expect(mockNotificationService.error).toHaveBeenCalledWith(
                 'Update failed',
-                'Close',
-                expect.objectContaining({ panelClass: ['snackbar-error'] })
+                undefined,
+                5000
             );
         });
     });

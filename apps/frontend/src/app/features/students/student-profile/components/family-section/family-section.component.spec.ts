@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FamilySectionComponent } from './family-section.component';
-import { FamilyService, StudentService, type Family, type Guardian, type StudentSummary, type CreateFamilyRequest, type UpdateFamilyRequest, type CreateGuardianRequest, type ProblemDetails } from '@core/services/student.service';
+import { FamilyService, type Family, type Guardian, type StudentSummary, type CreateFamilyRequest, type UpdateFamilyRequest, type CreateGuardianRequest, type ProblemDetails } from '@core/services/family.service';
+import { StudentService } from '@core/services/student.service';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { of, throwError, Observable } from 'rxjs';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { By } from '@angular/platform-browser';
 
 interface MockFamilyService {
@@ -27,7 +28,7 @@ describe('FamilySectionComponent', () => {
     let mockFamilyService: MockFamilyService;
     let mockStudentService: MockStudentService;
     let mockRouter: jest.Mocked<Partial<Router>>;
-    let mockSnackBar: jest.Mocked<Partial<MatSnackBar>>;
+    let mockNotificationService: jest.Mocked<Partial<NotificationService>>;
 
     const mockFamily: Family = {
         id: 1,
@@ -110,17 +111,18 @@ describe('FamilySectionComponent', () => {
             navigate: jest.fn(),
         };
 
-        mockSnackBar = {
-            open: jest.fn(),
+        mockNotificationService = {
+            success: jest.fn().mockReturnValue('notification-id'),
+            error: jest.fn().mockReturnValue('notification-id'),
         };
 
         await TestBed.configureTestingModule({
-            imports: [FamilySectionComponent, ReactiveFormsModule, MatSnackBarModule],
+            imports: [FamilySectionComponent, ReactiveFormsModule],
             providers: [
                 { provide: FamilyService, useValue: mockFamilyService },
                 { provide: StudentService, useValue: mockStudentService },
                 { provide: Router, useValue: mockRouter },
-                { provide: MatSnackBar, useValue: mockSnackBar },
+                { provide: NotificationService, useValue: mockNotificationService },
                 FormBuilder,
             ],
         }).compileComponents();

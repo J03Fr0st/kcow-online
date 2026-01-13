@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { StudentService, type Student, type UpdateStudentRequest, type ProblemDetails } from '@core/services/student.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 interface StudentForm {
     firstName: string | null;
@@ -25,7 +25,7 @@ interface StudentForm {
 export class ChildInfoTabComponent implements OnInit, OnDestroy {
     private readonly formBuilder = inject(FormBuilder);
     private readonly studentService = inject(StudentService);
-    private readonly snackBar = inject(MatSnackBar);
+    private readonly notificationService = inject(NotificationService);
 
     // Input signal for student data
     readonly student = input.required<Student>();
@@ -198,20 +198,14 @@ export class ChildInfoTabComponent implements OnInit, OnDestroy {
      * Show success message
      */
     private showSuccessMessage(message: string): void {
-        this.snackBar.open(message, 'Close', {
-            duration: 3000,
-            panelClass: ['snackbar-success'],
-        });
+        this.notificationService.success(message, undefined, 3000);
     }
 
     /**
      * Show error message
      */
     private showErrorMessage(message: string): void {
-        this.snackBar.open(message, 'Close', {
-            duration: 5000,
-            panelClass: ['snackbar-error'],
-        });
+        this.notificationService.error(message, undefined, 5000);
     }
 
     /**

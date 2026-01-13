@@ -14,10 +14,26 @@ export default defineConfig({
       '@environments': '/src/environments',
     },
   },
+  esbuild: {
+    target: 'es2023',
+    legalComments: 'none',
+    minifyIdentifiers: false,
+    minifySyntax: false,
+    minifyWhitespace: false,
+  },
   build: {
     target: 'es2023',
     outDir: 'dist',
     emptyOutDir: true,
+    minify: 'esbuild',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['@angular/core', '@angular/common', '@angular/router'],
+        },
+      },
+    },
   },
   server: {
     port: 4200,
@@ -28,5 +44,8 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['@angular/common', '@angular/core', '@angular/forms', '@angular/router'],
+    esbuildOptions: {
+      target: 'es2023',
+    },
   },
 });

@@ -2,9 +2,9 @@ import { Component, inject, input, output, EventEmitter, OnInit, signal, Writabl
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { FamilyService, type Family, type Guardian, type StudentSummary, type CreateFamilyRequest, type UpdateFamilyRequest, type CreateGuardianRequest, type ProblemDetails } from '@core/services/student.service';
-import { StudentService } from '@core/services/student.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { FamilyService, type Family, type Guardian, type StudentSummary, type CreateFamilyRequest, type UpdateFamilyRequest, type CreateGuardianRequest } from '@core/services/family.service';
+import { StudentService, type ProblemDetails } from '@core/services/student.service';
+import { NotificationService } from '@core/services/notification.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -19,7 +19,7 @@ export class FamilySectionComponent implements OnInit {
     private readonly familyService = inject(FamilyService);
     private readonly studentService = inject(StudentService);
     private readonly router = inject(Router);
-    private readonly snackBar = inject(MatSnackBar);
+    private readonly notificationService = inject(NotificationService);
 
     // Input signal for student data
     readonly student = input.required<{ id: number; familyId?: number | null; familyName?: string | null }>();
@@ -395,19 +395,13 @@ export class FamilySectionComponent implements OnInit {
      * Show success message
      */
     private showSuccessMessage(message: string): void {
-        this.snackBar.open(message, 'Close', {
-            duration: 3000,
-            panelClass: ['snackbar-success'],
-        });
+        this.notificationService.success(message, undefined, 3000);
     }
 
     /**
      * Show error message
      */
     private showErrorMessage(message: string): void {
-        this.snackBar.open(message, 'Close', {
-            duration: 5000,
-            panelClass: ['snackbar-error'],
-        });
+        this.notificationService.error(message, undefined, 5000);
     }
 }
