@@ -1,0 +1,8 @@
+-- Create Roles table
+CREATE TABLE IF NOT EXISTS "Roles" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Roles" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL COLLATE NOCASE,
+    "CreatedAt" TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "IX_Roles_Name" ON "Roles" ("Name");

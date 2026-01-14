@@ -1,5 +1,5 @@
+using Kcow.Application.Interfaces;
 using Kcow.Application.Schools;
-using Kcow.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,13 +14,13 @@ namespace Kcow.Api.Controllers;
 public class SchoolsController : ControllerBase
 {
     private readonly ISchoolService _schoolService;
-    private readonly AppDbContext _context;
+    private readonly ISchoolRepository _schoolRepository;
     private readonly ILogger<SchoolsController> _logger;
 
-    public SchoolsController(ISchoolService schoolService, AppDbContext context, ILogger<SchoolsController> logger)
+    public SchoolsController(ISchoolService schoolService, ISchoolRepository schoolRepository, ILogger<SchoolsController> logger)
     {
         _schoolService = schoolService;
-        _context = context;
+        _schoolRepository = schoolRepository;
         _logger = logger;
     }
 
@@ -67,7 +67,7 @@ public class SchoolsController : ControllerBase
             if (school == null)
             {
                 // Check if school exists but is archived
-                var archivedSchool = await _context.Schools.FindAsync(id);
+                var archivedSchool = await _schoolRepository.GetByIdAsync(id);
                 if (archivedSchool != null && !archivedSchool.IsActive)
                 {
                     return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
@@ -174,7 +174,7 @@ public class SchoolsController : ControllerBase
             if (school == null)
             {
                 // Check if school exists but is archived
-                var archivedSchool = await _context.Schools.FindAsync(id);
+                var archivedSchool = await _schoolRepository.GetByIdAsync(id);
                 if (archivedSchool != null && !archivedSchool.IsActive)
                 {
                     return StatusCode(StatusCodes.Status410Gone, new ProblemDetails
@@ -232,7 +232,7 @@ public class SchoolsController : ControllerBase
             if (!archived)
             {
                 // Check if school exists but is already archived
-                var archivedSchool = await _context.Schools.FindAsync(id);
+                var archivedSchool = await _schoolRepository.GetByIdAsync(id);
                 if (archivedSchool != null && !archivedSchool.IsActive)
                 {
                     return StatusCode(StatusCodes.Status410Gone, new ProblemDetails

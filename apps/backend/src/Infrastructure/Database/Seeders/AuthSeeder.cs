@@ -23,7 +23,7 @@ public static class AuthSeeder
         }
 
         // Seed Admin User
-        var adminEmail = "admin@kcow.example.com";
+        var adminEmail = "admin@kcow.local";
         var existingAdmin = await userRepository.GetByEmailAsync(adminEmail);
         
         if (existingAdmin == null)
