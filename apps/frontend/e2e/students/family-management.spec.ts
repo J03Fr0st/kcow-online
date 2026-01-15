@@ -36,7 +36,7 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForTimeout(1000);
 
     // Look for Family section
-    const familySection = page.locator('text=/family/i, [class*="family"], #family, app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     await page.waitForTimeout(500);
 
     const hasFamilySection = await familySection.count() > 0;
@@ -60,12 +60,12 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
       // Look for family member information
-      const familyName = page.locator('text=/', 'text=/Parent|Guardian|Mother|Father/i');
+      const familyName = page.getByText(/Parent|Guardian|Mother|Father/i);
       const hasFamilyName = await familyName.count() > 0;
 
       if (hasFamilyName) {
@@ -81,7 +81,7 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
@@ -100,7 +100,7 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
@@ -170,7 +170,7 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
@@ -218,12 +218,12 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
       // Look for siblings section
-      const siblingsSection = page.locator('text=/sibling/i, [class*="sibling"]');
+      const siblingsSection = page.locator('[class*="sibling"]').or(page.getByText(/sibling/i));
       const hasSiblings = await siblingsSection.count() > 0;
 
       if (hasSiblings) {
@@ -253,12 +253,12 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
       // Look for family name or details (indicating family exists)
-      const familyDetails = page.locator('text=/', 'text=/Family|Parent/i');
+      const familyDetails = page.getByText(/Family|Parent/i);
       const hasDetails = await familyDetails.count() > 0;
 
       if (hasDetails) {
@@ -279,7 +279,7 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
@@ -317,12 +317,12 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
       // Look for contact information (phone, email)
-      const contactInfo = page.locator('text=/@/i, text=/\\d{3}/'); // Email or phone pattern
+      const contactInfo = page.getByText(/@/).or(page.getByText(/\d{3}/)); // Email or phone pattern
       const hasContact = await contactInfo.count() > 0;
 
       // Contact info might not exist for all students, so we just check it doesn't error
@@ -338,12 +338,12 @@ test.describe('Family Management in Student Profile', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000);
 
-    const familySection = page.locator('text=/family/i, [class*="family"], app-family-section');
+    const familySection = page.locator('app-family-section, [class*="family-section"], .family-contacts');
     const hasFamilySection = await familySection.count() > 0;
 
     if (hasFamilySection) {
       // Look for "No Family Linked" message or "Create Family" button
-      const noFamilyMessage = page.locator('text=/no family/i, text=/create family/i');
+      const noFamilyMessage = page.getByText(/no family/i).or(page.getByText(/create family/i));
       const hasNoFamily = await noFamilyMessage.count() > 0;
 
       if (hasNoFamily) {
