@@ -16,7 +16,7 @@ so that **student data can be managed through the API (FR7)**.
    - Id, FirstName, LastName, DateOfBirth, Grade, SchoolId (FK), ClassGroupId (FK), SeatNumber, IsActive, Notes
    - Additional fields from legacy XSD: Gender, Language, etc.
 
-2. **And** EF Core configuration with foreign key relationships
+2. **And** Dapper repository with foreign key relationships (Note: Migrated from EF Core to Dapper in Epic 0)
 
 3. **And** migration creates the `students` table
 

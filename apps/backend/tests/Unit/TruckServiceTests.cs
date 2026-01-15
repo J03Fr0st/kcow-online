@@ -1,20 +1,27 @@
+using Kcow.Application.Interfaces;
 using Kcow.Application.Trucks;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Trucks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace Kcow.Unit.Tests;
 
 public class TruckServiceTests
 {
+    private readonly ITruckRepository _truckRepository;
+    private readonly TruckService _service;
+
+    public TruckServiceTests()
+    {
+        _truckRepository = Substitute.For<ITruckRepository>();
+        _service = new TruckService(_truckRepository, NullLogger<TruckService>.Instance);
+    }
+
     [Fact]
     public async Task CreateAsync_Persists_Truck()
     {
-        using var context = CreateContext();
-        var service = new TruckService(context, NullLogger<TruckService>.Instance);
-
+        // Arrange
         var request = new CreateTruckRequest
         {
             Name = "Unit Truck",
@@ -23,21 +30,26 @@ public class TruckServiceTests
             Notes = "Notes"
         };
 
-        var result = await service.CreateAsync(request);
+        _truckRepository.ExistsByRegistrationNumberAsync("UNIT-001", Arg.Any<CancellationToken>())
+            .Returns(false);
+        _truckRepository.CreateAsync(Arg.Any<Truck>(), Arg.Any<CancellationToken>())
+            .Returns(1);
 
+        // Act
+        var result = await _service.CreateAsync(request);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Equal("Unit Truck", result.Name);
         Assert.Equal("UNIT-001", result.RegistrationNumber);
         Assert.True(result.IsActive);
-        Assert.Equal(1, await context.Trucks.CountAsync());
+        await _truckRepository.Received(1).CreateAsync(Arg.Any<Truck>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CreateAsync_WithDuplicateRegistrationNumber_Throws()
     {
-        using var context = CreateContext();
-        var service = new TruckService(context, NullLogger<TruckService>.Instance);
-
+        // Arrange
         var request = new CreateTruckRequest
         {
             Name = "Unit Truck",
@@ -45,58 +57,181 @@ public class TruckServiceTests
             Status = "Active"
         };
 
-        await service.CreateAsync(request);
+        _truckRepository.ExistsByRegistrationNumberAsync("DUP-001", Arg.Any<CancellationToken>())
+            .Returns(true);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(request));
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request));
     }
 
     [Fact]
     public async Task GetAllAsync_OnlyReturnsActiveTrucks_InNameOrder()
     {
-        using var context = CreateContext();
-        context.Trucks.AddRange(
-            new Truck { Name = "Beta", RegistrationNumber = "B1", Status = "Active", IsActive = true },
-            new Truck { Name = "Alpha", RegistrationNumber = "A1", Status = "Active", IsActive = true },
-            new Truck { Name = "Inactive", RegistrationNumber = "I1", Status = "Retired", IsActive = false }
-        );
-        await context.SaveChangesAsync();
+        // Arrange
+        var trucks = new List<Truck>
+        {
+            new Truck { Id = 1, Name = "Beta", RegistrationNumber = "B1", Status = "Active", IsActive = true },
+            new Truck { Id = 2, Name = "Alpha", RegistrationNumber = "A1", Status = "Active", IsActive = true }
+        };
 
-        var service = new TruckService(context, NullLogger<TruckService>.Instance);
-        var results = await service.GetAllAsync();
+        _truckRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(trucks);
 
+        // Act
+        var results = await _service.GetAllAsync();
+
+        // Assert
         Assert.Equal(2, results.Count);
-        Assert.Collection(results,
-            first => Assert.Equal("Alpha", first.Name),
-            second => Assert.Equal("Beta", second.Name));
+        Assert.Equal("Alpha", results[0].Name);
+        Assert.Equal("Beta", results[1].Name);
     }
 
     [Fact]
     public async Task ArchiveAsync_Sets_IsActive_False()
     {
-        using var context = CreateContext();
-        var truck = new Truck { Name = "Archive Me", RegistrationNumber = "ARC-001", Status = "Active" };
-        context.Trucks.Add(truck);
-        await context.SaveChangesAsync();
+        // Arrange
+        var truck = new Truck { Id = 1, Name = "Archive Me", RegistrationNumber = "ARC-001", Status = "Active", IsActive = true };
+        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(truck);
+        _truckRepository.UpdateAsync(Arg.Any<Truck>(), Arg.Any<CancellationToken>())
+            .Returns(true);
 
-        var service = new TruckService(context, NullLogger<TruckService>.Instance);
-        var archived = await service.ArchiveAsync(truck.Id);
+        // Act
+        var archived = await _service.ArchiveAsync(1);
 
+        // Assert
         Assert.True(archived);
-        var reloaded = await context.Trucks.FindAsync(truck.Id);
-        Assert.NotNull(reloaded);
-        Assert.False(reloaded!.IsActive);
-        Assert.NotNull(reloaded.UpdatedAt);
+        await _truckRepository.Received(1).UpdateAsync(
+            Arg.Is<Truck>(t => t.IsActive == false),
+            Arg.Any<CancellationToken>());
     }
 
-    private static AppDbContext CreateContext()
+    [Fact]
+    public async Task ArchiveAsync_WithInvalidId_ReturnsFalse()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite("DataSource=:memory:")
-            .Options;
+        // Arrange
+        _truckRepository.GetByIdAsync(999, Arg.Any<CancellationToken>())
+            .Returns((Truck?)null);
 
-        var context = new AppDbContext(options);
-        context.Database.OpenConnection();
-        context.Database.EnsureCreated();
-        return context;
+        // Act
+        var result = await _service.ArchiveAsync(999);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithValidId_ReturnsTruck()
+    {
+        // Arrange
+        var truck = new Truck
+        {
+            Id = 1,
+            Name = "Test Truck",
+            RegistrationNumber = "TEST-001",
+            Status = "Active",
+            IsActive = true
+        };
+
+        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(truck);
+
+        // Act
+        var result = await _service.GetByIdAsync(1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Test Truck", result.Name);
+        Assert.Equal("TEST-001", result.RegistrationNumber);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_WithInvalidId_ReturnsNull()
+    {
+        // Arrange
+        _truckRepository.GetByIdAsync(999, Arg.Any<CancellationToken>())
+            .Returns((Truck?)null);
+
+        // Act
+        var result = await _service.GetByIdAsync(999);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithValidId_UpdatesTruck()
+    {
+        // Arrange
+        var truck = new Truck
+        {
+            Id = 1,
+            Name = "Original Name",
+            RegistrationNumber = "ORIG-001",
+            Status = "Active",
+            IsActive = true
+        };
+
+        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(truck);
+        _truckRepository.GetByRegistrationNumberAsync("UPDATED-001", Arg.Any<CancellationToken>())
+            .Returns((Truck?)null);
+        _truckRepository.UpdateAsync(Arg.Any<Truck>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        var request = new UpdateTruckRequest
+        {
+            Name = "Updated Name",
+            RegistrationNumber = "UPDATED-001",
+            Status = "Maintenance",
+            Notes = "Updated notes"
+        };
+
+        // Act
+        var result = await _service.UpdateAsync(1, request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Updated Name", result.Name);
+        Assert.Equal("UPDATED-001", result.RegistrationNumber);
+        Assert.Equal("Maintenance", result.Status);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithDuplicateRegistrationNumber_Throws()
+    {
+        // Arrange
+        var truck = new Truck
+        {
+            Id = 1,
+            Name = "Original Name",
+            RegistrationNumber = "ORIG-001",
+            Status = "Active",
+            IsActive = true
+        };
+
+        var existingTruck = new Truck
+        {
+            Id = 2,
+            Name = "Other Truck",
+            RegistrationNumber = "EXISTING-001",
+            Status = "Active",
+            IsActive = true
+        };
+
+        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(truck);
+        _truckRepository.GetByRegistrationNumberAsync("EXISTING-001", Arg.Any<CancellationToken>())
+            .Returns(existingTruck);
+
+        var request = new UpdateTruckRequest
+        {
+            Name = "Updated Name",
+            RegistrationNumber = "EXISTING-001",
+            Status = "Active"
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.UpdateAsync(1, request));
     }
 }

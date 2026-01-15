@@ -1,6 +1,6 @@
 # Story 4.9: Data Migration - Students & Families
 
-Status: review
+Status: done
 
 ## Story
 
@@ -34,45 +34,45 @@ So that the single-screen profile and global search operate on real migrated rec
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Legacy Schema Parser for Children (AC: #1)
-  - [ ] Read and validate Children.xml against Children.xsd schema
-  - [ ] Extract all 92 fields from Children XSD
-  - [ ] Handle encoding and format variations
-  - [ ] Parse nested contact/guardian structures
+- [x] Task 1: Create Legacy Schema Parser for Children (AC: #1)
+  - [x] Read and validate Children.xml against Children.xsd schema
+  - [x] Extract all 92 fields from Children XSD
+  - [x] Handle encoding and format variations
+  - [x] Parse nested contact/guardian structures
 
-- [ ] Task 2: Implement Family Record Creation (AC: #2)
-  - [ ] Extract family/guardian data from Children records
-  - [ ] Create Family entities with contact info
-  - [ ] Link families to students via StudentFamily join table
-  - [ ] Set relationship types (parent, guardian, sibling)
+- [x] Task 2: Implement Family Record Creation (AC: #2)
+  - [x] Extract family/guardian data from Children records
+  - [x] Create Family entities with contact info
+  - [x] Link families to students via StudentFamily join table
+  - [x] Set relationship types (parent, guardian, sibling)
 
-- [ ] Task 3: Implement School/Class Group Assignment Linking (AC: #3)
-  - [ ] Map legacy School IDs to imported School records
-  - [ ] Map legacy Class Group IDs to imported ClassGroup records
-  - [ ] Handle orphaned students (school/class not found)
-  - [ ] Log association errors
+- [x] Task 3: Implement School/Class Group Assignment Linking (AC: #3)
+  - [x] Map legacy School IDs to imported School records
+  - [x] Map legacy Class Group IDs to imported ClassGroup records
+  - [x] Handle orphaned students (school/class not found)
+  - [x] Log association errors
 
-- [ ] Task 4: Implement Contact and Medical Info Mapping (AC: #4)
-  - [ ] Map legacy contact fields (phone, email, address)
-  - [ ] Map guardian information
-  - [ ] Map medical/health information fields
-  - [ ] Translate Afrikaans field names to English
+- [x] Task 4: Implement Contact and Medical Info Mapping (AC: #4)
+  - [x] Map legacy contact fields (phone, email, address)
+  - [x] Map guardian information
+  - [x] Map medical/health information fields
+  - [x] Translate Afrikaans field names to English
 
-- [ ] Task 5: Implement Validation and Error Logging (AC: #5)
-  - [ ] Validate imported records against XSD constraints
-  - [ ] Create audit log entries for validation errors
-  - [ ] Include file/line information in error logs
+- [x] Task 5: Implement Validation and Error Logging (AC: #5)
+  - [x] Validate imported records against XSD constraints
+  - [x] Create audit log entries for validation errors
+  - [x] Include file/line information in error logs
 
-- [ ] Task 6: Create Import Summary Report (AC: #6)
-  - [ ] Track imported, skipped, and error counts
-  - [ ] Separate counts for Students and Families
-  - [ ] Include association errors in report
+- [x] Task 6: Create Import Summary Report (AC: #6)
+  - [x] Track imported, skipped, and error counts
+  - [x] Separate counts for Students and Families
+  - [x] Include association errors in report
 
-- [ ] Task 7: Verify Search and Profile Visibility (AC: #7)
-  - [ ] Test that imported Students appear in GET /api/students
-  - [ ] Test global search returns imported students
-  - [ ] Test student profile displays all imported data
-  - [ ] Test Family Grid shows linked families
+- [x] Task 7: Verify Search and Profile Visibility (AC: #7)
+  - [x] Test that imported Students appear in GET /api/students
+  - [x] Test global search returns imported students
+  - [x] Test student profile displays all imported data
+  - [x] Test Family Grid shows linked families
 
 ## Dev Notes
 

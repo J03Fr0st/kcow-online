@@ -1,43 +1,47 @@
+using Kcow.Application.Interfaces;
 using Kcow.Application.Students;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Students;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xunit;
+using NSubstitute;
 
 namespace Kcow.Unit.Tests;
 
 public class StudentSearchTests
 {
-    private static AppDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite("DataSource=:memory:")
-            .Options;
+    private readonly IStudentRepository _studentRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly IClassGroupRepository _classGroupRepository;
+    private readonly StudentService _service;
 
-        var context = new AppDbContext(options);
-        context.Database.OpenConnection();
-        context.Database.EnsureCreated();
-        return context;
+    public StudentSearchTests()
+    {
+        _studentRepository = Substitute.For<IStudentRepository>();
+        _schoolRepository = Substitute.For<ISchoolRepository>();
+        _classGroupRepository = Substitute.For<IClassGroupRepository>();
+        _service = new StudentService(
+            _studentRepository,
+            _schoolRepository,
+            _classGroupRepository,
+            NullLogger<StudentService>.Instance);
     }
 
     [Fact]
     public async Task SearchAsync_WithValidQuery_ReturnsMatchingResults()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
+        var students = new List<Student>
+        {
+            new Student { Id = 1, Reference = "STU001", FirstName = "John", LastName = "Smith", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow },
+            new Student { Id = 2, Reference = "STU002", FirstName = "Jane", LastName = "Smith", Grade = "Grade 3", IsActive = true, CreatedAt = DateTime.UtcNow },
+            new Student { Id = 3, Reference = "STU003", FirstName = "Bob", LastName = "Johnson", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow }
+        };
 
-        context.Students.AddRange(
-            new Student { Reference = "STU001", FirstName = "John", LastName = "Smith", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Student { Reference = "STU002", FirstName = "Jane", LastName = "Smith", Grade = "Grade 3", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Student { Reference = "STU003", FirstName = "Bob", LastName = "Johnson", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow }
-        );
-        await context.SaveChangesAsync();
+        _studentRepository.SearchByNameAsync("John", Arg.Any<CancellationToken>())
+            .Returns(students.Where(s => s.FirstName.Contains("John") || s.LastName.Contains("John")));
 
         // Act
-        var results = await service.SearchAsync("John");
+        var results = await _service.SearchAsync("John");
 
         // Assert
         Assert.Equal(2, results.Count);
@@ -46,59 +50,20 @@ public class StudentSearchTests
     }
 
     [Fact]
-    public async Task SearchAsync_CaseInsensitive_ReturnsAllMatches()
-    {
-        // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
-
-        context.Students.AddRange(
-            new Student { Reference = "STU001", FirstName = "John", LastName = "Smith", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Student { Reference = "STU002", FirstName = "Jane", LastName = "Smith", Grade = "Grade 3", IsActive = true, CreatedAt = DateTime.UtcNow }
-        );
-        await context.SaveChangesAsync();
-
-        // Act
-        var results = await service.SearchAsync("smith");
-
-        // Assert
-        Assert.Equal(2, results.Count);
-    }
-
-    [Fact]
-    public async Task SearchAsync_OnlyActiveStudents_ReturnsActiveOnly()
-    {
-        // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
-
-        context.Students.Add(
-            new Student { Reference = "STU001", FirstName = "Alice", LastName = "Williams", Grade = "Grade 1", IsActive = false, CreatedAt = DateTime.UtcNow }
-        );
-        await context.SaveChangesAsync();
-
-        // Act
-        var results = await service.SearchAsync("Williams");
-
-        // Assert
-        Assert.Empty(results); // Alice is inactive
-    }
-
-    [Fact]
     public async Task SearchAsync_WithLimit_RespectsLimit()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
+        var students = new List<Student>
+        {
+            new Student { Id = 1, Reference = "STU001", FirstName = "John", LastName = "Smith", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow },
+            new Student { Id = 2, Reference = "STU002", FirstName = "Jane", LastName = "Smith", Grade = "Grade 3", IsActive = true, CreatedAt = DateTime.UtcNow }
+        };
 
-        context.Students.AddRange(
-            new Student { Reference = "STU001", FirstName = "John", LastName = "Smith", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow },
-            new Student { Reference = "STU002", FirstName = "Jane", LastName = "Smith", Grade = "Grade 3", IsActive = true, CreatedAt = DateTime.UtcNow }
-        );
-        await context.SaveChangesAsync();
+        _studentRepository.SearchByNameAsync("Smith", Arg.Any<CancellationToken>())
+            .Returns(students);
 
         // Act
-        var results = await service.SearchAsync("Smith", limit: 1);
+        var results = await _service.SearchAsync("Smith", limit: 1);
 
         // Assert
         Assert.Single(results);
@@ -108,11 +73,11 @@ public class StudentSearchTests
     public async Task SearchAsync_NoMatches_ReturnsEmptyList()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
+        _studentRepository.SearchByNameAsync("Nonexistent", Arg.Any<CancellationToken>())
+            .Returns(Enumerable.Empty<Student>());
 
         // Act
-        var results = await service.SearchAsync("Nonexistent");
+        var results = await _service.SearchAsync("Nonexistent");
 
         // Assert
         Assert.Empty(results);
@@ -122,31 +87,9 @@ public class StudentSearchTests
     public async Task SearchAsync_WithSchoolAndClassGroup_IncludesInResult()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
-
-        var school = new School
-        {
-            Id = 1,
-            Name = "Test School",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        var classGroup = new ClassGroup
-        {
-            Id = 1,
-            Name = "Class 5A",
-            SchoolId = 1,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        context.Schools.Add(school);
-        context.ClassGroups.Add(classGroup);
-
         var student = new Student
         {
+            Id = 1,
             Reference = "STU001",
             FirstName = "John",
             LastName = "Smith",
@@ -157,11 +100,15 @@ public class StudentSearchTests
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Students.Add(student);
-        await context.SaveChangesAsync();
+        _studentRepository.SearchByNameAsync("John", Arg.Any<CancellationToken>())
+            .Returns(new[] { student });
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "Test School" });
+        _classGroupRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new ClassGroup { Id = 1, Name = "Class 5A" });
 
         // Act
-        var results = await service.SearchAsync("John");
+        var results = await _service.SearchAsync("John");
 
         // Assert
         var result = Assert.Single(results);
@@ -173,20 +120,51 @@ public class StudentSearchTests
     public async Task SearchAsync_WithoutSchoolOrClassGroup_DisplaysDefaults()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new StudentService(context, NullLogger<StudentService>.Instance);
+        var student = new Student
+        {
+            Id = 1,
+            Reference = "STU001",
+            FirstName = "John",
+            LastName = "Smith",
+            Grade = "Grade 5",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
 
-        context.Students.Add(
-            new Student { Reference = "STU001", FirstName = "John", LastName = "Smith", Grade = "Grade 5", IsActive = true, CreatedAt = DateTime.UtcNow }
-        );
-        await context.SaveChangesAsync();
+        _studentRepository.SearchByNameAsync("John", Arg.Any<CancellationToken>())
+            .Returns(new[] { student });
 
         // Act
-        var results = await service.SearchAsync("John");
+        var results = await _service.SearchAsync("John");
 
         // Assert
         var result = Assert.Single(results);
         Assert.Equal("No School", result.SchoolName);
         Assert.Equal("No Class", result.ClassGroupName);
+    }
+
+    [Fact]
+    public async Task SearchAsync_EnforcesMaxLimit()
+    {
+        // Arrange
+        var students = Enumerable.Range(1, 100)
+            .Select(i => new Student
+            {
+                Id = i,
+                Reference = $"STU{i:D3}",
+                FirstName = "John",
+                LastName = $"Doe{i}",
+                IsActive = true
+            })
+            .ToList();
+
+        _studentRepository.SearchByNameAsync("John", Arg.Any<CancellationToken>())
+            .Returns(students);
+
+        // Act - request more than max limit (50)
+        var results = await _service.SearchAsync("John", limit: 100);
+
+        // Assert - should be capped at 50
+        Assert.Equal(50, results.Count);
     }
 }

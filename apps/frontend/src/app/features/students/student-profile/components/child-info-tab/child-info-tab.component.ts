@@ -1,4 +1,4 @@
-import { Component, inject, input, output, EventEmitter, OnInit, OnDestroy, signal, WritableSignal } from '@angular/core';
+import { Component, inject, input, output, EventEmitter, OnInit, OnDestroy, signal, WritableSignal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { StudentService, type Student, type UpdateStudentRequest, type ProblemDetails } from '@core/services/student.service';
@@ -26,6 +26,7 @@ export class ChildInfoTabComponent implements OnInit, OnDestroy {
     private readonly formBuilder = inject(FormBuilder);
     private readonly studentService = inject(StudentService);
     private readonly notificationService = inject(NotificationService);
+    private readonly destroyRef = inject(DestroyRef);
 
     // Input signal for student data
     readonly student = input.required<Student>();
@@ -134,7 +135,7 @@ export class ChildInfoTabComponent implements OnInit, OnDestroy {
         };
 
         this.studentService.updateStudent(this.student().id, updateRequest).pipe(
-            takeUntilDestroyed(this)
+            takeUntilDestroyed(this.destroyRef)
         ).subscribe({
             next: (updatedStudent) => {
                 this.isSaving.set(false);

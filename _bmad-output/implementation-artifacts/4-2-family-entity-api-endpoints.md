@@ -31,10 +31,10 @@ so that **guardian/contact data can be managed and linked to students (FR9)**.
 - [x] Task 2: Create StudentFamily join entity (AC: #2)
   - [x] Create StudentFamily.cs with StudentId, FamilyId, RelationshipType
   - [x] RelationshipType enum: Parent, Guardian, Sibling, Other
-- [x] Task 3: Configure EF Core (AC: #2)
+- [x] Task 3: Configure Dapper repository (AC: #2) (Note: Migrated from EF Core to Dapper in Epic 0)
   - [x] Configure families table
   - [x] Configure student_families join table
-  - [x] Set up many-to-many relationship
+  - [x] Set up many-to-many relationship via join queries
 - [x] Task 4: Apply migration (AC: #2)
   - [x] Create and apply AddFamilies migration
 - [x] Task 5: Create Family DTOs (AC: #3, #4)

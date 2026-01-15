@@ -1,6 +1,6 @@
 # Story 4.10: E2E Tests - Student Management & Global Search
 
-Status: review
+Status: done
 
 ## Story
 
@@ -68,50 +68,50 @@ So that the primary user journey (student lookup and profile) is validated end-t
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Set Up E2E Test Infrastructure for Students (AC: #6, #7)
-  - [ ] Create `e2e/students/` test directory
-  - [ ] Create test fixtures with schools, class groups, students, families
-  - [ ] Include students with similar names for disambiguation testing
+- [x] Task 1: Set Up E2E Test Infrastructure for Students (AC: #6, #7)
+  - [x] Create `e2e/students/` test directory
+  - [x] Create test fixtures with schools, class groups, students, families
+  - [x] Include students with similar names for disambiguation testing
 
-- [ ] Task 2: Implement Global Search E2E Tests (AC: #1, #8)
-  - [ ] Test search bar accessibility from all pages
-  - [ ] Test typeahead results display
-  - [ ] Test result details (name, school, grade, class group)
-  - [ ] Test disambiguation of similar names
-  - [ ] Test navigation to profile on selection
-  - [ ] Test performance <2 seconds (NFR1)
-  - [ ] Test "No results found" display
+- [x] Task 2: Implement Global Search E2E Tests (AC: #1, #8)
+  - [x] Test search bar accessibility from all pages
+  - [x] Test typeahead results display
+  - [x] Test result details (name, school, grade, class group)
+  - [x] Test disambiguation of similar names
+  - [x] Test navigation to profile on selection
+  - [x] Test performance <2 seconds (NFR1)
+  - [x] Test "No results found" display
 
-- [ ] Task 3: Implement Profile Navigation Tests (AC: #2)
-  - [ ] Test navigation from student list
-  - [ ] Test navigation from search
-  - [ ] Test 3-column header display
-  - [ ] Test performance <2 seconds (NFR2)
+- [x] Task 3: Implement Profile Navigation Tests (AC: #2)
+  - [x] Test navigation from student list
+  - [x] Test navigation from search
+  - [x] Test 3-column header display
+  - [x] Test performance <2 seconds (NFR2)
 
-- [ ] Task 4: Implement Single-Screen Profile Tests (AC: #3)
-  - [ ] Test profile header content
-  - [ ] Test tabbed sections visibility
-  - [ ] Test tab switching without reload
-  - [ ] Test inline editing in Child Info
-  - [ ] Test save confirmation
-  - [ ] Test inline validation errors
+- [x] Task 4: Implement Single-Screen Profile Tests (AC: #3)
+  - [x] Test profile header content
+  - [x] Test tabbed sections visibility
+  - [x] Test tab switching without reload
+  - [x] Test inline editing in Child Info
+  - [x] Test save confirmation
+  - [x] Test inline validation errors
 
-- [ ] Task 5: Implement Student CRUD Tests (AC: #4)
-  - [ ] Test student creation with assignments
-  - [ ] Test class group filtering by school
-  - [ ] Test student editing
-  - [ ] Test student archiving
+- [x] Task 5: Implement Student CRUD Tests (AC: #4)
+  - [x] Test student creation with assignments
+  - [x] Test class group filtering by school
+  - [x] Test student editing
+  - [x] Test student archiving
 
-- [ ] Task 6: Implement Family Management Tests (AC: #5)
-  - [ ] Test Family Grid display
-  - [ ] Test adding family member
-  - [ ] Test editing family contact
-  - [ ] Test sibling display
+- [x] Task 6: Implement Family Management Tests (AC: #5)
+  - [x] Test Family Grid display
+  - [x] Test adding family member
+  - [x] Test editing family contact
+  - [x] Test sibling display
 
-- [ ] Task 7: Validate Epic 4 Completion (AC: #9)
-  - [ ] Run full test suite
-  - [ ] Document test coverage
-  - [ ] Fix any failing tests
+- [x] Task 7: Validate Epic 4 Completion (AC: #9)
+  - [x] Run full test suite
+  - [x] Document test coverage
+  - [x] Fix any failing tests
 
 ## Dev Notes
 

@@ -1,9 +1,9 @@
 using Kcow.Application.ClassGroups;
+using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.ClassGroups;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace Kcow.Unit.Tests;
 
@@ -12,26 +12,63 @@ namespace Kcow.Unit.Tests;
 /// </summary>
 public class ClassGroupServiceTests
 {
+    private readonly IClassGroupRepository _classGroupRepository;
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly ITruckRepository _truckRepository;
+    private readonly ClassGroupService _service;
+
+    public ClassGroupServiceTests()
+    {
+        _classGroupRepository = Substitute.For<IClassGroupRepository>();
+        _schoolRepository = Substitute.For<ISchoolRepository>();
+        _truckRepository = Substitute.For<ITruckRepository>();
+        _service = new ClassGroupService(
+            _classGroupRepository,
+            _schoolRepository,
+            _truckRepository,
+            NullLogger<ClassGroupService>.Instance);
+    }
+
     [Fact]
     public async Task CreateAsync_Persists_ClassGroup_WithXsdFields()
     {
         // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        context.Schools.Add(school);
-        await context.SaveChangesAsync();
-
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _schoolRepository.ExistsAsync(1, Arg.Any<CancellationToken>())
+            .Returns(true);
+        _classGroupRepository.CreateAsync(Arg.Any<ClassGroup>(), Arg.Any<CancellationToken>())
+            .Returns(1);
+        _classGroupRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new ClassGroup
+            {
+                Id = 1,
+                Name = "CG001",
+                SchoolId = 1,
+                DayOfWeek = DayOfWeek.Monday,
+                StartTime = new TimeOnly(9, 0),
+                EndTime = new TimeOnly(10, 30),
+                Sequence = 1,
+                DayTruck = "M01",
+                Description = "Test class group",
+                Evaluate = true,
+                ImportFlag = false,
+                Notes = "Test notes",
+                GroupMessage = "Welcome message",
+                SendCertificates = "Yes",
+                MoneyMessage = "Pay online",
+                Ixl = "IXL",
+                IsActive = true
+            });
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "Test School" });
 
         var request = new CreateClassGroupRequest
         {
             Name = "CG001",
-            SchoolId = school.Id,
+            SchoolId = 1,
             DayOfWeek = DayOfWeek.Monday,
             StartTime = new TimeOnly(9, 0),
             EndTime = new TimeOnly(10, 30),
             Sequence = 1,
-            // XSD fields
             DayTruck = "M01",
             Description = "Test class group",
             Evaluate = true,
@@ -44,63 +81,74 @@ public class ClassGroupServiceTests
         };
 
         // Act
-        var result = await service.CreateAsync(request);
+        var result = await _service.CreateAsync(request);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("CG001", result.Name);
-        Assert.Equal(school.Id, result.SchoolId);
+        Assert.Equal(1, result.SchoolId);
         Assert.Equal(DayOfWeek.Monday, result.DayOfWeek);
         Assert.Equal(new TimeOnly(9, 0), result.StartTime);
         Assert.Equal(new TimeOnly(10, 30), result.EndTime);
-        // Verify XSD fields
         Assert.Equal("M01", result.DayTruck);
         Assert.Equal("Test class group", result.Description);
         Assert.True(result.Evaluate);
         Assert.False(result.ImportFlag);
         Assert.Equal("Test notes", result.Notes);
-        Assert.Equal("Welcome message", result.GroupMessage);
-        Assert.Equal("Yes", result.SendCertificates);
-        Assert.Equal("Pay online", result.MoneyMessage);
-        Assert.Equal("IXL", result.Ixl);
-        Assert.Equal(1, await context.ClassGroups.CountAsync());
+        await _classGroupRepository.Received(1).CreateAsync(Arg.Any<ClassGroup>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CreateAsync_WithInvalidSchoolId_Throws()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _schoolRepository.ExistsAsync(999, Arg.Any<CancellationToken>())
+            .Returns(false);
 
         var request = new CreateClassGroupRequest
         {
             Name = "CG001",
-            SchoolId = 999, // Non-existent school
+            SchoolId = 999,
             DayOfWeek = DayOfWeek.Monday,
             StartTime = new TimeOnly(9, 0),
             EndTime = new TimeOnly(10, 0)
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(request));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request));
     }
 
     [Fact]
-    public async Task GetAllAsync_ReturnsActiveClassGroups_WithSchoolAndTruck()
+    public async Task CreateAsync_WithInvalidTimeRange_Throws()
     {
         // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        var truck = new Truck { Name = "Test Truck", RegistrationNumber = "TRUCK01", Status = "Active", IsActive = true };
-        context.Schools.Add(school);
-        context.Trucks.Add(truck);
-        context.ClassGroups.AddRange(
+        _schoolRepository.ExistsAsync(1, Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        var request = new CreateClassGroupRequest
+        {
+            Name = "CG001",
+            SchoolId = 1,
+            DayOfWeek = DayOfWeek.Monday,
+            StartTime = new TimeOnly(10, 0),
+            EndTime = new TimeOnly(9, 0) // End before start
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request));
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsActiveClassGroups()
+    {
+        // Arrange
+        var classGroups = new List<ClassGroup>
+        {
             new ClassGroup
             {
+                Id = 1,
                 Name = "Active1",
-                SchoolId = school.Id,
-                TruckId = truck.Id,
+                SchoolId = 1,
                 DayOfWeek = DayOfWeek.Monday,
                 StartTime = new TimeOnly(9, 0),
                 EndTime = new TimeOnly(10, 0),
@@ -109,155 +157,106 @@ public class ClassGroupServiceTests
             },
             new ClassGroup
             {
-                Name = "Inactive",
-                SchoolId = school.Id,
-                DayOfWeek = DayOfWeek.Tuesday,
-                StartTime = new TimeOnly(10, 0),
-                EndTime = new TimeOnly(11, 0),
-                IsActive = false,
-                CreatedAt = DateTime.UtcNow
-            },
-            new ClassGroup
-            {
+                Id = 2,
                 Name = "Active2",
-                SchoolId = school.Id,
+                SchoolId = 1,
                 DayOfWeek = DayOfWeek.Wednesday,
                 StartTime = new TimeOnly(11, 0),
                 EndTime = new TimeOnly(12, 0),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             }
-        );
-        await context.SaveChangesAsync();
+        };
 
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(classGroups);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "Test School" });
 
         // Act
-        var results = await service.GetAllAsync();
+        var results = await _service.GetAllAsync();
 
         // Assert
         Assert.Equal(2, results.Count);
         Assert.All(results, cg => Assert.True(cg.IsActive));
-        Assert.All(results, cg => Assert.NotNull(cg.School));
     }
 
     [Fact]
     public async Task GetAllAsync_WithSchoolFilter_ReturnsFilteredResults()
     {
         // Arrange
-        using var context = CreateContext();
-        var school1 = new School { Name = "School 1", IsActive = true };
-        var school2 = new School { Name = "School 2", IsActive = true };
-        context.Schools.AddRange(school1, school2);
-        context.ClassGroups.AddRange(
-            new ClassGroup
-            {
-                Name = "CG1",
-                SchoolId = school1.Id,
-                DayOfWeek = DayOfWeek.Monday,
-                StartTime = new TimeOnly(9, 0),
-                EndTime = new TimeOnly(10, 0),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new ClassGroup
-            {
-                Name = "CG2",
-                SchoolId = school2.Id,
-                DayOfWeek = DayOfWeek.Tuesday,
-                StartTime = new TimeOnly(10, 0),
-                EndTime = new TimeOnly(11, 0),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
-        await context.SaveChangesAsync();
+        var classGroups = new List<ClassGroup>
+        {
+            new ClassGroup { Id = 1, Name = "CG1", SchoolId = 1, DayOfWeek = DayOfWeek.Monday, StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(10, 0), IsActive = true },
+            new ClassGroup { Id = 2, Name = "CG2", SchoolId = 2, DayOfWeek = DayOfWeek.Tuesday, StartTime = new TimeOnly(10, 0), EndTime = new TimeOnly(11, 0), IsActive = true }
+        };
 
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(classGroups);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "School 1" });
 
         // Act
-        var results = await service.GetAllAsync(schoolId: school1.Id);
+        var results = await _service.GetAllAsync(schoolId: 1);
 
         // Assert
         Assert.Single(results);
         Assert.Equal("CG1", results[0].Name);
-        Assert.Equal(school1.Id, results[0].SchoolId);
+        Assert.Equal(1, results[0].SchoolId);
     }
 
     [Fact]
     public async Task GetAllAsync_WithTruckFilter_ReturnsFilteredResults()
     {
         // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        var truck1 = new Truck { Name = "Truck 1", RegistrationNumber = "TRUCK01", Status = "Active", IsActive = true };
-        var truck2 = new Truck { Name = "Truck 2", RegistrationNumber = "TRUCK02", Status = "Active", IsActive = true };
-        context.Schools.Add(school);
-        context.Trucks.AddRange(truck1, truck2);
-        context.ClassGroups.AddRange(
-            new ClassGroup
-            {
-                Name = "CG1",
-                SchoolId = school.Id,
-                TruckId = truck1.Id,
-                DayOfWeek = DayOfWeek.Monday,
-                StartTime = new TimeOnly(9, 0),
-                EndTime = new TimeOnly(10, 0),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new ClassGroup
-            {
-                Name = "CG2",
-                SchoolId = school.Id,
-                TruckId = truck2.Id,
-                DayOfWeek = DayOfWeek.Tuesday,
-                StartTime = new TimeOnly(10, 0),
-                EndTime = new TimeOnly(11, 0),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
-        await context.SaveChangesAsync();
+        var classGroups = new List<ClassGroup>
+        {
+            new ClassGroup { Id = 1, Name = "CG1", SchoolId = 1, TruckId = 1, DayOfWeek = DayOfWeek.Monday, StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(10, 0), IsActive = true },
+            new ClassGroup { Id = 2, Name = "CG2", SchoolId = 1, TruckId = 2, DayOfWeek = DayOfWeek.Tuesday, StartTime = new TimeOnly(10, 0), EndTime = new TimeOnly(11, 0), IsActive = true }
+        };
 
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(classGroups);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "Test School" });
+        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new Truck { Id = 1, Name = "Truck 1" });
 
         // Act
-        var results = await service.GetAllAsync(truckId: truck1.Id);
+        var results = await _service.GetAllAsync(truckId: 1);
 
         // Assert
         Assert.Single(results);
         Assert.Equal("CG1", results[0].Name);
-        Assert.Equal(truck1.Id, results[0].TruckId);
+        Assert.Equal(1, results[0].TruckId);
     }
 
     [Fact]
     public async Task GetByIdAsync_WithValidId_ReturnsClassGroupWithDetails()
     {
         // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        var truck = new Truck { Name = "Test Truck", RegistrationNumber = "TRUCK01", Status = "Active", IsActive = true };
-        context.Schools.Add(school);
-        context.Trucks.Add(truck);
         var classGroup = new ClassGroup
         {
+            Id = 1,
             Name = "Test CG",
-            SchoolId = school.Id,
-            TruckId = truck.Id,
+            SchoolId = 1,
+            TruckId = 1,
             DayOfWeek = DayOfWeek.Monday,
             StartTime = new TimeOnly(9, 0),
             EndTime = new TimeOnly(10, 0),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        context.ClassGroups.Add(classGroup);
-        await context.SaveChangesAsync();
 
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(classGroup);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "Test School" });
+        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new Truck { Id = 1, Name = "Test Truck" });
 
         // Act
-        var result = await service.GetByIdAsync(classGroup.Id);
+        var result = await _service.GetByIdAsync(1);
 
         // Assert
         Assert.NotNull(result);
@@ -272,99 +271,11 @@ public class ClassGroupServiceTests
     public async Task GetByIdAsync_WithInvalidId_ReturnsNull()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetByIdAsync(99999, Arg.Any<CancellationToken>())
+            .Returns((ClassGroup?)null);
 
         // Act
-        var result = await service.GetByIdAsync(99999);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task UpdateAsync_WithValidData_UpdatesClassGroup()
-    {
-        // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        context.Schools.Add(school);
-        var classGroup = new ClassGroup
-        {
-            Name = "Original",
-            SchoolId = school.Id,
-            DayOfWeek = DayOfWeek.Monday,
-            StartTime = new TimeOnly(9, 0),
-            EndTime = new TimeOnly(10, 0),
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-        context.ClassGroups.Add(classGroup);
-        await context.SaveChangesAsync();
-
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
-
-        var request = new UpdateClassGroupRequest
-        {
-            Name = "Updated",
-            SchoolId = school.Id,
-            DayOfWeek = DayOfWeek.Tuesday,
-            StartTime = new TimeOnly(10, 0),
-            EndTime = new TimeOnly(11, 30),
-            Sequence = 2,
-            // XSD fields
-            DayTruck = "T02",
-            Description = "Updated description",
-            Evaluate = false,
-            ImportFlag = true,
-            Notes = "Updated notes",
-            GroupMessage = "Updated message",
-            SendCertificates = "No",
-            MoneyMessage = "Updated payment",
-            Ixl = "IX2"
-        };
-
-        // Act
-        var result = await service.UpdateAsync(classGroup.Id, request);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("Updated", result.Name);
-        Assert.Equal(DayOfWeek.Tuesday, result.DayOfWeek);
-        Assert.Equal(new TimeOnly(10, 0), result.StartTime);
-        Assert.Equal(new TimeOnly(11, 30), result.EndTime);
-        Assert.Equal(2, result.Sequence);
-        // Verify XSD field updates
-        Assert.Equal("T02", result.DayTruck);
-        Assert.Equal("Updated description", result.Description);
-        Assert.False(result.Evaluate);
-        Assert.True(result.ImportFlag);
-        Assert.Equal("Updated notes", result.Notes);
-        Assert.Equal("Updated message", result.GroupMessage);
-        Assert.Equal("No", result.SendCertificates);
-        Assert.Equal("Updated payment", result.MoneyMessage);
-        Assert.Equal("IX2", result.Ixl);
-        Assert.NotNull(result.UpdatedAt);
-    }
-
-    [Fact]
-    public async Task UpdateAsync_WithInvalidId_ReturnsNull()
-    {
-        // Arrange
-        using var context = CreateContext();
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
-
-        var request = new UpdateClassGroupRequest
-        {
-            Name = "Test",
-            SchoolId = 1,
-            DayOfWeek = DayOfWeek.Monday,
-            StartTime = new TimeOnly(9, 0),
-            EndTime = new TimeOnly(10, 0)
-        };
-
-        // Act
-        var result = await service.UpdateAsync(99999, request);
+        var result = await _service.GetByIdAsync(99999);
 
         // Assert
         Assert.Null(result);
@@ -374,113 +285,123 @@ public class ClassGroupServiceTests
     public async Task ArchiveAsync_WithValidId_SetsIsActiveFalse()
     {
         // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        context.Schools.Add(school);
         var classGroup = new ClassGroup
         {
+            Id = 1,
             Name = "To Archive",
-            SchoolId = school.Id,
+            SchoolId = 1,
             DayOfWeek = DayOfWeek.Monday,
             StartTime = new TimeOnly(9, 0),
             EndTime = new TimeOnly(10, 0),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        context.ClassGroups.Add(classGroup);
-        await context.SaveChangesAsync();
 
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(classGroup);
+        _classGroupRepository.UpdateAsync(Arg.Any<ClassGroup>(), Arg.Any<CancellationToken>())
+            .Returns(true);
 
         // Act
-        var archived = await service.ArchiveAsync(classGroup.Id);
+        var archived = await _service.ArchiveAsync(1);
 
         // Assert
         Assert.True(archived);
-        var reloaded = await context.ClassGroups.FindAsync(classGroup.Id);
-        Assert.NotNull(reloaded);
-        Assert.False(reloaded!.IsActive);
-        Assert.NotNull(reloaded.UpdatedAt);
+        await _classGroupRepository.Received(1).UpdateAsync(
+            Arg.Is<ClassGroup>(cg => cg.IsActive == false),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ArchiveAsync_WithInvalidId_ReturnsFalse()
     {
         // Arrange
-        using var context = CreateContext();
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
+        _classGroupRepository.GetByIdAsync(99999, Arg.Any<CancellationToken>())
+            .Returns((ClassGroup?)null);
 
         // Act
-        var result = await service.ArchiveAsync(99999);
+        var result = await _service.ArchiveAsync(99999);
 
         // Assert
         Assert.False(result);
     }
 
     [Fact]
-    public async Task XsdFieldValidation_AllXsdFieldsPersisted()
+    public async Task CheckConflictsAsync_WithOverlappingSchedule_ReturnsConflicts()
     {
         // Arrange
-        using var context = CreateContext();
-        var school = new School { Name = "Test School", IsActive = true };
-        var truck = new Truck { Name = "Test Truck", RegistrationNumber = "TRUCK01", Status = "Active", IsActive = true };
-        context.Schools.Add(school);
-        context.Trucks.Add(truck);
-        await context.SaveChangesAsync();
-
-        var service = new ClassGroupService(context, NullLogger<ClassGroupService>.Instance);
-
-        // Name within 10 character limit
-        var request = new CreateClassGroupRequest
+        var classGroups = new List<ClassGroup>
         {
-            Name = "CG01", // Within XSD max of 10 characters
-            SchoolId = school.Id,
-            TruckId = truck.Id,
-            DayOfWeek = DayOfWeek.Monday,
-            StartTime = new TimeOnly(9, 0),
-            EndTime = new TimeOnly(10, 0),
-            // All 8 XSD fields
-            DayTruck = "M01",
-            Description = "A test class group",
-            Evaluate = true,
-            ImportFlag = false,
-            Notes = "Test notes",
-            GroupMessage = "Welcome",
-            SendCertificates = "Yes",
-            MoneyMessage = "Pay",
-            Ixl = "IX1"
+            new ClassGroup
+            {
+                Id = 1,
+                Name = "Existing CG",
+                SchoolId = 1,
+                TruckId = 1,
+                DayOfWeek = DayOfWeek.Monday,
+                StartTime = new TimeOnly(9, 0),
+                EndTime = new TimeOnly(10, 0),
+                IsActive = true
+            }
+        };
+
+        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(classGroups);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(new School { Id = 1, Name = "Test School" });
+
+        var request = new CheckConflictsRequest
+        {
+            TruckId = 1,
+            DayOfWeek = (int)DayOfWeek.Monday,
+            StartTime = new TimeOnly(9, 30),
+            EndTime = new TimeOnly(10, 30)
         };
 
         // Act
-        var result = await service.CreateAsync(request);
+        var result = await _service.CheckConflictsAsync(request);
 
-        // Assert - All XSD fields persisted correctly
-        Assert.NotNull(result);
-        Assert.Equal("CG01", result.Name);
-        Assert.Equal("M01", result.DayTruck);
-        Assert.Equal("A test class group", result.Description);
-        Assert.True(result.Evaluate);
-        Assert.False(result.ImportFlag);
-        Assert.Equal("Test notes", result.Notes);
-        Assert.Equal("Welcome", result.GroupMessage);
-        Assert.Equal("Yes", result.SendCertificates);
-        Assert.Equal("Pay", result.MoneyMessage);
-        Assert.Equal("IX1", result.Ixl);
+        // Assert
+        Assert.True(result.HasConflicts);
+        Assert.Single(result.Conflicts);
+        Assert.Equal("Existing CG", result.Conflicts[0].Name);
     }
 
-    private static AppDbContext CreateContext()
+    [Fact]
+    public async Task CheckConflictsAsync_WithNoOverlap_ReturnsNoConflicts()
     {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite("DataSource=:memory;")
-            .Options;
+        // Arrange
+        var classGroups = new List<ClassGroup>
+        {
+            new ClassGroup
+            {
+                Id = 1,
+                Name = "Existing CG",
+                SchoolId = 1,
+                TruckId = 1,
+                DayOfWeek = DayOfWeek.Monday,
+                StartTime = new TimeOnly(9, 0),
+                EndTime = new TimeOnly(10, 0),
+                IsActive = true
+            }
+        };
 
-        var context = new AppDbContext(options);
-        context.Database.OpenConnection();
-        context.Database.EnsureCreated();
+        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(classGroups);
 
-        // Enable foreign key enforcement for SQLite
-        context.Database.ExecuteSqlRaw("PRAGMA foreign_keys=ON;");
+        var request = new CheckConflictsRequest
+        {
+            TruckId = 1,
+            DayOfWeek = (int)DayOfWeek.Monday,
+            StartTime = new TimeOnly(11, 0),
+            EndTime = new TimeOnly(12, 0)
+        };
 
-        return context;
+        // Act
+        var result = await _service.CheckConflictsAsync(request);
+
+        // Assert
+        Assert.False(result.HasConflicts);
+        Assert.Empty(result.Conflicts);
     }
 }

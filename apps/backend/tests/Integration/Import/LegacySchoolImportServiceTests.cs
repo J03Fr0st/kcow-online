@@ -1,7 +1,7 @@
 using Kcow.Application.Auth;
+using Kcow.Application.Interfaces;
 using Kcow.Application.Schools;
 using Kcow.Infrastructure;
-using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Import;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,8 +46,9 @@ public class LegacySchoolImportServiceTests : IClassFixture<CustomWebApplication
         {
             using (var scope = _factory.Services.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var importer = new LegacySchoolImportService(context);
+                var schoolRepository = scope.ServiceProvider.GetRequiredService<ISchoolRepository>();
+                var truckRepository = scope.ServiceProvider.GetRequiredService<ITruckRepository>();
+                var importer = new LegacySchoolImportService(schoolRepository, truckRepository);
                 var summary = await importer.ImportAsync(xmlPath, xsdPath, auditPath, summaryPath);
                 Assert.Equal(1, summary.ImportedCount);
                 Assert.Equal(0, summary.SkippedCount);

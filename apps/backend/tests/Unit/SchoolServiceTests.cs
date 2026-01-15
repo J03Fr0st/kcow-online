@@ -1,20 +1,27 @@
+using Kcow.Application.Interfaces;
 using Kcow.Application.Schools;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Data;
 using Kcow.Infrastructure.Schools;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace Kcow.Unit.Tests;
 
 public class SchoolServiceTests
 {
+    private readonly ISchoolRepository _schoolRepository;
+    private readonly SchoolService _service;
+
+    public SchoolServiceTests()
+    {
+        _schoolRepository = Substitute.For<ISchoolRepository>();
+        _service = new SchoolService(_schoolRepository, NullLogger<SchoolService>.Instance);
+    }
+
     [Fact]
     public async Task CreateAsync_Persists_School()
     {
-        using var context = CreateContext();
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-
+        // Arrange
         var request = new CreateSchoolRequest
         {
             Name = "Test School",
@@ -27,8 +34,13 @@ public class SchoolServiceTests
             ImportFlag = false
         };
 
-        var result = await service.CreateAsync(request);
+        _schoolRepository.CreateAsync(Arg.Any<School>(), Arg.Any<CancellationToken>())
+            .Returns(1);
 
+        // Act
+        var result = await _service.CreateAsync(request);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
         Assert.Equal("123 Test St", result.Address);
@@ -37,15 +49,13 @@ public class SchoolServiceTests
         Assert.Equal("test@school.edu", result.Email);
         Assert.Equal("Test notes", result.SchedulingNotes);
         Assert.True(result.IsActive);
-        Assert.Equal(1, await context.Schools.CountAsync());
+        await _schoolRepository.Received(1).CreateAsync(Arg.Any<School>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task CreateAsync_WithMinimalData_Persists_School()
     {
-        using var context = CreateContext();
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-
+        // Arrange
         var request = new CreateSchoolRequest
         {
             Name = "Test School",
@@ -56,74 +66,62 @@ public class SchoolServiceTests
             SchedulingNotes = null
         };
 
-        var result = await service.CreateAsync(request);
+        _schoolRepository.CreateAsync(Arg.Any<School>(), Arg.Any<CancellationToken>())
+            .Returns(1);
 
+        // Act
+        var result = await _service.CreateAsync(request);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
         Assert.Null(result.SchedulingNotes);
         Assert.True(result.IsActive);
-        Assert.Equal(1, await context.Schools.CountAsync());
     }
 
     [Fact]
     public async Task GetAllAsync_OnlyReturnsActiveSchools_InNameOrder()
     {
-        using var context = CreateContext();
-        context.Schools.AddRange(
-            new School
-            {
-                Name = "Beta School",
-                Address = "Address B",
-                ContactPerson = "Contact B",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new School
-            {
-                Name = "Alpha School",
-                Address = "Address A",
-                ContactPerson = "Contact A",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new School
-            {
-                Name = "Inactive School",
-                Address = "Address I",
-                ContactPerson = "Contact I",
-                IsActive = false,
-                CreatedAt = DateTime.UtcNow
-            }
-        );
-        await context.SaveChangesAsync();
+        // Arrange
+        var schools = new List<School>
+        {
+            new School { Id = 1, Name = "Beta School", Address = "Address B", ContactPerson = "Contact B", IsActive = true, CreatedAt = DateTime.UtcNow },
+            new School { Id = 2, Name = "Alpha School", Address = "Address A", ContactPerson = "Contact A", IsActive = true, CreatedAt = DateTime.UtcNow }
+        };
 
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-        var results = await service.GetAllAsync();
+        _schoolRepository.GetActiveAsync(Arg.Any<CancellationToken>())
+            .Returns(schools);
 
+        // Act
+        var results = await _service.GetAllAsync();
+
+        // Assert
         Assert.Equal(2, results.Count);
-        Assert.Collection(results,
-            first => Assert.Equal("Alpha School", first.Name),
-            second => Assert.Equal("Beta School", second.Name));
+        Assert.Equal("Alpha School", results[0].Name);
+        Assert.Equal("Beta School", results[1].Name);
     }
 
     [Fact]
     public async Task GetByIdAsync_WithValidId_ReturnsSchool()
     {
-        using var context = CreateContext();
+        // Arrange
         var school = new School
         {
+            Id = 1,
             Name = "Test School",
             Address = "123 Test St",
             ContactPerson = "John Doe",
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        context.Schools.Add(school);
-        await context.SaveChangesAsync();
 
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-        var result = await service.GetByIdAsync(school.Id);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(school);
 
+        // Act
+        var result = await _service.GetByIdAsync(1);
+
+        // Assert
         Assert.NotNull(result);
         Assert.Equal("Test School", result.Name);
         Assert.Equal("123 Test St", result.Address);
@@ -133,49 +131,58 @@ public class SchoolServiceTests
     [Fact]
     public async Task GetByIdAsync_WithInvalidId_ReturnsNull()
     {
-        using var context = CreateContext();
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
+        // Arrange
+        _schoolRepository.GetByIdAsync(999, Arg.Any<CancellationToken>())
+            .Returns((School?)null);
 
-        var result = await service.GetByIdAsync(999);
+        // Act
+        var result = await _service.GetByIdAsync(999);
 
+        // Assert
         Assert.Null(result);
     }
 
     [Fact]
     public async Task GetByIdAsync_WithInactiveId_ReturnsNull()
     {
-        using var context = CreateContext();
+        // Arrange
         var school = new School
         {
+            Id = 1,
             Name = "Inactive School",
             IsActive = false,
             CreatedAt = DateTime.UtcNow
         };
-        context.Schools.Add(school);
-        await context.SaveChangesAsync();
 
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-        var result = await service.GetByIdAsync(school.Id);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(school);
 
+        // Act
+        var result = await _service.GetByIdAsync(1);
+
+        // Assert
         Assert.Null(result);
     }
 
     [Fact]
     public async Task UpdateAsync_WithValidId_UpdatesSchool()
     {
-        using var context = CreateContext();
+        // Arrange
         var school = new School
         {
+            Id = 1,
             Name = "Original Name",
             Address = "Original Address",
             ContactPerson = "Original Contact",
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        context.Schools.Add(school);
-        await context.SaveChangesAsync();
 
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(school);
+        _schoolRepository.UpdateAsync(Arg.Any<School>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var request = new UpdateSchoolRequest
         {
             Name = "Updated Name",
@@ -186,8 +193,10 @@ public class SchoolServiceTests
             SchedulingNotes = "Updated notes"
         };
 
-        var result = await service.UpdateAsync(school.Id, request);
+        // Act
+        var result = await _service.UpdateAsync(1, request);
 
+        // Assert
         Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
         Assert.Equal("Updated Address", result.Address);
@@ -196,90 +205,87 @@ public class SchoolServiceTests
         Assert.Equal("updated@school.edu", result.Email);
         Assert.Equal("Updated notes", result.SchedulingNotes);
         Assert.NotNull(result.UpdatedAt);
-
-        // Verify database was updated
-        var reloaded = await context.Schools.FindAsync(school.Id);
-        Assert.NotNull(reloaded);
-        Assert.Equal("Updated Name", reloaded.Name);
     }
 
     [Fact]
     public async Task UpdateAsync_WithInvalidId_ReturnsNull()
     {
-        using var context = CreateContext();
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
+        // Arrange
+        _schoolRepository.GetByIdAsync(999, Arg.Any<CancellationToken>())
+            .Returns((School?)null);
+
         var request = new UpdateSchoolRequest
         {
             Name = "Updated Name"
         };
 
-        var result = await service.UpdateAsync(999, request);
+        // Act
+        var result = await _service.UpdateAsync(999, request);
 
+        // Assert
         Assert.Null(result);
     }
 
     [Fact]
     public async Task ArchiveAsync_WithValidId_SetsIsActiveFalse()
     {
-        using var context = CreateContext();
+        // Arrange
         var school = new School
         {
+            Id = 1,
             Name = "To Archive",
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        context.Schools.Add(school);
-        await context.SaveChangesAsync();
 
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-        var archived = await service.ArchiveAsync(school.Id);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(school);
+        _schoolRepository.UpdateAsync(Arg.Any<School>(), Arg.Any<CancellationToken>())
+            .Returns(true);
 
+        // Act
+        var archived = await _service.ArchiveAsync(1);
+
+        // Assert
         Assert.True(archived);
-        var reloaded = await context.Schools.FindAsync(school.Id);
-        Assert.NotNull(reloaded);
-        Assert.False(reloaded!.IsActive);
-        Assert.NotNull(reloaded.UpdatedAt);
+        await _schoolRepository.Received(1).UpdateAsync(
+            Arg.Is<School>(s => s.IsActive == false),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ArchiveAsync_WithInvalidId_ReturnsFalse()
     {
-        using var context = CreateContext();
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
+        // Arrange
+        _schoolRepository.GetByIdAsync(999, Arg.Any<CancellationToken>())
+            .Returns((School?)null);
 
-        var archived = await service.ArchiveAsync(999);
+        // Act
+        var archived = await _service.ArchiveAsync(999);
 
+        // Assert
         Assert.False(archived);
     }
 
     [Fact]
     public async Task ArchiveAsync_WithInactiveId_ReturnsFalse()
     {
-        using var context = CreateContext();
+        // Arrange
         var school = new School
         {
+            Id = 1,
             Name = "Already Inactive",
             IsActive = false,
             CreatedAt = DateTime.UtcNow
         };
-        context.Schools.Add(school);
-        await context.SaveChangesAsync();
 
-        var service = new SchoolService(context, NullLogger<SchoolService>.Instance);
-        var archived = await service.ArchiveAsync(school.Id);
+        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
+            .Returns(school);
 
+        // Act
+        var archived = await _service.ArchiveAsync(1);
+
+        // Assert
         Assert.False(archived);
-    }
-
-    private static AppDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite("DataSource=:memory:")
-            .Options;
-
-        var context = new AppDbContext(options);
-        context.Database.OpenConnection();
-        context.Database.EnsureCreated();
-        return context;
     }
 }
