@@ -92,13 +92,13 @@ development_status:
   4-1-student-entity-api-endpoints: done  # Code reviewed: All critical security & performance issues fixed
   4-2-family-entity-api-endpoints: done  # Code reviewed: N+1 query resolved, production ready
   4-3-student-assignment-to-school-class-group: done  # Code reviewed: Frontend implementation complete, all ACs met
-  4-4-global-student-search: done
-  4-5-students-list-page: done
-  4-6-single-screen-student-profile-layout: done
-  4-7-student-profile-child-info-tab: done
-  4-8-family-management-in-student-profile: done
-  4-9-data-migration-students-families: done
-  4-10-e2e-tests-student-management-global-search: done
+  4-4-global-student-search: ready-for-dev
+  4-5-students-list-page: ready-for-dev
+  4-6-single-screen-student-profile-layout: ready-for-dev
+  4-7-student-profile-child-info-tab: ready-for-dev
+  4-8-family-management-in-student-profile: ready-for-dev
+  4-9-data-migration-students-families: ready-for-dev
+  4-10-e2e-tests-student-management-global-search: ready-for-dev
   epic-4-retrospective: optional
 
   # ========================
