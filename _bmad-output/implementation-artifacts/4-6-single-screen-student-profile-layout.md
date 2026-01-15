@@ -1,6 +1,6 @@
 # Story 4.6: Single-Screen Student Profile Layout
 
-Status: review
+Status: done
 
 ## Story
 

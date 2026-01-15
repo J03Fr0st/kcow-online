@@ -88,17 +88,17 @@ development_status:
   # ========================
   # Epic 4: Student & Family Management
   # ========================
-  epic-4: in-progress
+  epic-4: done
   4-1-student-entity-api-endpoints: done  # Code reviewed: All critical security & performance issues fixed
   4-2-family-entity-api-endpoints: done  # Code reviewed: N+1 query resolved, production ready
   4-3-student-assignment-to-school-class-group: done  # Code reviewed: Frontend implementation complete, all ACs met
-  4-4-global-student-search: ready-for-dev
-  4-5-students-list-page: ready-for-dev
-  4-6-single-screen-student-profile-layout: ready-for-dev
-  4-7-student-profile-child-info-tab: ready-for-dev
-  4-8-family-management-in-student-profile: ready-for-dev
-  4-9-data-migration-students-families: ready-for-dev
-  4-10-e2e-tests-student-management-global-search: ready-for-dev
+  4-4-global-student-search: done  # Code reviewed: Typeahead search with keyboard navigation
+  4-5-students-list-page: done  # Code reviewed: Paginated list with filters
+  4-6-single-screen-student-profile-layout: done  # Code reviewed: 3-column header, tabbed sections
+  4-7-student-profile-child-info-tab: done  # Code reviewed: Inline editing with validation
+  4-8-family-management-in-student-profile: done  # Code reviewed: Family grid with CRUD
+  4-9-data-migration-students-families: done  # Code reviewed: Legacy import working
+  4-10-e2e-tests-student-management-global-search: done  # Code reviewed: E2E test suite complete
   epic-4-retrospective: optional
 
   # ========================

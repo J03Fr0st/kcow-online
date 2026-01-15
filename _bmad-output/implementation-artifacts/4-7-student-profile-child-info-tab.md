@@ -1,6 +1,6 @@
 # Story 4.7: Student Profile - Child Info Tab
 
-Status: review
+Status: done
 
 ## Story
 
