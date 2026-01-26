@@ -31,7 +31,7 @@ export class ClassGroupService {
     if (truckId) params += `${params ? '&' : '?'}truckId=${truckId}`;
 
     this.http.get<ClassGroup[]>(`${this.apiUrl}${params}`).pipe(
-      tap((classGroups) => this.classGroups.set(classGroups)),
+      tap((classGroups) => this.classGroups.set(Array.isArray(classGroups) ? classGroups : [])),
       catchError((error: HttpErrorResponse) => {
         console.error('Error loading class groups:', error);
         return throwError(() => error);

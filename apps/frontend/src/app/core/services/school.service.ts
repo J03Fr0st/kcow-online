@@ -143,7 +143,7 @@ export class SchoolService {
 
         return this.http.get<School[]>(this.apiUrl, { withCredentials: true }).pipe(
             tap((schools) => {
-                this.schoolsSignal.set(schools);
+                this.schoolsSignal.set(Array.isArray(schools) ? schools : []);
             }),
             catchError((error: HttpErrorResponse) => {
                 // Return an observable that emits the mapped error
@@ -230,7 +230,10 @@ export class SchoolService {
      */
     getActiveSchools(): Observable<School[]> {
         return this.http.get<School[]>(this.apiUrl, { withCredentials: true }).pipe(
-            map((schools: School[]) => schools.filter((s: School) => s.isActive)),
+            map((schools: School[]) => (Array.isArray(schools) ? schools : []).filter((s: School) => s.isActive)),
+            tap((activeSchools) => {
+                this.schoolsSignal.set(activeSchools);
+            }),
             catchError((error: HttpErrorResponse) => this.handleError(error))
         );
     }

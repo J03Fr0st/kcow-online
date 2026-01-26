@@ -439,7 +439,7 @@ export class StudentService {
                 const pageSize = response.headers.get('X-PageSize');
 
                 const result: PaginatedStudentsResponse = {
-                    items: response.body || [],
+                    items: Array.isArray(response.body) ? response.body : [],
                     totalCount: totalCount ? parseInt(totalCount, 10) : 0,
                     page: page ? parseInt(page, 10) : 1,
                     pageSize: pageSize ? parseInt(pageSize, 10) : 25,

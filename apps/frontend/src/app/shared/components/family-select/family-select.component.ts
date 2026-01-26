@@ -42,6 +42,9 @@ export class FamilySelectComponent implements ControlValueAccessor, OnInit {
     // Display selected family name
     protected displayFamilyName = '';
 
+    // Dropdown open state
+    protected isDropdownOpen = false;
+
     // Event emitted when "Create New Family" is clicked
     readonly createNew = output<void>();
 
@@ -143,15 +146,33 @@ export class FamilySelectComponent implements ControlValueAccessor, OnInit {
     }
     
     /**
-     * Handle focus
+     * Handle focus - open dropdown
      */
-    protected onFocus(): void {
-        // If the search query currently matches the display name (i.e. showing the selected item),
-        // clear the query so the user sees the full list/search state, but don't clear the model yet.
-        if (this.displayFamilyName && this.searchQuery === this.displayFamilyName) {
+    protected onInputFocus(): void {
+        this.isDropdownOpen = true;
+        // If we have no families loaded or if the search query currently matches the display name,
+        // clear the query so the user sees the full list/search state.
+        if (this.filteredFamilies.length === 0 || (this.displayFamilyName && this.searchQuery === this.displayFamilyName)) {
             this.searchQuery = '';
             this.loadFamilies('');
         }
+    }
+
+    /**
+     * Handle input blur - close dropdown after a delay to allow clicks
+     */
+    protected onInputBlur(): void {
+        // Delay closing to allow click events on dropdown items
+        setTimeout(() => {
+            this.isDropdownOpen = false;
+        }, 500);
+    }
+
+    /**
+     * Handle dropdown content click - prevent blur from closing
+     */
+    protected onDropdownClick(): void {
+        // Keep dropdown open when clicking inside
     }
 
 
@@ -166,6 +187,7 @@ export class FamilySelectComponent implements ControlValueAccessor, OnInit {
             this.displayFamilyName = selected.familyName;
             this.searchQuery = selected.familyName; // Update search query to match selection
         }
+        this.isDropdownOpen = false;
         this.onChange(familyId);
         this.onTouched();
     }

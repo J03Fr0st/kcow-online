@@ -42,6 +42,9 @@ export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
     // Display selected school name
     protected displaySchoolName = '';
 
+    // Dropdown open state
+    protected isDropdownOpen = false;
+
     // Event emitted when "Create New School" is clicked
     readonly createNew = output<void>();
 
@@ -60,6 +63,16 @@ export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
         effect(() => {
             this.allSchools = this.schoolService.schools();
             this.filterSchools();
+            
+            // If we have a schoolId but no display name, update it
+            const currentId = this.schoolId();
+            if (currentId && !this.displaySchoolName && this.allSchools.length > 0) {
+                const selected = this.allSchools.find((s) => s.id === currentId);
+                if (selected) {
+                    this.displaySchoolName = selected.name;
+                    this.searchQuery = selected.name;
+                }
+            }
         });
     }
 
@@ -117,12 +130,42 @@ export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
     }
 
     /**
+     * Handle input focus - open dropdown
+     */
+    protected onInputFocus(): void {
+        this.isDropdownOpen = true;
+        this.searchQuery = '';
+        this.filterSchools();
+    }
+
+    /**
+     * Handle input blur - close dropdown after a delay to allow clicks
+     */
+    protected onInputBlur(): void {
+        // Delay closing to allow click events on dropdown items
+        setTimeout(() => {
+            this.isDropdownOpen = false;
+        }, 500);
+    }
+
+    /**
+     * Handle dropdown content click - prevent blur from closing
+     */
+    protected onDropdownClick(): void {
+        // Keep dropdown open when clicking inside
+    }
+
+    /**
      * Select a school
      */
     protected selectSchool(schoolId: number): void {
         this.schoolId.set(schoolId);
         const selected = this.allSchools.find((s) => s.id === schoolId);
         this.displaySchoolName = selected?.name || '';
+        this.searchQuery = this.displaySchoolName; // Set search query to selected name
+        this.isDropdownOpen = false;
+        
+        // Update Angular form control
         this.onChange(schoolId);
         this.onTouched();
     }
@@ -147,11 +190,16 @@ export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
     // ControlValueAccessor implementation
     writeValue(value: number | null): void {
         this.schoolId.set(value);
-        if (value) {
+        if (value && this.allSchools.length > 0) {
             const selected = this.allSchools.find((s) => s.id === value);
             this.displaySchoolName = selected?.name || '';
+            this.searchQuery = this.displaySchoolName;
+        } else if (value) {
+            // ID provided but schools not loaded yet - effect will handle it when loaded
+            this.displaySchoolName = 'Loading...';
         } else {
             this.displaySchoolName = '';
+            this.searchQuery = '';
         }
     }
 

@@ -4,7 +4,7 @@
       <span class="label-text">School</span>
       <span class="label-text-alt text-error">*</span>
     </label>
-    <div class="dropdown dropdown-end w-full">
+    <div class="dropdown dropdown-end w-full" [class.dropdown-open]="isDropdownOpen">
       <input
         type="text"
         placeholder="Search schools..."
@@ -12,12 +12,14 @@
         [value]="displaySchoolName || searchQuery"
         [disabled]="isDisabled"
         (input)="onSearchInput($event)"
-        (focus)="searchQuery = ''; filterSchools()"
+        (focus)="onInputFocus()"
+        (blur)="onInputBlur()"
         aria-required="true"
       />
       <ul
         tabindex="0"
         class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box max-h-60 overflow-auto"
+        (mousedown)="onDropdownClick()"
       >
         @if (isLoading) {
           <li><a class="disabled">Loading schools...</a></li>
