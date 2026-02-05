@@ -14,3 +14,4 @@ user_name: Joe
 communication_language: English
 document_output_language: English
 output_folder: "{project-root}/_bmad-output"
+project_context: "{project-root}/docs/project_context.md"
