@@ -1,0 +1,48 @@
+.evaluation-tab {
+  // Active row highlight during edit mode
+  tr.active {
+    background-color: var(--fallback-bc, oklch(var(--bc) / 0.1));
+  }
+
+  // Truncate text for notes column
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Max width for truncated text
+  .max-w-xs {
+    max-width: 20rem;
+  }
+
+  // Ensure smooth transitions
+  .table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  // Loading state styling
+  .loading-spinner {
+    display: inline-block;
+  }
+
+  // Card styling consistency
+  .card {
+    border-radius: 0.5rem;
+  }
+
+  // Form control spacing
+  .form-control {
+    margin-bottom: 0.25rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Badge consistency
+  .badge {
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+  }
+}

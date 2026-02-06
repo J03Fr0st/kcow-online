@@ -1,0 +1,329 @@
+<div class="evaluation-tab">
+  <!-- Header with Add button -->
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-semibold">Evaluation History</h3>
+    @if (!showAddForm()) {
+      <button class="btn btn-primary btn-sm" (click)="showAddEvaluationForm()" [disabled]="isLoadingActivities()">
+        @if (isLoadingActivities()) {
+          <span class="loading loading-spinner loading-xs"></span>
+        }
+        <span>Add Evaluation</span>
+      </button>
+    }
+  </div>
+
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="flex justify-center items-center py-12" aria-busy="true" aria-label="Loading evaluations">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error()) {
+    <div role="alert" class="alert alert-error shadow-sm mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Add Evaluation Form -->
+  @if (showAddForm()) {
+    <div class="card bg-base-200 mb-4">
+      <div class="card-body p-4">
+        <h4 class="card-title text-base mb-2">Add New Evaluation</h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Activity Dropdown -->
+          <div class="form-control">
+            <label class="label" for="new-activity">
+              <span class="label-text">Activity</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <select
+              id="new-activity"
+              class="select select-bordered select-sm"
+              [value]="newEvaluationForm().activityId"
+              (change)="onActivityChange($event)"
+            >
+              <option value="0">Select an activity</option>
+              @for (activity of activities(); track activity.id) {
+                <option [value]="activity.id">{{ activity.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Date Picker -->
+          <div class="form-control">
+            <label class="label" for="new-date">
+              <span class="label-text">Date</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              id="new-date"
+              type="date"
+              class="input input-bordered input-sm"
+              [value]="newEvaluationForm().evaluationDate"
+              (input)="onDateChange($event)"
+            />
+          </div>
+
+          <!-- Score Input -->
+          <div class="form-control">
+            <label class="label" for="new-score">
+              <span class="label-text">Score (0-100)</span>
+            </label>
+            <input
+              id="new-score"
+              type="number"
+              class="input input-bordered input-sm"
+              placeholder="Enter score"
+              min="0"
+              max="100"
+              [value]="newEvaluationForm().score ?? ''"
+              (input)="onScoreChange($event)"
+            />
+          </div>
+
+          <!-- Speed Metric Input -->
+          <div class="form-control">
+            <label class="label" for="new-speed">
+              <span class="label-text">Speed</span>
+            </label>
+            <input
+              id="new-speed"
+              type="number"
+              class="input input-bordered input-sm"
+              placeholder="Enter speed"
+              step="0.1"
+              [value]="newEvaluationForm().speedMetric ?? ''"
+              (input)="onSpeedChange($event)"
+            />
+          </div>
+
+          <!-- Accuracy Metric Input -->
+          <div class="form-control">
+            <label class="label" for="new-accuracy">
+              <span class="label-text">Accuracy (%)</span>
+            </label>
+            <input
+              id="new-accuracy"
+              type="number"
+              class="input input-bordered input-sm"
+              placeholder="Enter accuracy"
+              min="0"
+              max="100"
+              step="0.1"
+              [value]="newEvaluationForm().accuracyMetric ?? ''"
+              (input)="onAccuracyChange($event)"
+            />
+          </div>
+
+          <!-- Notes Input -->
+          <div class="form-control md:col-span-2">
+            <label class="label" for="new-notes">
+              <span class="label-text">Notes</span>
+            </label>
+            <input
+              id="new-notes"
+              type="text"
+              class="input input-bordered input-sm"
+              placeholder="Optional notes"
+              [value]="newEvaluationForm().notes"
+              (input)="onNotesChange($event)"
+            />
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="card-actions justify-end mt-2">
+          <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
+          <button
+            class="btn btn-primary btn-sm"
+            (click)="addEvaluation()"
+            [disabled]="!isNewFormValid() || isSaving()"
+          >
+            @if (isSaving()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            <span>Save Evaluation</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Evaluations Table -->
+  @if (!isLoading() && sortedRecords().length > 0) {
+    <div class="overflow-x-auto">
+      <table class="table table-sm table-zebra">
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Date</th>
+            <th>Score</th>
+            <th>Speed</th>
+            <th>Accuracy</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (record of sortedRecords(); track record.id) {
+            <tr
+              [class.active]="editingId() === record.id"
+              (click)="editingId() === null ? startEdit(record) : null"
+              [class.cursor-pointer]="editingId() === null"
+            >
+              @if (editingId() === record.id) {
+                <!-- Edit Mode -->
+                <td colspan="6">
+                  <div class="p-2 bg-base-200 rounded">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-2 items-end">
+                      <!-- Score -->
+                      <div class="form-control">
+                        <label class="label py-0">
+                          <span class="label-text text-xs">Score (0-100)</span>
+                        </label>
+                        <input
+                          type="number"
+                          class="input input-bordered input-xs"
+                          placeholder="Score"
+                          min="0"
+                          max="100"
+                          [value]="editingForm()?.score ?? ''"
+                          (input)="onEditScoreChange($event)"
+                          (blur)="onEditBlur()"
+                          (keydown.enter)="saveEdit(); $event.preventDefault()"
+                        />
+                      </div>
+
+                      <!-- Speed -->
+                      <div class="form-control">
+                        <label class="label py-0">
+                          <span class="label-text text-xs">Speed</span>
+                        </label>
+                        <input
+                          type="number"
+                          class="input input-bordered input-xs"
+                          placeholder="Speed"
+                          step="0.1"
+                          [value]="editingForm()?.speedMetric ?? ''"
+                          (input)="onEditSpeedChange($event)"
+                          (blur)="onEditBlur()"
+                          (keydown.enter)="saveEdit(); $event.preventDefault()"
+                        />
+                      </div>
+
+                      <!-- Accuracy -->
+                      <div class="form-control">
+                        <label class="label py-0">
+                          <span class="label-text text-xs">Accuracy (%)</span>
+                        </label>
+                        <input
+                          type="number"
+                          class="input input-bordered input-xs"
+                          placeholder="Accuracy"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          [value]="editingForm()?.accuracyMetric ?? ''"
+                          (input)="onEditAccuracyChange($event)"
+                          (blur)="onEditBlur()"
+                          (keydown.enter)="saveEdit(); $event.preventDefault()"
+                        />
+                      </div>
+
+                      <!-- Notes -->
+                      <div class="form-control">
+                        <label class="label py-0">
+                          <span class="label-text text-xs">Notes</span>
+                        </label>
+                        <input
+                          type="text"
+                          class="input input-bordered input-xs"
+                          placeholder="Notes"
+                          [value]="editingForm()?.notes"
+                          (input)="onEditNotesChange($event)"
+                          (blur)="onEditBlur()"
+                          (keydown.enter)="saveEdit(); $event.preventDefault()"
+                        />
+                      </div>
+
+                      <!-- Actions -->
+                      <div class="flex gap-1">
+                        <button
+                          class="btn btn-primary btn-xs"
+                          (click)="saveEdit()"
+                          [disabled]="isSaving()"
+                        >
+                          @if (isSaving()) {
+                            <span class="loading loading-spinner loading-xs"></span>
+                          }
+                          Save
+                        </button>
+                        <button
+                          class="btn btn-ghost btn-xs"
+                          (click)="cancelEdit()"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              } @else {
+                <!-- View Mode -->
+                <td>{{ record.activityName ?? '-' }}</td>
+                <td>{{ formatDate(record.evaluationDate) }}</td>
+                <td>
+                  @if (record.score !== undefined && record.score !== null) {
+                    <div class="flex items-center gap-2">
+                      <span class="badge badge-sm {{ getScoreClass(record.score) }}">
+                        {{ record.score }}%
+                      </span>
+                      <span class="text-xs text-base-content/60">{{ getScoreLevel(record.score) }}</span>
+                    </div>
+                  } @else {
+                    <span class="text-base-content/40">-</span>
+                  }
+                </td>
+                <td>
+                  @if (record.speedMetric !== undefined && record.speedMetric !== null) {
+                    <span>{{ record.speedMetric }}</span>
+                  } @else {
+                    <span class="text-base-content/40">-</span>
+                  }
+                </td>
+                <td>
+                  @if (record.accuracyMetric !== undefined && record.accuracyMetric !== null) {
+                    <span>{{ record.accuracyMetric }}%</span>
+                  } @else {
+                    <span class="text-base-content/40">-</span>
+                  }
+                </td>
+                <td>
+                  @if (record.notes) {
+                    <span class="text-sm truncate max-w-xs">{{ record.notes }}</span>
+                  } @else {
+                    <span class="text-base-content/40">-</span>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && sortedRecords().length === 0) {
+    <div class="text-center py-12 bg-base-200 rounded-lg">
+      <div class="text-4xl mb-2" aria-hidden="true">📊</div>
+      <p class="text-base-content/60">No evaluation records found</p>
+      <p class="text-sm text-base-content/40 mt-1">Click "Add Evaluation" to record the first evaluation</p>
+    </div>
+  }
+</div>

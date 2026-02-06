@@ -195,12 +195,12 @@
           </div>
         }
 
-        <!-- Evaluation Tab (Placeholder) -->
+        <!-- Evaluation Tab -->
         @if (isTabActive('evaluation')) {
-          <div id="panel-evaluation" role="tabpanel" aria-labelledby="tab-evaluation" class="flex flex-col items-center justify-center py-12">
-            <div class="text-6xl mb-4" aria-hidden="true">📊</div>
-            <h3 class="text-xl font-semibold">Student Evaluations</h3>
-            <p class="text-base-content/60 mt-2">Evaluation records coming in Epic 5</p>
+          <div id="panel-evaluation" role="tabpanel" aria-labelledby="tab-evaluation">
+            @if (student()) {
+              <app-evaluation-tab [studentId]="student()!.id" />
+            }
           </div>
         }
       </div>
