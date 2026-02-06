@@ -1,0 +1,85 @@
+@if (isOpen()) {
+  <div class="drawer drawer-end open">
+    <input
+      id="audit-drawer"
+      type="checkbox"
+      class="drawer-toggle"
+      [checked]="isOpen()"
+    />
+    <div class="drawer-side">
+      <label
+        for="audit-drawer"
+        aria-label="close sidebar"
+        class="drawer-overlay"
+        (click)="onClose()"
+      ></label>
+      <div class="menu p-4 w-80 min-h-full bg-base-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">
+            Audit History
+          </h3>
+          <button
+            class="btn btn-ghost btn-sm btn-circle"
+            (click)="onClose()"
+            aria-label="Close audit trail"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Entity info -->
+        <div class="text-sm text-base-content/70 mb-4">
+          {{ entityType }} #{{ entityId }}
+        </div>
+
+        <!-- Loading state -->
+        @if (isLoading()) {
+          <div class="flex justify-center py-8" aria-busy="true" aria-label="Loading audit history">
+            <span class="loading loading-spinner text-primary"></span>
+          </div>
+        }
+
+        <!-- Error state -->
+        @if (error(); as errorMsg) {
+          <div role="alert" class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ errorMsg }}</span>
+          </div>
+        }
+
+        <!-- Audit log entries -->
+        @if (auditLogs().length === 0 && !isLoading()) {
+          <div class="text-center py-8 text-base-content/60">
+            <p>No audit history available</p>
+          </div>
+        } @else if (auditLogs().length > 0) {
+          <div class="space-y-4">
+            @for (log of auditLogs(); track log.id) {
+              <div class="card bg-base-100 shadow-sm">
+                <div class="card-body p-3">
+                  <!-- Timestamp and user -->
+                  <div class="text-xs text-base-content/60 mb-2">
+                    {{ formatDate(log.changedAt) }} by {{ log.changedBy }}
+                  </div>
+
+                  <!-- Field change -->
+                  <div class="text-sm">
+                    <span class="font-semibold">{{ getFieldLabel(log.field) }}:</span>
+                    <span class="line-through text-error">{{ log.oldValue ?? '(empty)' }}</span>
+                    <span class="mx-1">→</span>
+                    <span class="text-success">{{ log.newValue ?? '(empty)' }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,4 +1,5 @@
 using Kcow.Application.Attendance;
+using Kcow.Application.Audit;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -12,11 +13,16 @@ public class AttendanceService : IAttendanceService
 {
     private readonly IAttendanceRepository _attendanceRepository;
     private readonly ILogger<AttendanceService> _logger;
+    private readonly IAuditService _auditService;
 
-    public AttendanceService(IAttendanceRepository attendanceRepository, ILogger<AttendanceService> logger)
+    public AttendanceService(
+        IAttendanceRepository attendanceRepository,
+        ILogger<AttendanceService> logger,
+        IAuditService auditService)
     {
         _attendanceRepository = attendanceRepository;
         _logger = logger;
+        _auditService = auditService;
     }
 
     /// <summary>
@@ -71,7 +77,7 @@ public class AttendanceService : IAttendanceService
     /// <summary>
     /// Creates a new attendance record.
     /// </summary>
-    public async Task<AttendanceDto> CreateAsync(CreateAttendanceRequest request, CancellationToken cancellationToken = default)
+    public async Task<AttendanceDto> CreateAsync(CreateAttendanceRequest request, string createdBy, CancellationToken cancellationToken = default)
     {
         if (!TryParseStatus(request.Status, out var statusEnum))
         {
@@ -91,6 +97,16 @@ public class AttendanceService : IAttendanceService
         var id = await _attendanceRepository.CreateAsync(attendance, cancellationToken);
         attendance.Id = id;
 
+        // Log audit entry for record creation
+        await _auditService.LogChangeAsync(
+            "Attendance",
+            id,
+            "Created",
+            null,
+            $"Record created with Status: {request.Status}",
+            createdBy,
+            cancellationToken);
+
         _logger.LogInformation("Created attendance record with ID {AttendanceId} for student {StudentId} on {SessionDate}",
             id, request.StudentId, request.SessionDate);
 
@@ -100,9 +116,9 @@ public class AttendanceService : IAttendanceService
     }
 
     /// <summary>
-    /// Updates an existing attendance record (triggers audit via ModifiedAt).
+    /// Updates an existing attendance record with audit logging.
     /// </summary>
-    public async Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request, CancellationToken cancellationToken = default)
+    public async Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request, string changedBy, CancellationToken cancellationToken = default)
     {
         var existing = await _attendanceRepository.GetByIdAsync(id, cancellationToken);
 
@@ -117,6 +133,27 @@ public class AttendanceService : IAttendanceService
             throw new InvalidOperationException($"Invalid attendance status: '{request.Status}'. Valid values are: Present, Absent, Late");
         }
 
+        // Track changes for audit
+        var changes = new Dictionary<string, (string? oldVal, string? newVal)>();
+
+        // Check if status changed
+        var oldStatusString = Enum.IsDefined(typeof(AttendanceStatus), existing.Status)
+            ? ((AttendanceStatus)existing.Status).ToString()
+            : $"Unknown({existing.Status})";
+        if (oldStatusString != request.Status)
+        {
+            changes["Status"] = (oldStatusString, request.Status);
+        }
+
+        // Check if notes changed
+        var oldNotes = existing.Notes ?? "";
+        var newNotes = request.Notes ?? "";
+        if (oldNotes != newNotes)
+        {
+            changes["Notes"] = (oldNotes, newNotes);
+        }
+
+        // Update the record
         var attendance = new Domain.Entities.Attendance
         {
             Id = id,
@@ -127,7 +164,18 @@ public class AttendanceService : IAttendanceService
 
         await _attendanceRepository.UpdateAsync(attendance, cancellationToken);
 
-        _logger.LogInformation("Updated attendance record with ID {AttendanceId}, ModifiedAt set for audit trail", id);
+        // Log audit changes if any
+        if (changes.Count > 0)
+        {
+            await _auditService.LogChangesAsync(
+                "Attendance",
+                id,
+                changes,
+                changedBy,
+                cancellationToken);
+        }
+
+        _logger.LogInformation("Updated attendance record with ID {AttendanceId}, {ChangeCount} changes audited", id, changes.Count);
 
         // Fetch the updated record with joined names
         var updated = await _attendanceRepository.GetByIdAsync(id, cancellationToken);

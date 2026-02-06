@@ -211,7 +211,16 @@
                     </button>
                   </div>
                 } @else {
-                  <button class="btn btn-ghost btn-xs" (click)="startEdit(record)">Edit</button>
+                  <div class="flex justify-end gap-1">
+                    <button class="btn btn-ghost btn-xs" (click)="startEdit(record)">Edit</button>
+                    <button
+                      class="btn btn-ghost btn-xs"
+                      (click)="openAuditTrail(record.id)"
+                      title="View History"
+                    >
+                      View History
+                    </button>
+                  </div>
                 }
               </td>
             </tr>
@@ -219,5 +228,15 @@
         </tbody>
       </table>
     </div>
+  }
+
+  <!-- Audit Trail Panel -->
+  @if (auditPanelRecordId(); as recordId) {
+    <app-audit-trail-panel
+      entityType="Attendance"
+      [entityId]="recordId"
+      [isOpen]="true"
+      (close)="closeAuditTrail()"
+    />
   }
 </div>

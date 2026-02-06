@@ -1,5 +1,6 @@
 using Dapper;
 using Kcow.Application.Activities;
+using Kcow.Application.Audit;
 using Kcow.Application.Attendance;
 using Kcow.Application.Auth;
 using Kcow.Application.ClassGroups;
@@ -9,6 +10,7 @@ using Kcow.Application.Schools;
 using Kcow.Application.Students;
 using Kcow.Application.Trucks;
 using Kcow.Infrastructure.Activities;
+using Kcow.Infrastructure.Audit;
 using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.ClassGroups;
 using Kcow.Infrastructure.Database.Seeders;
@@ -63,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IFamilyRepository, FamilyRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         // Register authentication services
         services.AddScoped<IAuthService, AuthService>();
@@ -89,6 +92,9 @@ public static class DependencyInjection
 
         // Register attendance services
         services.AddScoped<IAttendanceService, Kcow.Infrastructure.Attendance.AttendanceService>();
+
+        // Register audit services
+        services.AddScoped<IAuditService, AuditService>();
 
         return services;
     }

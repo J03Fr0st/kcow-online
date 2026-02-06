@@ -105,7 +105,21 @@ public class AttendanceController : ControllerBase
 
         try
         {
-            var record = await _attendanceService.CreateAsync(request, cancellationToken);
+            // Get current user from JWT claims - require authenticated user
+            var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value;
+
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                return Unauthorized(new ProblemDetails
+                {
+                    Title = "Authentication required",
+                    Status = 401,
+                    Detail = "Unable to identify user from authentication token. Please log in again."
+                });
+            }
+
+            var record = await _attendanceService.CreateAsync(request, userEmail, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = record.Id }, record);
         }
         catch (InvalidOperationException ex)
@@ -126,7 +140,7 @@ public class AttendanceController : ControllerBase
     }
 
     /// <summary>
-    /// Updates an existing attendance record (triggers audit via ModifiedAt).
+    /// Updates an existing attendance record with audit logging.
     /// </summary>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(AttendanceDto), StatusCodes.Status200OK)]
@@ -149,7 +163,21 @@ public class AttendanceController : ControllerBase
 
         try
         {
-            var record = await _attendanceService.UpdateAsync(id, request, cancellationToken);
+            // Get current user from JWT claims - require authenticated user
+            var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value;
+
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Authentication required",
+                    Status = 401,
+                    Detail = "Unable to identify user from authentication token. Audit logging requires valid user identity."
+                });
+            }
+
+            var record = await _attendanceService.UpdateAsync(id, request, userEmail, cancellationToken);
 
             if (record == null)
             {

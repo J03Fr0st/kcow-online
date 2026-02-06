@@ -1,4 +1,5 @@
 using Kcow.Application.Attendance;
+using Kcow.Application.Audit;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -9,14 +10,17 @@ namespace Kcow.Unit.Tests;
 public class AttendanceServiceTests
 {
     private readonly IAttendanceRepository _attendanceRepository;
+    private readonly IAuditService _auditService;
     private readonly Infrastructure.Attendance.AttendanceService _service;
 
     public AttendanceServiceTests()
     {
         _attendanceRepository = Substitute.For<IAttendanceRepository>();
+        _auditService = Substitute.For<IAuditService>();
         _service = new Infrastructure.Attendance.AttendanceService(
             _attendanceRepository,
-            NullLogger<Infrastructure.Attendance.AttendanceService>.Instance);
+            NullLogger<Infrastructure.Attendance.AttendanceService>.Instance,
+            _auditService);
     }
 
     [Fact]
@@ -51,7 +55,7 @@ public class AttendanceServiceTests
             });
 
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, "test@example.com");
 
         // Assert
         Assert.NotNull(result);
@@ -64,6 +68,14 @@ public class AttendanceServiceTests
         Assert.Equal("Present", result.Status);
         Assert.Equal("On time", result.Notes);
         await _attendanceRepository.Received(1).CreateAsync(Arg.Any<Kcow.Domain.Entities.Attendance>(), Arg.Any<CancellationToken>());
+        await _auditService.Received(1).LogChangeAsync(
+            Arg.Any<string>(),
+            Arg.Any<int>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -79,7 +91,7 @@ public class AttendanceServiceTests
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request, "test@example.com"));
         Assert.Contains("Invalid attendance status", ex.Message);
     }
 
@@ -157,7 +169,7 @@ public class AttendanceServiceTests
         };
 
         // Act
-        var result = await _service.UpdateAsync(1, request);
+        var result = await _service.UpdateAsync(1, request, "test@example.com");
 
         // Assert
         Assert.NotNull(result);
@@ -165,6 +177,13 @@ public class AttendanceServiceTests
         Assert.Equal("Corrected", result.Notes);
         Assert.NotNull(result.ModifiedAt);
         await _attendanceRepository.Received(1).UpdateAsync(Arg.Any<Kcow.Domain.Entities.Attendance>(), Arg.Any<CancellationToken>());
+        await _auditService.Received(1).LogChangesAsync(
+            "Attendance",
+            1,
+            Arg.Is<Dictionary<string, (string?, string?)>>(d =>
+                d.ContainsKey("Status") && d.ContainsKey("Notes")),
+            "test@example.com",
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -180,7 +199,7 @@ public class AttendanceServiceTests
         };
 
         // Act
-        var result = await _service.UpdateAsync(999, request);
+        var result = await _service.UpdateAsync(999, request, "test@example.com");
 
         // Assert
         Assert.Null(result);
@@ -204,7 +223,7 @@ public class AttendanceServiceTests
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.UpdateAsync(1, request));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.UpdateAsync(1, request, "test@example.com"));
         Assert.Contains("Invalid attendance status", ex.Message);
     }
 
@@ -300,7 +319,7 @@ public class AttendanceServiceTests
             });
 
         // Act
-        var result = await _service.CreateAsync(request);
+        var result = await _service.CreateAsync(request, "test@example.com");
 
         // Assert
         Assert.NotNull(result);

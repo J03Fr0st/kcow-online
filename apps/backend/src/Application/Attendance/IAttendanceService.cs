@@ -28,10 +28,10 @@ public interface IAttendanceService
     /// <summary>
     /// Creates a new attendance record.
     /// </summary>
-    Task<AttendanceDto> CreateAsync(CreateAttendanceRequest request, CancellationToken cancellationToken = default);
+    Task<AttendanceDto> CreateAsync(CreateAttendanceRequest request, string createdBy, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Updates an existing attendance record (triggers audit via ModifiedAt).
+    /// Updates an existing attendance record with audit logging.
     /// </summary>
-    Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request, CancellationToken cancellationToken = default);
+    Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request, string changedBy, CancellationToken cancellationToken = default);
 }

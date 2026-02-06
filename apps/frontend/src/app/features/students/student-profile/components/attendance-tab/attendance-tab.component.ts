@@ -6,6 +6,7 @@ import { ClassGroupService } from '@core/services/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Attendance, AttendanceStatus, CreateAttendanceRequest } from '@features/attendance/models/attendance.model';
 import type { ClassGroup } from '@features/class-groups/models/class-group.model';
+import { AuditTrailPanelComponent } from '../audit-trail-panel/audit-trail-panel.component';
 
 interface EditingAttendance {
   id: number;
@@ -23,7 +24,7 @@ interface NewAttendanceForm {
 @Component({
   selector: 'app-attendance-tab',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AuditTrailPanelComponent],
   templateUrl: './attendance-tab.component.html',
   styleUrls: ['./attendance-tab.component.scss'],
 })
@@ -58,6 +59,9 @@ export class AttendanceTabComponent implements OnInit {
     status: 'Present',
     notes: '',
   });
+
+  // Audit trail panel state
+  readonly auditPanelRecordId = signal<number | null>(null);
 
   // Computed: sorted attendance records by date descending
   readonly sortedRecords = computed(() => {
@@ -327,5 +331,19 @@ export class AttendanceTabComponent implements OnInit {
    */
   private showErrorMessage(message: string): void {
     this.notificationService.error(message, undefined, 5000);
+  }
+
+  /**
+   * Open audit trail panel for a specific record
+   */
+  openAuditTrail(recordId: number): void {
+    this.auditPanelRecordId.set(recordId);
+  }
+
+  /**
+   * Close audit trail panel
+   */
+  closeAuditTrail(): void {
+    this.auditPanelRecordId.set(null);
   }
 }
