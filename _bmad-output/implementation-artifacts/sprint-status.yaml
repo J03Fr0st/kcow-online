@@ -106,7 +106,7 @@ development_status:
   # ========================
   epic-5: in-progress
   5-1-attendance-entity-api-endpoints: done
-  5-2-attendance-tab-in-student-profile: review  # Code completed: AttendanceTab with inline edit, add flow, status chips. All tasks done, build passes, service tests pass.
+  5-2-attendance-tab-in-student-profile: done  # Code completed: AttendanceTab with inline edit, add flow, status chips. Code review fixes applied: blur/enter save, class group dropdown, duplicate detection. All tests passing.
   5-3-attendance-audit-trail: ready-for-dev
   5-4-evaluation-entity-api-endpoints: ready-for-dev
   5-5-evaluation-tab-in-student-profile: ready-for-dev
