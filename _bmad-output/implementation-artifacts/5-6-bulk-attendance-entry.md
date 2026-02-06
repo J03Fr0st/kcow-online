@@ -28,47 +28,74 @@ so that **I can efficiently mark attendance for a class**.
   - [ ] Add button to class group row or detail view
   - [ ] Navigate to bulk attendance view
 - [ ] Task 2: Create BulkAttendance component (AC: #1)
-  - [ ] Load students in class group
-  - [ ] Display list with name and status toggle
+  - [ ] Load students in class group via Angular service
+  - [ ] Display list with name and status toggle using Angular Signals for state
   - [ ] Default all to "Present"
 - [ ] Task 3: Check for existing attendance (AC: #3)
-  - [ ] Load attendance for selected date
-  - [ ] Pre-fill existing statuses
+  - [ ] Load attendance for selected date via Attendance API
+  - [ ] Pre-fill existing statuses using Signal-based form state
   - [ ] Indicate which are updates vs new
-- [ ] Task 4: Implement bulk save (AC: #2)
-  - [ ] Create/update attendance for all students
-  - [ ] Use batch endpoint or sequential calls
-  - [ ] Show progress and success
+- [ ] Task 4: Implement batch attendance endpoint (AC: #2)
+  - [ ] Create batch endpoint in `AttendanceController`
+  - [ ] Implement batch insert/update in `IAttendanceRepository` using Dapper
+  - [ ] Use `IDbTransaction` for atomic batch operations (all-or-nothing save)
+  - [ ] Validate all entries before committing transaction
+  - [ ] Register any new services in `DependencyInjection.cs`
+- [ ] Task 5: Implement bulk save on frontend (AC: #2)
+  - [ ] Call batch attendance endpoint with all student entries
+  - [ ] Show progress indicator and success confirmation
+  - [ ] Handle partial failure responses
 
 ## Dev Notes
 
 ### Bulk Attendance Layout
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Take Attendance: Class 5A - Monday 2026-01-03               │
-│ Date: [2026-01-03 ▼]                                        │
-├─────────────────────────────────────────────────────────────┤
-│ Student          │ Present │ Absent │ Late │ Notes          │
-│ John Smith       │   (●)   │   ○    │  ○   │ [_______]      │
-│ Jane Doe         │   ○     │  (●)   │  ○   │ [Sick_____]    │
-│ Tom Wilson       │   ○     │   ○    │ (●)  │ [Late 10min]   │
-├─────────────────────────────────────────────────────────────┤
-│                                           [Cancel] [Save All]│
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+| Take Attendance: Class 5A - Monday 2026-01-03                |
+| Date: [2026-01-03 v]                                         |
++-------------------------------------------------------------+
+| Student          | Present | Absent | Late | Notes           |
+| John Smith       |   (o)   |   o    |  o   | [_______]       |
+| Jane Doe         |   o     |  (o)   |  o   | [Sick_____]     |
+| Tom Wilson       |   o     |   o    | (o)  | [Late 10min]    |
++-------------------------------------------------------------+
+|                                           [Cancel] [Save All] |
++-------------------------------------------------------------+
 ```
 
 ### Batch Attendance API
 
-Consider adding a batch endpoint:
 ```
 POST /api/class-groups/{id}/attendance
 Body: { sessionDate: "2026-01-03", entries: [...] }
 ```
 
+### Backend Architecture (Dapper + DbUp)
+
+- **Repository**: `IAttendanceRepository` in `Application/Interfaces/` with batch method
+- **Implementation**: `AttendanceRepository` in `Infrastructure/Repositories/` using `IDbConnectionFactory` and Dapper
+- **Transaction handling**: Use `IDbTransaction` for atomic batch insert/update
+  ```csharp
+  using var connection = _connectionFactory.CreateConnection();
+  connection.Open();
+  using var transaction = connection.BeginTransaction();
+  // Dapper operations with transaction parameter
+  // INSERT INTO attendance (student_id, class_group_id, session_date, status, notes, ...)
+  transaction.Commit();
+  ```
+- **SQL**: Use parameterized queries with snake_case column names
+- **No EF Core**: All data access via Dapper with explicit SQL
+
+### Frontend Architecture (Angular 21)
+
+- **State management**: Use Angular Signals for bulk form state
+- **Toggle state**: Signal array tracking each student's attendance status
+- **API calls**: RxJS-based service with `toSignal()` where appropriate
+
 ### Previous Story Dependencies
 
-- **Story 5.1** provides: Attendance API
+- **Story 5.1** provides: Attendance API (Dapper-based with `IAttendanceRepository`)
 - **Story 3.2** provides: Class groups with student roster
 
 ### References

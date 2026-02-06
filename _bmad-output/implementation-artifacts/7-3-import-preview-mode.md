@@ -42,6 +42,10 @@ so that **I can verify the data before it goes live (FR12)**.
 
 ## Dev Notes
 
+### Architecture Note
+
+Preview mode runs the parser and mapper pipeline but does NOT interact with the database at all. This story produces an in-memory report only. No repositories, connections, or transactions are involved.
+
 ### CLI Command
 
 ```bash
@@ -57,31 +61,31 @@ dotnet run --project apps/backend/src/Api import run
 ```
 === IMPORT PREVIEW ===
 
-📊 Record Counts:
+Record Counts:
   - Schools: 15
   - Class Groups: 42
   - Activities: 8
   - Students: 350
 
-📝 Sample Records (Schools):
+Sample Records (Schools):
   1. Greenwood Primary - 123 Main St
   2. Hillside Academy - 456 Oak Ave
   ...
 
-⚠️ Warnings (12 total):
+Warnings (12 total):
   - Student #45: DateOfBirth missing, using null
   - Student #89: Invalid gender value "X", using null
-  
-❌ Errors (3 records will be skipped):
+
+Errors (3 records will be skipped):
   - Student #123: FirstName is required (skipped)
   - ClassGroup #5: Invalid SchoolId reference (skipped)
 
-📋 Summary:
+Summary:
   - Valid: 410 records
   - Warnings: 12 records
   - Skipped: 3 records
-  
-⚡ Run without --preview to import data.
+
+Run without --preview to import data.
 ```
 
 ### Previous Story Dependencies
@@ -105,3 +109,4 @@ dotnet run --project apps/backend/src/Api import run
 ### Completion Notes List
 
 ### File List
+

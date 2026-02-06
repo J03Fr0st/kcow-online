@@ -13,10 +13,10 @@ so that **parsed data can be loaded into the new database**.
 1. **Given** parsed legacy data
    **When** the mapping service runs
    **Then** legacy fields are mapped to new entity properties:
-   - Children → Student entity
-   - Class Group → ClassGroup entity
-   - School → School entity
-   - Activity → Activity entity
+   - Children -> Student entity
+   - Class Group -> ClassGroup entity
+   - School -> School entity
+   - Activity -> Activity entity
 
 2. **And** data transformations are applied (date formats, enum conversions, etc.)
 
@@ -30,15 +30,15 @@ so that **parsed data can be loaded into the new database**.
   - [ ] Define IDataMapper interface
   - [ ] Create mapper for each entity type
 - [ ] Task 2: Implement School mapper (AC: #1, #2)
-  - [ ] Map LegacySchool → School
+  - [ ] Map LegacySchool -> School
   - [ ] Handle optional fields
 - [ ] Task 3: Implement ClassGroup mapper (AC: #1, #2)
-  - [ ] Map LegacyClassGroup → ClassGroup
+  - [ ] Map LegacyClassGroup -> ClassGroup
   - [ ] Convert day/time formats
 - [ ] Task 4: Implement Activity mapper (AC: #1, #2)
-  - [ ] Map LegacyActivity → Activity
+  - [ ] Map LegacyActivity -> Activity
 - [ ] Task 5: Implement Student mapper (AC: #1, #2)
-  - [ ] Map LegacyChild → Student
+  - [ ] Map LegacyChild -> Student
   - [ ] Convert date formats
   - [ ] Handle family relationships
 - [ ] Task 6: Add validation and flagging (AC: #3)
@@ -50,6 +50,10 @@ so that **parsed data can be loaded into the new database**.
   - [ ] Create mapping documentation
 
 ## Dev Notes
+
+### Architecture Note
+
+This story is purely about data transformation. Mappers convert parsed legacy models (from Story 7.1) into domain entities. No direct database access is needed -- mappers produce domain entity instances that will be persisted by Story 7.4 using existing Dapper repositories.
 
 ### Mapping Interface
 
@@ -101,6 +105,10 @@ apps/backend/src/
 │       └── MappingResult.cs
 ```
 
+### Existing Import Infrastructure
+
+The `Application/Import/` folder may already contain parsers and mappers from earlier stories (2-6, 3-6, 4-9, 8-3). Reuse existing patterns and interfaces where applicable.
+
 ### Previous Story Dependencies
 
 - **Story 7.1** provides: Parsed legacy data (LegacySchool, LegacyChild, etc.)
@@ -121,3 +129,4 @@ apps/backend/src/
 ### Completion Notes List
 
 ### File List
+

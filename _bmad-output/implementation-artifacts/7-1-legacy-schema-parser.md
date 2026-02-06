@@ -49,6 +49,10 @@ so that **I can extract data from the Access export format**.
 
 ## Dev Notes
 
+### Architecture Note
+
+This story is purely about XML parsing and validation. The parser outputs parsed legacy models (`LegacySchool`, `LegacyClassGroup`, etc.) but does NOT write to the database. No repository or database interaction is needed for this story.
+
 ### Legacy File Locations
 
 | Entity | XSD Schema | XML Data |
@@ -108,6 +112,10 @@ apps/backend/src/
         └── XmlLegacyParser.cs
 ```
 
+### Existing Import Infrastructure
+
+The `Application/Import/` folder may already contain parsers and mappers from earlier stories (2-6, 3-6, 4-9, 8-3). Reuse existing patterns where applicable.
+
 ### References
 
 - [Source: _bmad-output/planning-artifacts/epics.md#Story 7.1]
@@ -125,3 +133,4 @@ apps/backend/src/
 ### Completion Notes List
 
 ### File List
+

@@ -32,7 +32,7 @@ so that **I can track amounts owed**.
   - [ ] Description field
   - [ ] Notes field
 - [ ] Task 2: Submit invoice (AC: #2)
-  - [ ] Call POST invoice API
+  - [ ] Call POST invoice API (backed by Dapper repository)
   - [ ] Refresh invoices list
   - [ ] Recalculate balance
   - [ ] Confirm creation
@@ -45,23 +45,23 @@ so that **I can track amounts owed**.
 <form class="card" (ngSubmit)="onSubmit()">
   <div class="card-body">
     <h3>Create Invoice</h3>
-    
+
     <app-form-field label="Amount (R)">
       <input type="number" formControlName="amount" min="0.01" step="0.01" />
     </app-form-field>
-    
+
     <app-form-field label="Due Date">
       <input type="date" formControlName="dueDate" />
     </app-form-field>
-    
+
     <app-form-field label="Description">
       <input type="text" formControlName="description" />
     </app-form-field>
-    
+
     <app-form-field label="Notes">
       <textarea formControlName="notes"></textarea>
     </app-form-field>
-    
+
     <div class="card-actions">
       <button type="button" class="btn" (click)="cancel()">Cancel</button>
       <button type="submit" class="btn btn-primary">Create Invoice</button>
@@ -69,6 +69,12 @@ so that **I can track amounts owed**.
   </div>
 </form>
 ```
+
+### Frontend Architecture
+
+- Angular 21 with Signals + RxJS
+- Invoice form uses reactive forms
+- Calls POST `/api/students/:id/invoices` endpoint
 
 ### Previous Story Dependencies
 

@@ -45,6 +45,7 @@ So that financial flows and balance calculations operate on real migrated record
   - [ ] Map payment dates and amounts accurately
   - [ ] Generate receipt numbers for historical payments
   - [ ] Link payments to invoices where applicable
+  - [ ] Use `IPaymentRepository` (Dapper-based) for data insertion
 
 - [ ] Task 3: Calculate Imported Balances (AC: #3)
   - [ ] Calculate outstanding balance from invoice vs payment totals
@@ -76,12 +77,44 @@ So that financial flows and balance calculations operate on real migrated record
 
 ### Architecture Requirements
 - **Legacy Data Source**: Billing fields from Children.xsd + School billing settings
-- **Entity Locations**: 
+- **Entity Locations**:
   - `apps/backend/src/Domain/Entities/Invoice.cs`
   - `apps/backend/src/Domain/Entities/Payment.cs`
-  - `apps/backend/src/Domain/Entities/Receipt.cs`
+- **Repository Interfaces**: `Application/Interfaces/IInvoiceRepository.cs`, `Application/Interfaces/IPaymentRepository.cs`
+- **Repository Implementations**: `Infrastructure/Repositories/InvoiceRepository.cs`, `Infrastructure/Repositories/PaymentRepository.cs` (Dapper-based, using `IDbConnectionFactory`)
 - **Import Service Location**: `apps/backend/src/Application/Import/`
 - **CLI Command**: `dotnet run import billing`
+
+### Data Insertion Pattern
+
+Use Dapper repositories for all data insertion:
+
+```csharp
+// Use IInvoiceRepository for invoice imports
+await _invoiceRepository.CreateAsync(new Invoice
+{
+    StudentId = mappedStudentId,
+    InvoiceDate = legacyDate,
+    Amount = legacyAmount,
+    DueDate = calculatedDueDate,
+    Status = 0, // Pending
+    Description = "Imported from legacy system",
+    CreatedAt = DateTime.UtcNow.ToString("o")
+});
+
+// Use IPaymentRepository for payment imports
+await _paymentRepository.CreateAsync(new Payment
+{
+    StudentId = mappedStudentId,
+    InvoiceId = matchedInvoiceId,
+    PaymentDate = legacyPaymentDate,
+    Amount = legacyPaymentAmount,
+    PaymentMethod = 3, // Other (legacy)
+    ReceiptNumber = generatedReceiptNumber,
+    Notes = "Imported from legacy system",
+    CreatedAt = DateTime.UtcNow.ToString("o")
+});
+```
 
 ### Field Mapping Reference
 Billing data may be embedded in Children records or separate:
@@ -108,7 +141,7 @@ Critical for financial accuracy:
 ### Previous Story Context
 - Story 6-6 completed Billing Status in Profile Header
 - Financial tab is functional
-- Invoice and Payment CRUD is implemented
+- Invoice and Payment CRUD is implemented via Dapper repositories
 
 ### Testing Standards
 - Integration tests in `apps/backend/tests/Integration/Import/`
@@ -142,3 +175,4 @@ Critical for financial accuracy:
 | Date | Change |
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
+| 2026-02-06 | Updated to reference Dapper + DbUp architecture (no EF Core) |

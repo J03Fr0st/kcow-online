@@ -42,17 +42,20 @@ So that tracking flows and audit trails operate on real historical records.
   - [ ] Link StudentId and ClassGroupId from imported data
   - [ ] Map status values (Present, Absent, Late)
   - [ ] Handle orphaned attendance (student/class not found)
+  - [ ] Use existing `IAttendanceRepository` for data insertion via Dapper
 
 - [ ] Task 3: Implement Evaluation Record Import (AC: #2)
   - [ ] Map legacy evaluation/assessment data to Evaluation entity
   - [ ] Link StudentId and ActivityId
   - [ ] Map score, speed, and accuracy metrics
   - [ ] Translate field names from Afrikaans to English
+  - [ ] Use existing `IEvaluationRepository` for data insertion via Dapper
 
 - [ ] Task 4: Preserve Historical Timestamps (AC: #3)
   - [ ] Map original CreatedAt timestamps from legacy data
   - [ ] Preserve ModifiedAt dates for audit accuracy
   - [ ] Ensure audit trail reflects actual historical dates
+  - [ ] Use parameterized SQL with explicit timestamp columns (snake_case)
 
 - [ ] Task 5: Implement Validation and Error Logging (AC: #4)
   - [ ] Validate imported records against XSD constraints
@@ -72,17 +75,33 @@ So that tracking flows and audit trails operate on real historical records.
 
 ## Dev Notes
 
-### Architecture Requirements
+### Architecture Requirements (Dapper + DbUp)
+
 - **Legacy XSD Location**: `docs/legacy/3_Activity/Activity.xsd` (7 fields)
-- **Entity Locations**: 
+- **Entity Locations**:
   - `apps/backend/src/Domain/Entities/Attendance.cs`
   - `apps/backend/src/Domain/Entities/Evaluation.cs`
   - `apps/backend/src/Domain/Entities/Activity.cs`
+- **Repository Interfaces**:
+  - `apps/backend/src/Application/Interfaces/IAttendanceRepository.cs`
+  - `apps/backend/src/Application/Interfaces/IEvaluationRepository.cs`
+- **Repository Implementations**:
+  - `apps/backend/src/Infrastructure/Repositories/AttendanceRepository.cs` (Dapper + `IDbConnectionFactory`)
+  - `apps/backend/src/Infrastructure/Repositories/EvaluationRepository.cs` (Dapper + `IDbConnectionFactory`)
 - **Import Service Location**: `apps/backend/src/Application/Import/`
 - **CLI Command**: `dotnet run import attendance-evaluations`
+- **DI Registration**: `apps/backend/src/Infrastructure/DependencyInjection.cs`
+
+### Data Access Pattern
+
+- All data insertion uses existing Dapper-based repositories (`IAttendanceRepository`, `IEvaluationRepository`)
+- Bulk inserts should use `IDbTransaction` for batch atomicity
+- SQL uses parameterized queries with snake_case column names
+- No EF Core -- all data access is via Dapper with explicit SQL
+- No navigation properties -- use explicit SQL JOINs for related data lookups
 
 ### Field Mapping Reference
-See `docs/domain-models.md` for complete Afrikaans → English translations:
+See `docs/domain-models.md` for complete Afrikaans to English translations:
 - Activity entity: 7 fields from Activity.xsd
 - Attendance record extraction from activity data
 - Evaluation/score mapping
@@ -141,3 +160,4 @@ Critical for audit compliance (FR14):
 | Date | Change |
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
+| 2026-02-06 | Updated to reference Dapper + DbUp architecture and existing repositories |

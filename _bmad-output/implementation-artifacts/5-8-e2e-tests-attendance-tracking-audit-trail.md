@@ -69,6 +69,7 @@ So that attendance workflows and correction traceability are validated end-to-en
   - [ ] Create `e2e/attendance-evaluations/` test directory
   - [ ] Create test fixtures with students, class groups, attendance
   - [ ] Include existing attendance for pre-fill testing
+  - [ ] Seed test data via API calls or SQL scripts (using Dapper-based test helpers)
 
 - [ ] Task 2: Implement Attendance Tab Tests (AC: #1)
   - [ ] Test navigation to Attendance tab
@@ -114,13 +115,15 @@ So that attendance workflows and correction traceability are validated end-to-en
 - **E2E Test Location**: `apps/frontend/e2e/attendance-evaluations/`
 - **Test Framework**: Playwright
 - **Test Configuration**: `apps/frontend/playwright.config.ts`
+- **Backend**: Dapper + DbUp architecture (no EF Core) -- tests interact via HTTP API only
 
 ### Test Organization Pattern
 ```
 e2e/attendance-evaluations/
-├── attendance.spec.ts        # Attendance tab tests
-├── bulk-attendance.spec.ts   # Bulk entry tests
-└── audit-trail.spec.ts       # FR14 audit trail tests
+  attendance.spec.ts        # Attendance tab tests
+  bulk-attendance.spec.ts   # Bulk entry tests
+  audit-trail.spec.ts       # FR14 audit trail tests
+  evaluations.spec.ts       # Evaluations tab tests
 ```
 
 ### Critical Test Scenarios
@@ -132,17 +135,18 @@ e2e/attendance-evaluations/
 
 ### Status Chip Colors
 Test these exact mappings:
-- Present → green
-- Absent → red
-- Late → yellow
+- Present -> green
+- Absent -> red
+- Late -> yellow
 
 ### Test Data Strategy
 - Seed existing attendance records for edit/audit testing
 - Include class groups with enrolled students for bulk testing
 - Include records with audit history for panel testing
+- Test data seeded via API endpoints (backend uses Dapper repositories internally)
 
 ### Previous Story Context
-- Stories 5-1 to 5-6 implemented full Attendance/Evaluations
+- Stories 5-1 to 5-6 implemented full Attendance/Evaluations (Dapper + DbUp backend)
 - Story 5-7 added data migration for seed data
 - Audit Trail Panel is implemented
 
@@ -172,3 +176,4 @@ Test these exact mappings:
 | Date | Change |
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
+| 2026-02-06 | Verified no EF Core references; added Dapper architecture notes |

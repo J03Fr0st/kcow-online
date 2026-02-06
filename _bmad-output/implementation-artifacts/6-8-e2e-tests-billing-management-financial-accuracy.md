@@ -138,13 +138,14 @@ So that invoicing, payments, and balance calculations are validated end-to-end.
 - **E2E Test Location**: `apps/frontend/e2e/billing/`
 - **Test Framework**: Playwright
 - **Test Configuration**: `apps/frontend/playwright.config.ts`
+- **Backend**: Dapper + DbUp architecture (no EF Core)
 
 ### Test Organization Pattern
 ```
 e2e/billing/
-├── invoicing.spec.ts           # Invoice creation tests
-├── payments.spec.ts            # Payment recording tests
-└── financial-calculations.spec.ts  # Balance and accuracy tests
+  invoicing.spec.ts           # Invoice creation tests
+  payments.spec.ts            # Payment recording tests
+  financial-calculations.spec.ts  # Balance and accuracy tests
 ```
 
 ### Critical Test Scenarios
@@ -159,9 +160,9 @@ e2e/billing/
 
 ### Balance Color Indicators
 Test these exact mappings:
-- Balance = 0 → green, "Up to date"
-- Balance > 0 → red, "Balance due"
-- Overdue invoices → warning indicator
+- Balance = 0 -> green, "Up to date"
+- Balance > 0 -> red, "Balance due"
+- Overdue invoices -> warning indicator
 
 ### Test Data Strategy
 - Seed students with various billing states
@@ -170,7 +171,7 @@ Test these exact mappings:
 - Include students with up-to-date billing
 
 ### Previous Story Context
-- Stories 6-1 to 6-6 implemented full Billing functionality
+- Stories 6-1 to 6-6 implemented full Billing functionality using Dapper + DbUp
 - Story 6-7 added data migration for seed data
 - Financial tab and profile header billing are functional
 
@@ -200,3 +201,4 @@ Test these exact mappings:
 | Date | Change |
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
+| 2026-02-06 | Updated to reference Dapper + DbUp architecture (no EF Core) |

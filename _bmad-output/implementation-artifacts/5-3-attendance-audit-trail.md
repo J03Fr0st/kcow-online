@@ -25,28 +25,67 @@ so that **I have traceability for any changes (FR14)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create AuditLog entity and table (AC: #1)
-  - [ ] Create AuditLog entity with EntityType, EntityId, Field, OldValue, NewValue, ChangedBy, ChangedAt
-  - [ ] Configure EF Core and apply migration
-- [ ] Task 2: Implement audit logging service (AC: #1)
-  - [ ] Create IAuditService interface
-  - [ ] Log changes on attendance update
+- [ ] Task 1: Create AuditLog entity and DbUp migration (AC: #1)
+  - [ ] Create `AuditLog.cs` in `Domain/Entities/` with EntityType, EntityId, Field, OldValue, NewValue, ChangedBy, ChangedAt
+  - [ ] Create DbUp migration script `Infrastructure/Migrations/Scripts/011_CreateAuditLog.sql`
+  - [ ] No EF Core navigation properties -- plain POCO entity
+- [ ] Task 2: Create AuditLog repository (AC: #1)
+  - [ ] Create `IAuditLogRepository` interface in `Application/Interfaces/`
+  - [ ] Create `AuditLogRepository` in `Infrastructure/Repositories/` using Dapper + `IDbConnectionFactory`
+  - [ ] Methods: `CreateAsync`, `GetByEntityAsync(entityType, entityId)`
+  - [ ] Register in `Infrastructure/DependencyInjection.cs`
+- [ ] Task 3: Implement audit logging service (AC: #1)
+  - [ ] Create `IAuditService` interface in `Application/Interfaces/`
+  - [ ] Create `AuditService` in `Infrastructure/Audit/` using `IAuditLogRepository`
+  - [ ] Log changes on attendance update by comparing old vs new values
   - [ ] Capture user from auth context
-- [ ] Task 3: Create audit retrieval endpoint (AC: #2)
+  - [ ] Register in `Infrastructure/DependencyInjection.cs`
+- [ ] Task 4: Create audit retrieval endpoint (AC: #2)
   - [ ] GET `/api/audit-log?entityType=Attendance&entityId={id}`
-  - [ ] Return list of audit entries
-- [ ] Task 4: Create AuditTrailPanel component (AC: #2, #3)
+  - [ ] Return list of audit entries via `IAuditLogRepository.GetByEntityAsync()`
+- [ ] Task 5: Create AuditTrailPanel component (AC: #2, #3)
   - [ ] Display audit history in drawer or expandable panel
   - [ ] Show timestamp, old/new values, user
   - [ ] Read-only display
-- [ ] Task 5: Add "View History" button to attendance row (AC: #2)
+- [ ] Task 6: Add "View History" button to attendance row (AC: #2)
   - [ ] Open AuditTrailPanel on click
 
 ## Dev Notes
 
-### AuditLog Entity
+### Architecture Compliance
+
+This story follows the project's **Dapper + DbUp** architecture (established in Story 0.1):
+- **No EF Core** -- all data access uses Dapper via `IDbConnectionFactory`
+- **Repository pattern**: `IAuditLogRepository` in `Application/Interfaces/`, `AuditLogRepository` in `Infrastructure/Repositories/`
+- **DbUp migration**: SQL script in `Infrastructure/Migrations/Scripts/` with sequential numbering
+- **Parameterized SQL only**, snake_case column names
+- **No navigation properties** -- use explicit SQL JOINs where needed
+- **DI registration** in `Infrastructure/DependencyInjection.cs`
+
+### DbUp Migration Script (011_CreateAuditLog.sql)
+
+```sql
+-- Create AuditLog table for tracking entity changes
+CREATE TABLE IF NOT EXISTS "audit_log" (
+    "id" INTEGER NOT NULL CONSTRAINT "PK_audit_log" PRIMARY KEY AUTOINCREMENT,
+    "entity_type" TEXT NOT NULL,
+    "entity_id" INTEGER NOT NULL,
+    "field" TEXT NOT NULL,
+    "old_value" TEXT NULL,
+    "new_value" TEXT NULL,
+    "changed_by" TEXT NOT NULL,
+    "changed_at" TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS "IX_audit_log_entity" ON "audit_log" ("entity_type", "entity_id");
+CREATE INDEX IF NOT EXISTS "IX_audit_log_changed_at" ON "audit_log" ("changed_at");
+```
+
+### AuditLog Entity (Plain POCO -- no navigation properties)
 
 ```csharp
+namespace Kcow.Domain.Entities;
+
 public class AuditLog
 {
     public int Id { get; set; }
@@ -60,22 +99,66 @@ public class AuditLog
 }
 ```
 
+### Repository Pattern (Dapper)
+
+```csharp
+// Application/Interfaces/IAuditLogRepository.cs
+public interface IAuditLogRepository
+{
+    Task<int> CreateAsync(AuditLog entry, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, int entityId, CancellationToken cancellationToken = default);
+}
+
+// Infrastructure/Repositories/AuditLogRepository.cs
+public class AuditLogRepository : IAuditLogRepository
+{
+    private readonly IDbConnectionFactory _connectionFactory;
+
+    public AuditLogRepository(IDbConnectionFactory connectionFactory)
+    {
+        _connectionFactory = connectionFactory;
+    }
+
+    public async Task<int> CreateAsync(AuditLog entry, CancellationToken cancellationToken = default)
+    {
+        using var connection = _connectionFactory.Create();
+        const string sql = @"
+            INSERT INTO audit_log (entity_type, entity_id, field, old_value, new_value, changed_by, changed_at)
+            VALUES (@EntityType, @EntityId, @Field, @OldValue, @NewValue, @ChangedBy, @ChangedAt)
+            RETURNING id";
+        return await connection.QuerySingleAsync<int>(sql, entry);
+    }
+
+    public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, int entityId, CancellationToken cancellationToken = default)
+    {
+        using var connection = _connectionFactory.Create();
+        const string sql = @"
+            SELECT id, entity_type, entity_id, field, old_value, new_value, changed_by, changed_at
+            FROM audit_log
+            WHERE entity_type = @EntityType AND entity_id = @EntityId
+            ORDER BY changed_at DESC";
+        return await connection.QueryAsync<AuditLog>(sql, new { EntityType = entityType, EntityId = entityId });
+    }
+}
+```
+
 ### Audit Trail Panel
 
 ```
-┌─────────────────────────────────────────────┐
-│ Audit History - Attendance #123             │
-├─────────────────────────────────────────────┤
-│ 2026-01-02 14:30 by admin@kcow.co.za        │
-│ Status: Absent → Present                    │
-│                                             │
-│ 2026-01-02 10:15 by admin@kcow.co.za        │
-│ Notes: "" → "Marked by teacher"             │
-└─────────────────────────────────────────────┘
++---------------------------------------------+
+| Audit History - Attendance #123              |
++---------------------------------------------+
+| 2026-01-02 14:30 by admin@kcow.co.za        |
+| Status: Absent -> Present                    |
+|                                              |
+| 2026-01-02 10:15 by admin@kcow.co.za        |
+| Notes: "" -> "Marked by teacher"             |
++---------------------------------------------+
 ```
 
 ### Previous Story Dependencies
 
+- **Story 5.1** provides: Attendance API (Dapper + DbUp backend)
 - **Story 5.2** provides: Attendance tab where audit will be shown
 
 ### References

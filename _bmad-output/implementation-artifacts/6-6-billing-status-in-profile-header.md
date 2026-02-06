@@ -41,10 +41,10 @@ so that **I immediately know if a student has outstanding balance**.
 ```html
 <div class="stat">
   <div class="stat-title">Billing Status</div>
-  <div class="stat-value" [ngClass]="{'text-success': balance === 0, 'text-error': balance > 0}">
-    {{ balance === 0 ? 'Up to date' : 'R ' + balance.toFixed(2) }}
+  <div class="stat-value" [ngClass]="{'text-success': balance() === 0, 'text-error': balance() > 0}">
+    {{ balance() === 0 ? 'Up to date' : 'R ' + balance().toFixed(2) }}
   </div>
-  @if (hasOverdue) {
+  @if (hasOverdue()) {
     <div class="stat-desc text-warning">
       <span class="badge badge-warning">Overdue</span>
     </div>
@@ -52,10 +52,16 @@ so that **I immediately know if a student has outstanding balance**.
 </div>
 ```
 
+### Frontend Architecture
+
+- Angular 21 with Signals + RxJS
+- Balance and overdue status are signals derived from billing summary API call
+- Billing summary API backed by Dapper repository (Story 6.1)
+
 ### Previous Story Dependencies
 
 - **Story 4.6** provides: Profile header layout
-- **Story 6.1** provides: Billing summary API
+- **Story 6.1** provides: Billing summary API (Dapper-based backend)
 
 ### References
 

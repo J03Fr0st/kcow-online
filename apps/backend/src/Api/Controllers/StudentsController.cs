@@ -1,3 +1,4 @@
+using Kcow.Application.Attendance;
 using Kcow.Application.Common;
 using Kcow.Application.Families;
 using Kcow.Application.Students;
@@ -16,12 +17,14 @@ public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
     private readonly IFamilyService _familyService;
+    private readonly IAttendanceService _attendanceService;
     private readonly ILogger<StudentsController> _logger;
 
-    public StudentsController(IStudentService studentService, IFamilyService familyService, ILogger<StudentsController> logger)
+    public StudentsController(IStudentService studentService, IFamilyService familyService, IAttendanceService attendanceService, ILogger<StudentsController> logger)
     {
         _studentService = studentService;
         _familyService = familyService;
+        _attendanceService = attendanceService;
         _logger = logger;
     }
 
@@ -339,6 +342,28 @@ public class StudentsController : ControllerBase
             _logger.LogError(ex, "Error searching students with query '{Query}'", q);
             return StatusCode(StatusCodes.Status500InternalServerError,
                 CreateServerErrorProblemDetails("An error occurred while searching for students"));
+        }
+    }
+
+    /// <summary>
+    /// Gets attendance history for a specific student.
+    /// </summary>
+    [HttpGet("{id}/attendance")]
+    [ProducesResponseType(typeof(List<AttendanceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAttendance(int id)
+    {
+        try
+        {
+            var records = await _attendanceService.GetByStudentIdAsync(id);
+            return Ok(records);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving attendance for student {StudentId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while retrieving attendance records"));
         }
     }
 

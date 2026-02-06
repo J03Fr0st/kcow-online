@@ -25,10 +25,10 @@ so that **I have traceability for financial corrections (FR14)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend audit logging (AC: #1)
-  - [ ] Add audit logging to invoice updates
-  - [ ] Add audit logging to payment updates
-  - [ ] Reuse audit service from Story 5.3
+- [ ] Task 1: Extend audit logging for billing (AC: #1)
+  - [ ] Add audit logging to invoice updates using Dapper-based `IAuditLogRepository` from Story 5.3
+  - [ ] Add audit logging to payment updates using Dapper-based `IAuditLogRepository` from Story 5.3
+  - [ ] Reuse audit service and repository from Story 5.3
 - [ ] Task 2: Add "View History" to billing records (AC: #2)
   - [ ] Add button to invoice rows
   - [ ] Add button to payment rows
@@ -40,13 +40,31 @@ so that **I have traceability for financial corrections (FR14)**.
 
 ### Audit Logging for Billing
 
-Reuse the AuditLog entity and service from Story 5.3:
+Reuse the Dapper-based audit infrastructure from Story 5.3:
+- `IAuditLogRepository` (in `Application/Interfaces/`) for data access
+- `AuditLogRepository` (in `Infrastructure/Repositories/`) using `IDbConnectionFactory` + Dapper
 - EntityType: "Invoice" or "Payment"
 - Log changes to: Amount, Status, Notes
 
+### Backend Pattern
+
+```csharp
+// Reuse IAuditLogRepository from Story 5.3
+await _auditLogRepository.CreateAsync(new AuditLog
+{
+    EntityType = "Invoice",
+    EntityId = invoice.Id,
+    FieldName = "Status",
+    OldValue = oldStatus.ToString(),
+    NewValue = newStatus.ToString(),
+    ChangedBy = currentUser,
+    ChangedAt = DateTime.UtcNow.ToString("o")
+});
+```
+
 ### Previous Story Dependencies
 
-- **Story 5.3** provides: AuditLog entity and AuditTrailPanel component
+- **Story 5.3** provides: `IAuditLogRepository`, `AuditLogRepository` (Dapper-based), and AuditTrailPanel component
 - **Story 6.2** provides: Financial tab
 
 ### References

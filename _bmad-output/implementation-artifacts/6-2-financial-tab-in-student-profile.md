@@ -29,7 +29,7 @@ so that **I can track and update financial status without leaving the profile**.
 
 - [ ] Task 1: Create FinancialTab component (AC: #1)
   - [ ] Replace placeholder in student profile
-  - [ ] Fetch billing summary
+  - [ ] Fetch billing summary from API using Angular service with Signals
   - [ ] Display balance, last payment, outstanding count
 - [ ] Task 2: Create invoices list (AC: #2, #3)
   - [ ] Display table with Date, Amount, Status
@@ -46,27 +46,33 @@ so that **I can track and update financial status without leaving the profile**.
 ### Financial Tab Layout
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Financial Summary                                           │
-├─────────────────────────────────────────────────────────────┤
-│ Current Balance: R 1,500.00  │ Last Payment: R 500 on 01/01 │
-│ Outstanding Invoices: 2       │                              │
-├─────────────────────────────────────────────────────────────┤
-│ Invoices                                    [Create Invoice] │
-│ Date       │ Amount    │ Status    │                        │
-│ 2026-01-01 │ R 1,000   │ [Pending] │                        │
-│ 2025-12-01 │ R 2,000   │ [Paid]    │                        │
-├─────────────────────────────────────────────────────────────┤
-│ Payments                                   [Record Payment]  │
-│ Date       │ Amount    │ Receipt #  │                       │
-│ 2026-01-01 │ R 500     │ RCP-001234 │                       │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+| Financial Summary                                           |
++-------------------------------------------------------------+
+| Current Balance: R 1,500.00  | Last Payment: R 500 on 01/01 |
+| Outstanding Invoices: 2       |                              |
++-------------------------------------------------------------+
+| Invoices                                    [Create Invoice] |
+| Date       | Amount    | Status    |                        |
+| 2026-01-01 | R 1,000   | [Pending] |                        |
+| 2025-12-01 | R 2,000   | [Paid]    |                        |
++-------------------------------------------------------------+
+| Payments                                   [Record Payment]  |
+| Date       | Amount    | Receipt #  |                       |
+| 2026-01-01 | R 500     | RCP-001234 |                       |
++-------------------------------------------------------------+
 ```
+
+### Frontend Architecture
+
+- Angular 21 with Signals + RxJS
+- Billing service calls REST API endpoints from Story 6.1
+- Components use DaisyUI for styling
 
 ### Previous Story Dependencies
 
 - **Story 4.6** provides: Profile tabs
-- **Story 6.1** provides: Billing API
+- **Story 6.1** provides: Billing API (Dapper-based backend)
 
 ### References
 

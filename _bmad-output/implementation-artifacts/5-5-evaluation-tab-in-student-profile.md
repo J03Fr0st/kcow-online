@@ -28,38 +28,47 @@ so that **I can track progress without leaving the profile**.
 
 - [ ] Task 1: Create EvaluationTab component (AC: #1)
   - [ ] Replace placeholder in student profile
-  - [ ] Fetch evaluation history
+  - [ ] Fetch evaluation history using Angular service calling Evaluation API
   - [ ] Display table with Activity, Date, Score, Speed, Accuracy
+  - [ ] Use Angular Signals for component state management
 - [ ] Task 2: Add score indicators (AC: #1)
-  - [ ] Visual representation of scores
-  - [ ] Color-coded or progress bar
+  - [ ] Visual representation of scores using status chips
+  - [ ] Color-coded or progress bar indicators
+  - [ ] Use computed Signals for derived display values
 - [ ] Task 3: Implement add flow (AC: #2)
-  - [ ] Activity dropdown (load activities)
+  - [ ] Activity dropdown (load activities from API)
   - [ ] Date picker
-  - [ ] Score, Speed, Accuracy inputs
-  - [ ] Save and refresh
+  - [ ] Score, Speed, Accuracy inputs with validation
+  - [ ] Save via Evaluation API and refresh list using Signal updates
 - [ ] Task 4: Implement inline edit (AC: #3)
-  - [ ] Click row to edit
-  - [ ] Update and save
+  - [ ] Click row to edit with Signal-driven edit state
+  - [ ] Update and save via Evaluation API
 
 ## Dev Notes
 
 ### Evaluation Tab Layout
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ Evaluations                                [Add Evaluation]  │
-├─────────────────────────────────────────────────────────────┤
-│ Activity    │ Date       │ Score │ Speed │ Accuracy │ Notes │
-│ Reading L1  │ 2026-01-02 │ 85    │ 45wpm │ 92%      │ Good  │
-│ Math Basics │ 2026-01-01 │ 78    │ -     │ 88%      │       │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+| Evaluations                                [Add Evaluation]  |
++-------------------------------------------------------------+
+| Activity    | Date       | Score | Speed | Accuracy | Notes  |
+| Reading L1  | 2026-01-02 | 85    | 45wpm | 92%      | Good   |
+| Math Basics | 2026-01-01 | 78    | -     | 88%      |        |
++-------------------------------------------------------------+
 ```
+
+### Frontend Architecture (Angular 21)
+
+- **State management**: Use Angular Signals for local component state
+- **API calls**: Use RxJS-based services with `toSignal()` for template binding
+- **Component pattern**: Standalone component with OnPush change detection
+- **Forms**: Reactive forms with signal-based validation state
 
 ### Previous Story Dependencies
 
-- **Story 4.6** provides: Profile tabs
-- **Story 5.4** provides: Evaluation API
+- **Story 4.6** provides: Profile tabs infrastructure
+- **Story 5.4** provides: Evaluation API (Dapper-based backend with `IEvaluationRepository`)
 
 ### References
 

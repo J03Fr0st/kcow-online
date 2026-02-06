@@ -35,12 +35,12 @@ so that **I can track payments against invoices**.
   - [ ] Invoice dropdown (optional)
   - [ ] Notes field
 - [ ] Task 2: Submit payment (AC: #2)
-  - [ ] Call POST payment API
+  - [ ] Call POST payment API (backed by Dapper repository)
   - [ ] Refresh payments list
   - [ ] Recalculate balance
   - [ ] Show generated receipt number
 - [ ] Task 3: Update invoice (AC: #3)
-  - [ ] Backend logic to update invoice status when paid
+  - [ ] Backend logic to update invoice status when paid (via IInvoiceRepository)
   - [ ] Refresh invoices list
 
 ## Dev Notes
@@ -51,11 +51,11 @@ so that **I can track payments against invoices**.
 <form class="card" (ngSubmit)="onSubmit()">
   <div class="card-body">
     <h3>Record Payment</h3>
-    
+
     <app-form-field label="Amount (R)">
       <input type="number" formControlName="amount" min="0.01" step="0.01" />
     </app-form-field>
-    
+
     <app-form-field label="Payment Method">
       <select formControlName="paymentMethod">
         <option value="Cash">Cash</option>
@@ -64,7 +64,7 @@ so that **I can track payments against invoices**.
         <option value="Other">Other</option>
       </select>
     </app-form-field>
-    
+
     <app-form-field label="Apply to Invoice (optional)">
       <select formControlName="invoiceId">
         <option value="">-- No specific invoice --</option>
@@ -73,11 +73,11 @@ so that **I can track payments against invoices**.
         }
       </select>
     </app-form-field>
-    
+
     <app-form-field label="Notes">
       <textarea formControlName="notes"></textarea>
     </app-form-field>
-    
+
     <div class="card-actions">
       <button type="button" class="btn" (click)="cancel()">Cancel</button>
       <button type="submit" class="btn btn-primary">Save Payment</button>
@@ -88,7 +88,13 @@ so that **I can track payments against invoices**.
 
 ### Receipt Number Generation
 
-Backend generates unique receipt number: `RCP-{YYYYMMDD}-{sequence}`
+Backend generates unique receipt number via `BillingService`: `RCP-{YYYYMMDD}-{sequence}`
+
+### Frontend Architecture
+
+- Angular 21 with Signals + RxJS
+- Payment form uses reactive forms
+- Calls POST `/api/students/:id/payments` endpoint
 
 ### Previous Story Dependencies
 

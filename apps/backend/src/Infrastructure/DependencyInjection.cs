@@ -1,4 +1,5 @@
 using Kcow.Application.Activities;
+using Kcow.Application.Attendance;
 using Kcow.Application.Auth;
 using Kcow.Application.ClassGroups;
 using Kcow.Application.Families;
@@ -57,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IFamilyRepository, FamilyRepository>();
         services.AddScoped<IActivityRepository, ActivityRepository>();
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
         // Register authentication services
         services.AddScoped<IAuthService, AuthService>();
@@ -80,6 +82,9 @@ public static class DependencyInjection
 
         // Register activity services
         services.AddScoped<IActivityService, ActivityService>();
+
+        // Register attendance services
+        services.AddScoped<IAttendanceService, Kcow.Infrastructure.Attendance.AttendanceService>();
 
         return services;
     }
