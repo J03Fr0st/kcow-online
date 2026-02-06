@@ -105,8 +105,8 @@ development_status:
   # Epic 5: Attendance & Evaluations
   # ========================
   epic-5: in-progress
-  5-1-attendance-entity-api-endpoints: in-progress
-  5-2-attendance-tab-in-student-profile: ready-for-dev
+  5-1-attendance-entity-api-endpoints: done
+  5-2-attendance-tab-in-student-profile: in-progress
   5-3-attendance-audit-trail: ready-for-dev
   5-4-evaluation-entity-api-endpoints: ready-for-dev
   5-5-evaluation-tab-in-student-profile: ready-for-dev

@@ -32,11 +32,12 @@ public class AttendanceController : ControllerBase
         [FromQuery] int? studentId = null,
         [FromQuery] int? classGroupId = null,
         [FromQuery] string? fromDate = null,
-        [FromQuery] string? toDate = null)
+        [FromQuery] string? toDate = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            var records = await _attendanceService.GetFilteredAsync(studentId, classGroupId, fromDate, toDate);
+            var records = await _attendanceService.GetFilteredAsync(studentId, classGroupId, fromDate, toDate, cancellationToken);
             return Ok(records);
         }
         catch (Exception ex)
@@ -55,11 +56,11 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var record = await _attendanceService.GetByIdAsync(id);
+            var record = await _attendanceService.GetByIdAsync(id, cancellationToken);
 
             if (record == null)
             {
@@ -89,7 +90,7 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Create([FromBody] CreateAttendanceRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateAttendanceRequest request, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
@@ -104,7 +105,7 @@ public class AttendanceController : ControllerBase
 
         try
         {
-            var record = await _attendanceService.CreateAsync(request);
+            var record = await _attendanceService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = record.Id }, record);
         }
         catch (InvalidOperationException ex)
@@ -133,7 +134,7 @@ public class AttendanceController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateAttendanceRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateAttendanceRequest request, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
@@ -148,7 +149,7 @@ public class AttendanceController : ControllerBase
 
         try
         {
-            var record = await _attendanceService.UpdateAsync(id, request);
+            var record = await _attendanceService.UpdateAsync(id, request, cancellationToken);
 
             if (record == null)
             {

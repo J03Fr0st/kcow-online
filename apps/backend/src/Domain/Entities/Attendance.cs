@@ -14,10 +14,6 @@ public class Attendance
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
-
-    // Navigation properties
-    public Student Student { get; set; } = null!;
-    public ClassGroup ClassGroup { get; set; } = null!;
 }
 
 /// <summary>

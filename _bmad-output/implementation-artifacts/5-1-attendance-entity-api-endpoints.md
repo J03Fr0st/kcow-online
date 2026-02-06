@@ -1,6 +1,6 @@
 # Story 5.1: Attendance Entity & API Endpoints
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -30,38 +30,38 @@ so that **attendance data can be tracked per student per session**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Attendance entity (AC: #1)
-  - [ ] Create `Attendance.cs` in `Domain/Entities/`
-  - [ ] Add `AttendanceStatus` enum (Present, Absent, Late)
-  - [ ] Add foreign key fields (StudentId, ClassGroupId) - no navigation properties (Dapper)
-- [ ] Task 2: Create DbUp migration script (AC: #3)
-  - [ ] Create `011_CreateAttendance.sql` in `Infrastructure/Migrations/Scripts/`
-  - [ ] Add indexes on student_id, session_date, class_group_id
-  - [ ] Add composite index on (student_id, session_date)
-  - [ ] Note: `010_CreateAttendance.sql` already exists - verify and extend or replace as needed
-- [ ] Task 3: Create DTOs (AC: #4)
-  - [ ] `AttendanceDto` in `Application/Attendance/` with student/class group info
-  - [ ] `CreateAttendanceRequest`, `UpdateAttendanceRequest`
-- [ ] Task 4: Create repository interface and implementation (AC: #2)
-  - [ ] `IAttendanceRepository` in `Application/Interfaces/`
-  - [ ] `AttendanceRepository` in `Infrastructure/Repositories/` using Dapper
-  - [ ] Use `IDbConnectionFactory` for connections
-  - [ ] Use parameterized SQL with `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync`
-  - [ ] Include filtering by StudentId, ClassGroupId, date range
-  - [ ] Note: `IAttendanceRepository` and `AttendanceRepository` already exist - verify and extend
-- [ ] Task 5: Create AttendanceService (AC: #4)
-  - [ ] `IAttendanceService` in `Application/Attendance/`
-  - [ ] `AttendanceService` in `Infrastructure/Attendance/` using `IAttendanceRepository`
-  - [ ] CRUD with filtering, track modifications for audit
-- [ ] Task 6: Create endpoints (AC: #4, #5)
-  - [ ] `AttendanceController` in `Api/Controllers/`
-  - [ ] Nested route on `StudentsController` for `/api/students/:id/attendance`
-  - [ ] Add `[Authorize]` attribute
-  - [ ] Return ProblemDetails for errors
-- [ ] Task 7: Register services in DI (AC: #2)
-  - [ ] Register `IAttendanceRepository`/`AttendanceRepository` in `DependencyInjection.cs`
-  - [ ] Register `IAttendanceService`/`AttendanceService` in `DependencyInjection.cs`
-  - [ ] Note: Some registrations may already exist - verify
+- [x] Task 1: Create Attendance entity (AC: #1)
+  - [x] Create `Attendance.cs` in `Domain/Entities/`
+  - [x] Add `AttendanceStatus` enum (Present, Absent, Late)
+  - [x] Add foreign key fields (StudentId, ClassGroupId) - no navigation properties (Dapper)
+- [x] Task 2: Create DbUp migration script (AC: #3)
+  - [x] Create `011_CreateAttendance.sql` in `Infrastructure/Migrations/Scripts/`
+  - [x] Add indexes on student_id, session_date, class_group_id
+  - [x] Add composite index on (student_id, session_date)
+  - [x] Note: `010_CreateAttendance.sql` already exists - verified; existing script already meets all requirements
+- [x] Task 3: Create DTOs (AC: #4)
+  - [x] `AttendanceDto` in `Application/Attendance/` with student/class group info
+  - [x] `CreateAttendanceRequest`, `UpdateAttendanceRequest`
+- [x] Task 4: Create repository interface and implementation (AC: #2)
+  - [x] `IAttendanceRepository` in `Application/Interfaces/`
+  - [x] `AttendanceRepository` in `Infrastructure/Repositories/` using Dapper
+  - [x] Use `IDbConnectionFactory` for connections
+  - [x] Use parameterized SQL with `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync`
+  - [x] Include filtering by StudentId, ClassGroupId, date range
+  - [x] Note: `IAttendanceRepository` and `AttendanceRepository` already exist - verified and functional
+- [x] Task 5: Create AttendanceService (AC: #4)
+  - [x] `IAttendanceService` in `Application/Attendance/`
+  - [x] `AttendanceService` in `Infrastructure/Attendance/` using `IAttendanceRepository`
+  - [x] CRUD with filtering, track modifications for audit
+- [x] Task 6: Create endpoints (AC: #4, #5)
+  - [x] `AttendanceController` in `Api/Controllers/`
+  - [x] Nested route on `StudentsController` for `/api/students/:id/attendance`
+  - [x] Add `[Authorize]` attribute
+  - [x] Return ProblemDetails for errors
+- [x] Task 7: Register services in DI (AC: #2)
+  - [x] Register `IAttendanceRepository`/`AttendanceRepository` in `DependencyInjection.cs`
+  - [x] Register `IAttendanceService`/`AttendanceService` in `DependencyInjection.cs`
+  - [x] Note: Registrations already existed - verified correct
 
 ## Dev Notes
 
@@ -153,10 +153,58 @@ Verify existing script at `Infrastructure/Migrations/Scripts/010_CreateAttendanc
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Investigated integration test failures (5 of 12 failing) - root cause: Dapper `DefaultTypeMap.MatchNamesWithUnderscores` was `false`, preventing snake_case DB columns from mapping to PascalCase C# properties when re-fetching records via JOIN queries
+- Fix: Added `DefaultTypeMap.MatchNamesWithUnderscores = true` in DependencyInjection.cs - improved overall test suite from 66/28 pass/fail to 77/17 pass/fail (fixed 11 additional tests beyond attendance)
+- Removed navigation properties (Student, ClassGroup) from Attendance entity per Dapper pattern compliance (Task 1 spec: "no navigation properties")
+
 ### Completion Notes List
 
+- All attendance implementation files were already present from a previous session
+- Fixed critical Dapper snake_case mapping bug that prevented correct data retrieval from JOIN queries
+- All 15 unit tests pass (AttendanceServiceTests)
+- All 12 integration tests pass (AttendanceControllerTests) including: CRUD, filtering, auth, status validation, audit trail, nested route, all status types
+- Remaining 17 integration test failures and 3 unit test failures are pre-existing (ClassGroups, Auth, Import, Families) - confirmed by running tests against clean main branch
+
+### Senior Developer Review (AI)
+
+**Reviewed:** 2026-02-06 | **Reviewer:** Joe (AI-assisted)
+**Result:** Approved with fixes applied
+
+**Issues Found & Fixed:**
+1. [HIGH] Fragile enum cast in MapToDto - added Enum.IsDefined guard for out-of-range status int values
+2. [HIGH] CancellationToken not propagated through service layer - added to IAttendanceService, AttendanceService, AttendanceController, StudentsController
+3. [MEDIUM] [Required] on int value types (StudentId, ClassGroupId) always passes - changed to [Range(1, int.MaxValue)]
+4. [MEDIUM] No SessionDate format validation - added [RegularExpression] for ISO date format (YYYY-MM-DD)
+
+**Noted (not fixed - codebase-wide patterns):**
+- Controller generic Exception catch blocks (matches existing pattern in ActivitiesController, etc.)
+- Duplicated CreateServerErrorProblemDetails helper across controllers
+- Story Dev Notes entity spec inconsistent with actual implementation types
+
+**All 15 unit tests pass after fixes.**
+
+### Change Log
+
+- 2026-02-06: Code review fixes: CancellationToken propagation, enum cast guard, request validation improvements
+- 2026-02-06: Fixed Dapper snake_case mapping (MatchNamesWithUnderscores=true), removed navigation properties from Attendance entity, verified all ACs met with passing tests
+
 ### File List
+
+- `apps/backend/src/Domain/Entities/Attendance.cs` - Entity + AttendanceStatus enum (modified: removed navigation properties)
+- `apps/backend/src/Application/Interfaces/IAttendanceRepository.cs` - Repository interface + AttendanceWithNames helper
+- `apps/backend/src/Application/Attendance/IAttendanceService.cs` - Service interface
+- `apps/backend/src/Application/Attendance/AttendanceDto.cs` - DTO with student/class group names
+- `apps/backend/src/Application/Attendance/CreateAttendanceRequest.cs` - Create request with validation
+- `apps/backend/src/Application/Attendance/UpdateAttendanceRequest.cs` - Update request with validation
+- `apps/backend/src/Infrastructure/Repositories/AttendanceRepository.cs` - Dapper repository with JOINs and filtering
+- `apps/backend/src/Infrastructure/Attendance/AttendanceService.cs` - Service with CRUD, status validation, audit tracking
+- `apps/backend/src/Infrastructure/Migrations/Scripts/010_CreateAttendance.sql` - Migration with indexes
+- `apps/backend/src/Infrastructure/DependencyInjection.cs` - DI registrations + Dapper MatchNamesWithUnderscores fix (modified)
+- `apps/backend/src/Api/Controllers/AttendanceController.cs` - REST controller with [Authorize]
+- `apps/backend/src/Api/Controllers/StudentsController.cs` - Nested route GET /api/students/{id}/attendance
+- `apps/backend/tests/Unit/AttendanceServiceTests.cs` - 15 unit tests
+- `apps/backend/tests/Integration/Attendance/AttendanceControllerTests.cs` - 12 integration tests

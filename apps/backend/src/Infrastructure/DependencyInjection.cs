@@ -1,3 +1,4 @@
+using Dapper;
 using Kcow.Application.Activities;
 using Kcow.Application.Attendance;
 using Kcow.Application.Auth;
@@ -34,6 +35,9 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // Enable Dapper snake_case column to PascalCase property mapping
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
+
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Data Source=kcow.db";
 

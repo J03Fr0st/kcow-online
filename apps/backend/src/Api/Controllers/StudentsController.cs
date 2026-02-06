@@ -352,11 +352,11 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(typeof(List<AttendanceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAttendance(int id)
+    public async Task<IActionResult> GetAttendance(int id, CancellationToken cancellationToken = default)
     {
         try
         {
-            var records = await _attendanceService.GetByStudentIdAsync(id);
+            var records = await _attendanceService.GetByStudentIdAsync(id, cancellationToken);
             return Ok(records);
         }
         catch (Exception ex)

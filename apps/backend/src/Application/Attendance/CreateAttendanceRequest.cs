@@ -10,19 +10,20 @@ public class CreateAttendanceRequest
     /// <summary>
     /// The student ID (required).
     /// </summary>
-    [Required(ErrorMessage = "StudentId is required")]
+    [Range(1, int.MaxValue, ErrorMessage = "StudentId must be a positive integer")]
     public int StudentId { get; set; }
 
     /// <summary>
     /// The class group ID (required).
     /// </summary>
-    [Required(ErrorMessage = "ClassGroupId is required")]
+    [Range(1, int.MaxValue, ErrorMessage = "ClassGroupId must be a positive integer")]
     public int ClassGroupId { get; set; }
 
     /// <summary>
     /// The session date in ISO format (YYYY-MM-DD) (required).
     /// </summary>
     [Required(ErrorMessage = "SessionDate is required")]
+    [RegularExpression(@"^\d{4}-\d{2}-\d{2}$", ErrorMessage = "SessionDate must be in ISO format (YYYY-MM-DD)")]
     public string SessionDate { get; set; } = string.Empty;
 
     /// <summary>

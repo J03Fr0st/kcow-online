@@ -26,9 +26,10 @@ public class AttendanceService : IAttendanceService
         int? studentId = null,
         int? classGroupId = null,
         string? fromDate = null,
-        string? toDate = null)
+        string? toDate = null,
+        CancellationToken cancellationToken = default)
     {
-        var records = await _attendanceRepository.GetFilteredAsync(studentId, classGroupId, fromDate, toDate);
+        var records = await _attendanceRepository.GetFilteredAsync(studentId, classGroupId, fromDate, toDate, cancellationToken);
 
         var dtos = records.Select(MapToDto).ToList();
 
@@ -41,9 +42,9 @@ public class AttendanceService : IAttendanceService
     /// <summary>
     /// Gets a single attendance record by ID.
     /// </summary>
-    public async Task<AttendanceDto?> GetByIdAsync(int id)
+    public async Task<AttendanceDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var record = await _attendanceRepository.GetByIdAsync(id);
+        var record = await _attendanceRepository.GetByIdAsync(id, cancellationToken);
 
         if (record == null)
         {
@@ -58,9 +59,9 @@ public class AttendanceService : IAttendanceService
     /// <summary>
     /// Gets attendance history for a specific student.
     /// </summary>
-    public async Task<List<AttendanceDto>> GetByStudentIdAsync(int studentId)
+    public async Task<List<AttendanceDto>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default)
     {
-        var records = await _attendanceRepository.GetByStudentIdAsync(studentId);
+        var records = await _attendanceRepository.GetByStudentIdAsync(studentId, cancellationToken);
         var dtos = records.Select(MapToDto).ToList();
 
         _logger.LogInformation("Retrieved {Count} attendance records for student {StudentId}", dtos.Count, studentId);
@@ -70,7 +71,7 @@ public class AttendanceService : IAttendanceService
     /// <summary>
     /// Creates a new attendance record.
     /// </summary>
-    public async Task<AttendanceDto> CreateAsync(CreateAttendanceRequest request)
+    public async Task<AttendanceDto> CreateAsync(CreateAttendanceRequest request, CancellationToken cancellationToken = default)
     {
         if (!TryParseStatus(request.Status, out var statusEnum))
         {
@@ -87,23 +88,23 @@ public class AttendanceService : IAttendanceService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _attendanceRepository.CreateAsync(attendance);
+        var id = await _attendanceRepository.CreateAsync(attendance, cancellationToken);
         attendance.Id = id;
 
         _logger.LogInformation("Created attendance record with ID {AttendanceId} for student {StudentId} on {SessionDate}",
             id, request.StudentId, request.SessionDate);
 
         // Fetch the full record with joined names
-        var created = await _attendanceRepository.GetByIdAsync(id);
+        var created = await _attendanceRepository.GetByIdAsync(id, cancellationToken);
         return MapToDto(created!);
     }
 
     /// <summary>
     /// Updates an existing attendance record (triggers audit via ModifiedAt).
     /// </summary>
-    public async Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request)
+    public async Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request, CancellationToken cancellationToken = default)
     {
-        var existing = await _attendanceRepository.GetByIdAsync(id);
+        var existing = await _attendanceRepository.GetByIdAsync(id, cancellationToken);
 
         if (existing == null)
         {
@@ -124,12 +125,12 @@ public class AttendanceService : IAttendanceService
             ModifiedAt = DateTime.UtcNow
         };
 
-        await _attendanceRepository.UpdateAsync(attendance);
+        await _attendanceRepository.UpdateAsync(attendance, cancellationToken);
 
         _logger.LogInformation("Updated attendance record with ID {AttendanceId}, ModifiedAt set for audit trail", id);
 
         // Fetch the updated record with joined names
-        var updated = await _attendanceRepository.GetByIdAsync(id);
+        var updated = await _attendanceRepository.GetByIdAsync(id, cancellationToken);
         return MapToDto(updated!);
     }
 
@@ -139,6 +140,11 @@ public class AttendanceService : IAttendanceService
             new[] { record.StudentFirstName, record.StudentLastName }
             .Where(s => !string.IsNullOrWhiteSpace(s)));
 
+        var statusValue = record.Status;
+        var statusString = Enum.IsDefined(typeof(AttendanceStatus), statusValue)
+            ? ((AttendanceStatus)statusValue).ToString()
+            : $"Unknown({statusValue})";
+
         return new AttendanceDto
         {
             Id = record.Id,
@@ -147,7 +153,7 @@ public class AttendanceService : IAttendanceService
             ClassGroupId = record.ClassGroupId,
             ClassGroupName = record.ClassGroupName,
             SessionDate = record.SessionDate,
-            Status = ((AttendanceStatus)record.Status).ToString(),
+            Status = statusString,
             Notes = record.Notes,
             CreatedAt = record.CreatedAt,
             ModifiedAt = record.ModifiedAt
