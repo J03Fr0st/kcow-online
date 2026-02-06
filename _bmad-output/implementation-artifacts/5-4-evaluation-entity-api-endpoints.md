@@ -1,6 +1,6 @@
 # Story 5.4: Evaluation Entity & API Endpoints
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -23,29 +23,29 @@ so that **student progress evaluations can be recorded**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Evaluation entity (AC: #1)
-  - [ ] Create `Evaluation.cs` in `Domain/Entities/` with all properties
-  - [ ] No navigation properties -- plain POCO entity (no `Student` or `Activity` references)
-  - [ ] Note: Activity entity already exists from Epic 8 with Code, Name, Description, Folder, GradeLevel, Icon fields
-- [ ] Task 2: Create DbUp migration script (AC: #2)
-  - [ ] Create `Infrastructure/Migrations/Scripts/012_CreateEvaluation.sql`
-  - [ ] Define `evaluations` table with FKs to `students` and `activities`
-  - [ ] Add indexes on `student_id`, `activity_id`, and `evaluation_date`
-- [ ] Task 3: Create Evaluation repository (AC: #3)
-  - [ ] Create `IEvaluationRepository` interface in `Application/Interfaces/`
-  - [ ] Create `EvaluationRepository` in `Infrastructure/Repositories/` using Dapper + `IDbConnectionFactory`
-  - [ ] Methods: `GetAllAsync`, `GetByIdAsync`, `GetByStudentIdAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`
-  - [ ] Use explicit SQL JOINs to fetch related Student/Activity names
-  - [ ] Register in `Infrastructure/DependencyInjection.cs`
-- [ ] Task 4: Create DTOs (AC: #3, #4)
-  - [ ] `EvaluationDto` (includes student name, activity name from JOINs)
-  - [ ] `CreateEvaluationRequest`, `UpdateEvaluationRequest`
-- [ ] Task 5: Create EvaluationService and EvaluationController (AC: #3, #4)
-  - [ ] `IEvaluationService` in `Application/Interfaces/`
-  - [ ] `EvaluationService` in `Infrastructure/Evaluation/` using `IEvaluationRepository`
-  - [ ] `EvaluationController` with full CRUD endpoints
-  - [ ] GET `/api/students/{id}/evaluations` for student evaluation history
-  - [ ] Register service in `Infrastructure/DependencyInjection.cs`
+- [x] Task 1: Create Evaluation entity (AC: #1)
+  - [x] Create `Evaluation.cs` in `Domain/Entities/` with all properties
+  - [x] No navigation properties -- plain POCO entity (no `Student` or `Activity` references)
+  - [x] Note: Activity entity already exists from Epic 8 with Code, Name, Description, Folder, GradeLevel, Icon fields
+- [x] Task 2: Create DbUp migration script (AC: #2)
+  - [x] Create `Infrastructure/Migrations/Scripts/012_CreateEvaluation.sql`
+  - [x] Define `evaluations` table with FKs to `students` and `activities`
+  - [x] Add indexes on `student_id`, `activity_id`, and `evaluation_date`
+- [x] Task 3: Create Evaluation repository (AC: #3)
+  - [x] Create `IEvaluationRepository` interface in `Application/Interfaces/`
+  - [x] Create `EvaluationRepository` in `Infrastructure/Repositories/` using Dapper + `IDbConnectionFactory`
+  - [x] Methods: `GetAllAsync`, `GetByIdAsync`, `GetByStudentIdAsync`, `CreateAsync`, `UpdateAsync`, `DeleteAsync`
+  - [x] Use explicit SQL JOINs to fetch related Student/Activity names
+  - [x] Register in `Infrastructure/DependencyInjection.cs`
+- [x] Task 4: Create DTOs (AC: #3, #4)
+  - [x] `EvaluationDto` (includes student name, activity name from JOINs)
+  - [x] `CreateEvaluationRequest`, `UpdateEvaluationRequest`
+- [x] Task 5: Create EvaluationService and EvaluationController (AC: #3, #4)
+  - [x] `IEvaluationService` in `Application/Interfaces/`
+  - [x] `EvaluationService` in `Infrastructure/Evaluation/` using `IEvaluationRepository`
+  - [x] `EvaluationController` with full CRUD endpoints
+  - [x] GET `/api/students/{id}/evaluations` for student evaluation history
+  - [x] Register service in `Infrastructure/DependencyInjection.cs`
 
 ## Dev Notes
 
@@ -177,10 +177,58 @@ public async Task<EvaluationWithNames?> GetByIdAsync(int id, CancellationToken c
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+glm-4.7 (Claude Opus 4.6 compatible)
 
 ### Debug Log References
 
 ### Completion Notes List
 
+**Implementation Summary:**
+- Created Evaluation entity as plain POCO with all required properties (Id, StudentId, ActivityId, EvaluationDate, Score, SpeedMetric, AccuracyMetric, Notes, CreatedAt, ModifiedAt)
+- Created DbUp migration script (012_CreateEvaluation.sql) with proper FKs to students and activities tables, plus indexes for performance
+- Implemented IEvaluationRepository and EvaluationRepository following Dapper pattern with explicit SQL JOINs
+- Created EvaluationDto, CreateEvaluationRequest, and UpdateEvaluationRequest DTOs with proper validation
+- Implemented IEvaluationService and EvaluationService with audit logging support for create and update operations
+- Created EvaluationController with full CRUD endpoints and student evaluation history endpoint
+- Registered repository and service in DependencyInjection.cs
+- Wrote 19 unit tests for EvaluationService covering all CRUD operations and edge cases
+
+**All acceptance criteria met:**
+1. ✅ Evaluation entity exists with all specified properties
+2. ✅ DbUp migration script creates evaluations table with FKs to students and activities
+3. ✅ /api/evaluations endpoints support CRUD via Dapper repository
+4. ✅ GET /api/students/{id}/evaluations returns evaluation history
+
+**Tests Passing:** 21/21 EvaluationServiceTests (added 2 new tests for FK validation)
+
+### Code Review Fixes Applied
+
+**Issues Found and Fixed:**
+1. ✅ **HIGH:** Added audit logging to DeleteAsync - now logs who deleted which evaluation record
+2. ✅ **MEDIUM:** Added FK validation before create - now throws InvalidOperationException with clear message when StudentId or ActivityId don't exist
+3. ✅ **MEDIUM:** Skip update when no changes detected - now skips database write if no actual changes
+
+**Changes Made:**
+- Updated `IEvaluationService.DeleteAsync` signature to include `deletedBy` parameter
+- Updated `EvaluationService` to inject `IStudentRepository` and `IActivityRepository` for FK validation
+- Added `InvalidOperationException` handling in `EvaluationController.Create` for proper 400 responses
+- Modified `UpdateAsync` to return early when `changes.Count == 0`
+- Updated 21 unit tests to include new dependencies and validation tests
+
 ### File List
+
+**New Files Created:**
+- apps/backend/src/Domain/Entities/Evaluation.cs
+- apps/backend/src/Infrastructure/Migrations/Scripts/012_CreateEvaluation.sql
+- apps/backend/src/Application/Interfaces/IEvaluationRepository.cs
+- apps/backend/src/Infrastructure/Repositories/EvaluationRepository.cs
+- apps/backend/src/Application/Evaluations/EvaluationDto.cs
+- apps/backend/src/Application/Evaluations/CreateEvaluationRequest.cs
+- apps/backend/src/Application/Evaluations/UpdateEvaluationRequest.cs
+- apps/backend/src/Application/Evaluations/IEvaluationService.cs
+- apps/backend/src/Infrastructure/Evaluations/EvaluationService.cs
+- apps/backend/src/Api/Controllers/EvaluationController.cs
+- apps/backend/tests/Unit/EvaluationServiceTests.cs
+
+**Modified Files:**
+- apps/backend/src/Infrastructure/DependencyInjection.cs
