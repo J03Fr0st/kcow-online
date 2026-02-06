@@ -186,12 +186,12 @@
           </div>
         }
 
-        <!-- Attendance Tab (Placeholder) -->
+        <!-- Attendance Tab -->
         @if (isTabActive('attendance')) {
-          <div id="panel-attendance" role="tabpanel" aria-labelledby="tab-attendance" class="flex flex-col items-center justify-center py-12">
-            <div class="text-6xl mb-4" aria-hidden="true">📋</div>
-            <h3 class="text-xl font-semibold">Attendance Records</h3>
-            <p class="text-base-content/60 mt-2">Attendance tracking coming in Epic 5</p>
+          <div id="panel-attendance" role="tabpanel" aria-labelledby="tab-attendance">
+            @if (student()) {
+              <app-attendance-tab [studentId]="student()!.id" />
+            }
           </div>
         }
 

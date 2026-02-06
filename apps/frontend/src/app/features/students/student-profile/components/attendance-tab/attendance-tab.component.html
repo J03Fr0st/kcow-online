@@ -1,0 +1,223 @@
+<div class="attendance-tab space-y-4">
+  <!-- Header with Add button -->
+  <div class="flex justify-between items-center">
+    <h3 class="text-lg font-semibold">Attendance History</h3>
+    @if (!showAddForm()) {
+      <button class="btn btn-primary btn-sm" (click)="showAddAttendanceForm()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Attendance
+      </button>
+    }
+  </div>
+
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-8" aria-busy="true" aria-label="Loading attendance records">
+      <span class="loading loading-spinner text-primary"></span>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error(); as errorMsg) {
+    <div role="alert" class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ errorMsg }}</span>
+    </div>
+  }
+
+  <!-- Add Attendance Form -->
+  @if (showAddForm()) {
+    <div class="card bg-base-200">
+      <div class="card-body">
+        <h4 class="card-title text-base">New Attendance Record</h4>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Date input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Date</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              type="date"
+              class="input input-bordered input-sm"
+              [value]="newAttendanceForm().sessionDate"
+              (input)="updateNewForm('sessionDate', $any($event.target).value)"
+            />
+          </div>
+
+          <!-- Class Group dropdown -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Class Group</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            @if (isLoadingClassGroups()) {
+              <select class="select select-bordered select-sm" disabled>
+                <option>Loading...</option>
+              </select>
+            } @else {
+              <select
+                class="select select-bordered select-sm"
+                [value]="newAttendanceForm().classGroupId || ''"
+                (change)="updateNewForm('classGroupId', parseInt($any($event.target).value) || 0)"
+              >
+                <option value="" disabled>Select class group</option>
+                @for (cg of classGroups(); track cg.id) {
+                  <option [value]="cg.id">{{ cg.name }}{{ cg.schoolName ? ' - ' + cg.schoolName : '' }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <!-- Status dropdown -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Status</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <select
+              class="select select-bordered select-sm"
+              [value]="newAttendanceForm().status"
+              (change)="updateNewForm('status', $any($event.target).value)"
+            >
+              @for (status of statusOptions; track status) {
+                <option [value]="status">{{ status }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Notes input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Notes</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm"
+              [value]="newAttendanceForm().notes"
+              placeholder="Optional notes"
+              (input)="updateNewForm('notes', $any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="card-actions justify-end mt-2">
+          <button class="btn btn-ghost btn-sm" (click)="cancelAdd()">Cancel</button>
+          <button
+            class="btn btn-primary btn-sm"
+            [disabled]="!isNewFormValid() || isSaving()"
+            (click)="addAttendance()"
+          >
+            @if (isSaving()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Attendance Records Table -->
+  @if (sortedRecords().length === 0 && !isLoading()) {
+    <div class="text-center py-8 text-base-content/60">
+      <p>No attendance records found</p>
+    </div>
+  } @else if (sortedRecords().length > 0) {
+    <div class="overflow-x-auto">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Class Group</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (record of sortedRecords(); track record.id) {
+            <tr [class.bg-base-200]="editingId() === record.id">
+              <td>
+                @if (editingId() === record.id) {
+                  <input
+                    type="date"
+                    class="input input-bordered input-xs"
+                    [value]="record.sessionDate"
+                    disabled
+                  />
+                } @else {
+                  {{ formatDate(record.sessionDate) }}
+                }
+              </td>
+              <td>
+                @if (record.classGroupName) {
+                  {{ record.classGroupName }}
+                } @else if (record.classGroupId) {
+                  ID: {{ record.classGroupId }}
+                } @else {
+                  -
+                }
+              </td>
+              <td>
+                @if (editingId() === record.id) {
+                  <select
+                    class="select select-bordered select-xs"
+                    [value]="editingForm()?.status"
+                    (change)="updateEditForm('status', $any($event.target).value)"
+                    (keyup.enter)="saveEdit()"
+                  >
+                    @for (status of statusOptions; track status) {
+                      <option [value]="status">{{ status }}</option>
+                    }
+                  </select>
+                } @else {
+                  <span class="badge" [class]="getStatusClass(record.status)">{{ record.status }}</span>
+                }
+              </td>
+              <td>
+                @if (editingId() === record.id) {
+                  <input
+                    type="text"
+                    class="input input-bordered input-xs"
+                    [value]="editingForm()?.notes || ''"
+                    placeholder="Add notes"
+                    (input)="updateEditForm('notes', $any($event.target).value)"
+                    (keyup.enter)="saveEdit()"
+                    (blur)="onEditBlur()"
+                  />
+                } @else {
+                  {{ record.notes || '-' }}
+                }
+              </td>
+              <td class="text-right">
+                @if (editingId() === record.id) {
+                  <div class="flex justify-end gap-1">
+                    <button class="btn btn-ghost btn-xs" (click)="cancelEdit()">Cancel</button>
+                    <button
+                      class="btn btn-primary btn-xs"
+                      [disabled]="!isEditFormValid() || isSaving()"
+                      (click)="saveEdit()"
+                    >
+                      @if (isSaving()) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      }
+                      Save
+                    </button>
+                  </div>
+                } @else {
+                  <button class="btn btn-ghost btn-xs" (click)="startEdit(record)">Edit</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

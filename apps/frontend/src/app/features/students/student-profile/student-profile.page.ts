@@ -6,6 +6,7 @@ import { StudentService, type Student, type ProblemDetails } from '@core/service
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
 import { ChildInfoTabComponent } from './components/child-info-tab/child-info-tab.component';
 import { FamilySectionComponent } from './components/family-section/family-section.component';
+import { AttendanceTabComponent } from './components/attendance-tab/attendance-tab.component';
 
 type TabId = 'child-info' | 'financial' | 'attendance' | 'evaluation';
 
@@ -18,7 +19,7 @@ interface Tab {
 @Component({
     selector: 'app-student-profile',
     standalone: true,
-    imports: [CommonModule, StudentAvatarComponent, RouterLink, ChildInfoTabComponent, FamilySectionComponent],
+    imports: [CommonModule, StudentAvatarComponent, RouterLink, ChildInfoTabComponent, FamilySectionComponent, AttendanceTabComponent],
     templateUrl: './student-profile.page.html',
     styleUrls: ['./student-profile.page.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
