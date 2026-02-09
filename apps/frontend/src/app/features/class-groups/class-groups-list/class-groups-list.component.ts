@@ -9,6 +9,7 @@ import type { Truck } from '@features/trucks/models/truck.model';
 import { NotificationService } from '@core/services/notification.service';
 import { ClassGroupFormComponent } from '../class-group-form/class-group-form.component';
 import { WeeklyScheduleComponent } from '../weekly-schedule/weekly-schedule.component';
+import { BulkAttendanceComponent } from '../bulk-attendance/bulk-attendance.component';
 import { getDayOfWeekName } from '../models/class-group.model';
 
 type ViewMode = 'list' | 'weekly';
@@ -16,7 +17,7 @@ type ViewMode = 'list' | 'weekly';
 @Component({
   selector: 'app-class-groups-list',
   standalone: true,
-  imports: [CommonModule, ClassGroupFormComponent, WeeklyScheduleComponent],
+  imports: [CommonModule, ClassGroupFormComponent, WeeklyScheduleComponent, BulkAttendanceComponent],
   templateUrl: './class-groups-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -32,6 +33,7 @@ export class ClassGroupsListComponent implements OnInit {
   protected editingId = signal<number | null>(null);
   private showFormFlag = signal<boolean>(false);
   protected viewMode = signal<ViewMode>('list');
+  protected takingAttendanceId = signal<number | null>(null);
 
   // Filters
   protected filterSchoolId = signal<number | null>(null);
@@ -56,6 +58,9 @@ export class ClassGroupsListComponent implements OnInit {
 
   // Computed: show form when editing or when create flag is set
   protected showForm = computed(() => this.editingId() !== null || this.showFormFlag());
+
+  // Computed: show bulk attendance component when taking attendance
+  protected showBulkAttendance = computed(() => this.takingAttendanceId() !== null);
 
   ngOnInit(): void {
     this.loadClassGroups();
@@ -220,5 +225,19 @@ export class ClassGroupsListComponent implements OnInit {
    */
   protected isWeeklyView(): boolean {
     return this.viewMode() === 'weekly';
+  }
+
+  /**
+   * Open bulk attendance view for a class group
+   */
+  protected openTakeAttendance(classGroup: ClassGroup): void {
+    this.takingAttendanceId.set(classGroup.id);
+  }
+
+  /**
+   * Close bulk attendance view
+   */
+  protected closeTakeAttendance(): void {
+    this.takingAttendanceId.set(null);
   }
 }

@@ -39,6 +39,15 @@ public interface IAttendanceRepository
     /// Checks if an attendance record exists by ID.
     /// </summary>
     Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Batch creates or updates attendance records for a class group session.
+    /// Uses transaction for atomic all-or-nothing operation.
+    /// </summary>
+    /// <returns>Tuple with (created count, updated count)</returns>
+    Task<(int created, int updated)> BatchSaveAsync(
+        List<Kcow.Domain.Entities.Attendance> attendanceRecords,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

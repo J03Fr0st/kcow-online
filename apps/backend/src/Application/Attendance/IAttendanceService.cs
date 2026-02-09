@@ -34,4 +34,10 @@ public interface IAttendanceService
     /// Updates an existing attendance record with audit logging.
     /// </summary>
     Task<AttendanceDto?> UpdateAsync(int id, UpdateAttendanceRequest request, string changedBy, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Batch creates or updates attendance records for a class group session.
+    /// Uses transaction for atomic all-or-nothing operation.
+    /// </summary>
+    Task<BatchAttendanceResponse> BatchSaveAsync(BatchAttendanceRequest request, string createdBy, CancellationToken cancellationToken = default);
 }

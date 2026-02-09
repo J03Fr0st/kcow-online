@@ -162,13 +162,22 @@
             </div>
             } @else {
             <!-- Regular Actions -->
-            <button
-              class="btn btn-ghost btn-xs"
-              (click)="startDelete(classGroup)"
-              aria-label="Archive class group"
-              title="Archive class group">
-              🗑️
-            </button>
+            <div class="flex gap-1">
+              <button
+                class="btn btn-ghost btn-xs"
+                (click)="openTakeAttendance(classGroup)"
+                aria-label="Take attendance"
+                title="Take attendance">
+                ✅
+              </button>
+              <button
+                class="btn btn-ghost btn-xs"
+                (click)="startDelete(classGroup)"
+                aria-label="Archive class group"
+                title="Archive class group">
+                🗑️
+              </button>
+            </div>
             }
           </td>
         </tr>
@@ -200,6 +209,24 @@
         [classGroupId]="editingId()"
         (submit)="onFormSubmit($event)"
         (cancel)="closeForm()"
+      />
+    </div>
+  </div>
+  }
+
+  <!-- Bulk Attendance Modal -->
+  @if (showBulkAttendance()) {
+  <div class="fixed inset-0 z-50 flex justify-end">
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 bg-base-300/50 backdrop-blur-sm transition-opacity"
+      (click)="closeTakeAttendance()"></div>
+
+    <!-- Drawer Panel -->
+    <div class="relative w-full max-w-4xl bg-base-100 shadow-xl h-full overflow-y-auto">
+      <app-bulk-attendance
+        [classGroupId]="takingAttendanceId()!"
+        (close)="closeTakeAttendance()"
       />
     </div>
   </div>

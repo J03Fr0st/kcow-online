@@ -124,4 +124,83 @@ public class AttendanceRepository : IAttendanceRepository
         var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
         return count > 0;
     }
+
+    public async Task<(int created, int updated)> BatchSaveAsync(
+        List<Kcow.Domain.Entities.Attendance> attendanceRecords,
+        CancellationToken cancellationToken = default)
+    {
+        using var connection = _connectionFactory.Create();
+        connection.Open();
+
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            int createdCount = 0;
+            int updatedCount = 0;
+
+            foreach (var record in attendanceRecords)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Check if record exists for this student, class group, and date
+                const string checkSql = @"
+                    SELECT id FROM attendance
+                    WHERE student_id = @StudentId AND class_group_id = @ClassGroupId AND session_date = @SessionDate
+                    LIMIT 1";
+
+                var checkCommand = new CommandDefinition(
+                    checkSql,
+                    new { record.StudentId, record.ClassGroupId, record.SessionDate },
+                    transaction,
+                    cancellationToken: cancellationToken);
+
+                var existingId = await connection.QuerySingleOrDefaultAsync<int?>(checkCommand);
+
+                if (existingId.HasValue)
+                {
+                    // Update existing record
+                    const string updateSql = @"
+                        UPDATE attendance
+                        SET status = @Status,
+                            notes = @Notes,
+                            modified_at = @ModifiedAt
+                        WHERE id = @Id";
+
+                    var updateCommand = new CommandDefinition(
+                        updateSql,
+                        new { Id = existingId.Value, record.Status, record.Notes, record.ModifiedAt },
+                        transaction,
+                        cancellationToken: cancellationToken);
+
+                    await connection.ExecuteAsync(updateCommand);
+                    updatedCount++;
+                }
+                else
+                {
+                    // Insert new record
+                    const string insertSql = @"
+                        INSERT INTO attendance (student_id, class_group_id, session_date, status, notes, created_at, modified_at)
+                        VALUES (@StudentId, @ClassGroupId, @SessionDate, @Status, @Notes, @CreatedAt, @ModifiedAt)
+                        RETURNING id";
+
+                    var insertCommand = new CommandDefinition(
+                        insertSql,
+                        record,
+                        transaction,
+                        cancellationToken: cancellationToken);
+
+                    await connection.QuerySingleAsync<int>(insertCommand);
+                    createdCount++;
+                }
+            }
+
+            transaction.Commit();
+            return (createdCount, updatedCount);
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 }

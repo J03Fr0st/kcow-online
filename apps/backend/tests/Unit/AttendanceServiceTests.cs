@@ -325,4 +325,129 @@ public class AttendanceServiceTests
         Assert.NotNull(result);
         await _attendanceRepository.Received(1).CreateAsync(Arg.Any<Kcow.Domain.Entities.Attendance>(), Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task BatchSaveAsync_WithValidEntries_ReturnsCounts()
+    {
+        // Arrange
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = 1,
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = 1, Status = "Present" },
+                new() { StudentId = 2, Status = "Absent", Notes = "Sick" },
+                new() { StudentId = 3, Status = "Late", Notes = "10 min late" }
+            }
+        };
+
+        _attendanceRepository.BatchSaveAsync(
+            Arg.Any<List<Kcow.Domain.Entities.Attendance>>(),
+            Arg.Any<CancellationToken>())
+            .Returns((2, 1));
+
+        // Act
+        var result = await _service.BatchSaveAsync(request, "admin@test.com");
+
+        // Assert
+        Assert.Equal(2, result.Created);
+        Assert.Equal(1, result.Updated);
+        Assert.Equal(0, result.Failed);
+        Assert.Null(result.Errors);
+        await _attendanceRepository.Received(1).BatchSaveAsync(
+            Arg.Is<List<Kcow.Domain.Entities.Attendance>>(list => list.Count == 3),
+            Arg.Any<CancellationToken>());
+        await _auditService.Received(1).LogChangeAsync(
+            "Attendance", 1, "BatchSave",
+            Arg.Any<string?>(), Arg.Any<string>(),
+            "admin@test.com", Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task BatchSaveAsync_WithInvalidStatus_ReturnsFailureWithoutCallingRepository()
+    {
+        // Arrange
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = 1,
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = 1, Status = "Present" },
+                new() { StudentId = 2, Status = "BadStatus" }
+            }
+        };
+
+        // Act
+        var result = await _service.BatchSaveAsync(request, "admin@test.com");
+
+        // Assert
+        Assert.Equal(0, result.Created);
+        Assert.Equal(0, result.Updated);
+        Assert.Equal(1, result.Failed);
+        Assert.NotNull(result.Errors);
+        Assert.Single(result.Errors);
+        Assert.Contains("Student 2", result.Errors[0]);
+        Assert.Contains("BadStatus", result.Errors[0]);
+        await _attendanceRepository.DidNotReceive().BatchSaveAsync(
+            Arg.Any<List<Kcow.Domain.Entities.Attendance>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task BatchSaveAsync_WhenRepositoryThrows_ReturnsAllFailed()
+    {
+        // Arrange
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = 1,
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = 1, Status = "Present" },
+                new() { StudentId = 2, Status = "Absent" }
+            }
+        };
+
+        _attendanceRepository.BatchSaveAsync(
+            Arg.Any<List<Kcow.Domain.Entities.Attendance>>(),
+            Arg.Any<CancellationToken>())
+            .Returns<(int, int)>(_ => throw new Exception("Database error"));
+
+        // Act
+        var result = await _service.BatchSaveAsync(request, "admin@test.com");
+
+        // Assert
+        Assert.Equal(0, result.Created);
+        Assert.Equal(0, result.Updated);
+        Assert.Equal(2, result.Failed);
+        Assert.NotNull(result.Errors);
+        Assert.Contains("rolled back", result.Errors[0]);
+    }
+
+    [Fact]
+    public async Task BatchSaveAsync_WithEmptyEntries_ReturnsZeroCounts()
+    {
+        // Arrange
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = 1,
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>()
+        };
+
+        _attendanceRepository.BatchSaveAsync(
+            Arg.Any<List<Kcow.Domain.Entities.Attendance>>(),
+            Arg.Any<CancellationToken>())
+            .Returns((0, 0));
+
+        // Act
+        var result = await _service.BatchSaveAsync(request, "admin@test.com");
+
+        // Assert
+        Assert.Equal(0, result.Created);
+        Assert.Equal(0, result.Updated);
+        Assert.Equal(0, result.Failed);
+    }
 }

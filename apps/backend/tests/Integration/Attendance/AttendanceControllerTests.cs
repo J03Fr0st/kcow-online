@@ -458,4 +458,134 @@ public class AttendanceControllerTests : IClassFixture<CustomWebApplicationFacto
             Assert.Equal(status, record.Status);
         }
     }
+
+    [Fact]
+    public async Task BatchAttendance_WithValidData_ReturnsCreatedCounts()
+    {
+        // Arrange
+        EnsureDatabaseInitialized();
+        using var client = await CreateAuthenticatedClientAsync();
+
+        var student1Id = await EnsureStudentExistsAsync(client);
+        var student2Id = await EnsureStudentExistsAsync(client);
+        var classGroupId = EnsureClassGroupExistsViaDb();
+
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = classGroupId,
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = student1Id, Status = "Present" },
+                new() { StudentId = student2Id, Status = "Absent", Notes = "Sick" }
+            }
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync($"/api/class-groups/{classGroupId}/attendance", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BatchAttendanceResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Created);
+        Assert.Equal(0, result.Updated);
+        Assert.Equal(0, result.Failed);
+    }
+
+    [Fact]
+    public async Task BatchAttendance_UpdateExisting_ReturnsUpdatedCounts()
+    {
+        // Arrange
+        EnsureDatabaseInitialized();
+        using var client = await CreateAuthenticatedClientAsync();
+
+        var studentId = await EnsureStudentExistsAsync(client);
+        var classGroupId = EnsureClassGroupExistsViaDb();
+
+        // Create initial attendance
+        var initialRequest = new BatchAttendanceRequest
+        {
+            ClassGroupId = classGroupId,
+            SessionDate = "2026-02-08",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = studentId, Status = "Present" }
+            }
+        };
+
+        await client.PostAsJsonAsync($"/api/class-groups/{classGroupId}/attendance", initialRequest);
+
+        // Update with different status
+        var updateRequest = new BatchAttendanceRequest
+        {
+            ClassGroupId = classGroupId,
+            SessionDate = "2026-02-08",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = studentId, Status = "Late", Notes = "Updated" }
+            }
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync($"/api/class-groups/{classGroupId}/attendance", updateRequest);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<BatchAttendanceResponse>();
+        Assert.NotNull(result);
+        Assert.Equal(0, result.Created);
+        Assert.Equal(1, result.Updated);
+        Assert.Equal(0, result.Failed);
+    }
+
+    [Fact]
+    public async Task BatchAttendance_WithMismatchedClassGroupId_ReturnsBadRequest()
+    {
+        // Arrange
+        EnsureDatabaseInitialized();
+        using var client = await CreateAuthenticatedClientAsync();
+
+        var classGroupId = EnsureClassGroupExistsViaDb();
+
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = 999, // Mismatched with URL
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = 1, Status = "Present" }
+            }
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync($"/api/class-groups/{classGroupId}/attendance", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task BatchAttendance_WithoutAuthentication_ReturnsUnauthorized()
+    {
+        // Arrange
+        EnsureDatabaseInitialized();
+        using var client = CreateHttpsClient();
+
+        var request = new BatchAttendanceRequest
+        {
+            ClassGroupId = 1,
+            SessionDate = "2026-02-09",
+            Entries = new List<BatchAttendanceEntry>
+            {
+                new() { StudentId = 1, Status = "Present" }
+            }
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/class-groups/1/attendance", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }

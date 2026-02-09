@@ -1,0 +1,155 @@
+<div class="p-6 bg-base-100 min-h-full">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex justify-between items-start">
+      <div>
+        <h2 class="text-2xl font-bold text-base-content">Take Attendance</h2>
+        <p class="text-base-content/60 mt-1">
+          @if (classGroupName()) {
+            {{ classGroupName() }} - {{ dayOfWeek() }}
+          }
+        </p>
+      </div>
+      <button class="btn btn-ghost btn-sm" (click)="cancel()" aria-label="Close">
+        ✕
+      </button>
+    </div>
+
+    <!-- Date Selector -->
+    <div class="mt-4 flex items-center gap-4">
+      <div class="form-control">
+        <label class="label" for="sessionDate">
+          <span class="label-text">Session Date</span>
+        </label>
+        <input
+          id="sessionDate"
+          type="date"
+          class="input input-bordered"
+          [value]="sessionDate()"
+          (change)="onDateChange($event)"
+          [max]="todayDate"
+        />
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="flex gap-2 ml-auto">
+        <span class="badge badge-success badge-outline">✓ Present: {{ presentCount() }}</span>
+        <span class="badge badge-error badge-outline">✗ Absent: {{ absentCount() }}</span>
+        <span class="badge badge-warning badge-outline">⏱ Late: {{ lateCount() }}</span>
+        <span class="badge badge-ghost">Total: {{ studentCount() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+  <div class="flex justify-center p-12" aria-busy="true" aria-label="Loading students">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  } @else if (error()) {
+  <!-- Error State -->
+  <div class="alert alert-error">
+    <span>{{ error() }}</span>
+  </div>
+  } @else if (students().length === 0) {
+  <!-- Empty State -->
+  <div
+    class="flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+    <div class="text-6xl mb-4" aria-hidden="true">👥</div>
+    <h3 class="text-xl font-semibold">No students in this class</h3>
+    <p class="text-base-content/60 mb-6 text-center max-w-sm">
+      This class group doesn't have any students assigned yet.
+    </p>
+  </div>
+  } @else {
+  <!-- Student List -->
+  <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+    <table class="table table-zebra table-sm" aria-label="Student attendance list">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Grade</th>
+          <th class="w-48">Status</th>
+          <th class="w-64">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of students(); track entry.studentId) {
+        <tr>
+          <td>
+            <div class="font-medium">{{ entry.studentName }}</div>
+            @if (entry.hasExistingRecord) {
+              <div class="text-xs text-base-content/60">Existing record</div>
+            }
+          </td>
+          <td>
+            <span class="text-sm">{{ entry.grade || '-' }}</span>
+          </td>
+          <td>
+            <div class="flex gap-1">
+              <button
+                class="btn btn-xs"
+                [class.btn-success]="entry.status === 'Present'"
+                [class.btn-outline]="entry.status !== 'Present'"
+                (click)="updateStudentStatus(entry.studentId, 'Present')"
+                [attr.aria-pressed]="entry.status === 'Present'"
+                title="Present">
+                ✓ Present
+              </button>
+              <button
+                class="btn btn-xs"
+                [class.btn-error]="entry.status === 'Absent'"
+                [class.btn-outline]="entry.status !== 'Absent'"
+                (click)="updateStudentStatus(entry.studentId, 'Absent')"
+                [attr.aria-pressed]="entry.status === 'Absent'"
+                title="Absent">
+                ✗ Absent
+              </button>
+              <button
+                class="btn btn-xs"
+                [class.btn-warning]="entry.status === 'Late'"
+                [class.btn-outline]="entry.status !== 'Late'"
+                (click)="updateStudentStatus(entry.studentId, 'Late')"
+                [attr.aria-pressed]="entry.status === 'Late'"
+                title="Late">
+                ⏱ Late
+              </button>
+            </div>
+          </td>
+          <td>
+            <input
+              type="text"
+              class="input input-bordered input-sm w-full"
+              placeholder="Add notes..."
+              [value]="entry.notes"
+              (input)="onStudentNotesInput(entry.studentId, $event)"
+            />
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-6 flex justify-end gap-2">
+    <button
+      class="btn btn-ghost"
+      (click)="cancel()"
+      [disabled]="saving()">
+      Cancel
+    </button>
+    <button
+      class="btn btn-primary"
+      (click)="saveAll()"
+      [disabled]="saving()"
+      [class.loading]="saving()">
+      @if (saving()) {
+        Saving...
+      } @else {
+        ✓ Save All
+      }
+    </button>
+  </div>
+  }
+</div>

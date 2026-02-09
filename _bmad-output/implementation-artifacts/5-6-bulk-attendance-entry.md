@@ -1,6 +1,6 @@
 # Story 5.6: Bulk Attendance Entry
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -24,27 +24,27 @@ so that **I can efficiently mark attendance for a class**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add "Take Attendance" action (AC: #1)
-  - [ ] Add button to class group row or detail view
-  - [ ] Navigate to bulk attendance view
-- [ ] Task 2: Create BulkAttendance component (AC: #1)
-  - [ ] Load students in class group via Angular service
-  - [ ] Display list with name and status toggle using Angular Signals for state
-  - [ ] Default all to "Present"
-- [ ] Task 3: Check for existing attendance (AC: #3)
-  - [ ] Load attendance for selected date via Attendance API
-  - [ ] Pre-fill existing statuses using Signal-based form state
-  - [ ] Indicate which are updates vs new
-- [ ] Task 4: Implement batch attendance endpoint (AC: #2)
-  - [ ] Create batch endpoint in `AttendanceController`
-  - [ ] Implement batch insert/update in `IAttendanceRepository` using Dapper
-  - [ ] Use `IDbTransaction` for atomic batch operations (all-or-nothing save)
-  - [ ] Validate all entries before committing transaction
-  - [ ] Register any new services in `DependencyInjection.cs`
-- [ ] Task 5: Implement bulk save on frontend (AC: #2)
-  - [ ] Call batch attendance endpoint with all student entries
-  - [ ] Show progress indicator and success confirmation
-  - [ ] Handle partial failure responses
+- [x] Task 1: Add "Take Attendance" action (AC: #1)
+  - [x] Add button to class group row or detail view
+  - [x] Navigate to bulk attendance view
+- [x] Task 2: Create BulkAttendance component (AC: #1)
+  - [x] Load students in class group via Angular service
+  - [x] Display list with name and status toggle using Angular Signals for state
+  - [x] Default all to "Present"
+- [x] Task 3: Check for existing attendance (AC: #3)
+  - [x] Load attendance for selected date via Attendance API
+  - [x] Pre-fill existing statuses using Signal-based form state
+  - [x] Indicate which are updates vs new
+- [x] Task 4: Implement batch attendance endpoint (AC: #2)
+  - [x] Create batch endpoint in `AttendanceController`
+  - [x] Implement batch insert/update in `IAttendanceRepository` using Dapper
+  - [x] Use `IDbTransaction` for atomic batch operations (all-or-nothing save)
+  - [x] Validate all entries before committing transaction
+  - [x] Register any new services in `DependencyInjection.cs`
+- [x] Task 5: Implement bulk save on frontend (AC: #2)
+  - [x] Call batch attendance endpoint with all student entries
+  - [x] Show progress indicator and success confirmation
+  - [x] Handle partial failure responses
 
 ## Dev Notes
 
@@ -106,10 +106,43 @@ Body: { sessionDate: "2026-01-03", entries: [...] }
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-opus-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Implemented bulk attendance entry feature with Angular Signals for state management
+- Added "Take Attendance" button to class groups list
+- Created BulkAttendance component with date selector, student list, and status toggles
+- Implemented batch attendance API endpoint with atomic transaction support
+- Added validation for status values and error handling
+- Supports both creating new attendance records and updating existing ones
+- Shows pre-filled values when attendance already exists for the selected date
+- Uses OnPush change detection for optimal performance
+- Integrated with existing audit logging system
+
 ### File List
+
+**Frontend:**
+- apps/frontend/src/app/features/class-groups/class-groups-list/class-groups-list.component.ts (added takingAttendanceId signal and openTakeAttendance/closeTakeAttendance methods)
+- apps/frontend/src/app/features/class-groups/class-groups-list/class-groups-list.component.html (added Take Attendance button and bulk attendance modal)
+- apps/frontend/src/app/features/class-groups/bulk-attendance/bulk-attendance.component.ts (new)
+- apps/frontend/src/app/features/class-groups/bulk-attendance/bulk-attendance.component.html (new)
+
+**Backend:**
+- apps/backend/src/Application/Attendance/BatchAttendanceRequest.cs (new)
+- apps/backend/src/Application/Attendance/IAttendanceService.cs (added BatchSaveAsync method)
+- apps/backend/src/Application/Interfaces/IAttendanceRepository.cs (added BatchSaveAsync method)
+- apps/backend/src/Infrastructure/Attendance/AttendanceService.cs (implemented BatchSaveAsync with validation and audit logging)
+- apps/backend/src/Infrastructure/Repositories/AttendanceRepository.cs (implemented BatchSaveAsync with transaction support and CancellationToken forwarding)
+- apps/backend/src/Api/Controllers/ClassGroupsController.cs (added batch attendance endpoint POST {id}/attendance)
+
+**Tests:**
+- apps/backend/tests/Unit/AttendanceServiceTests.cs (added 4 BatchSaveAsync unit tests)
+- apps/backend/tests/Integration/Attendance/AttendanceControllerTests.cs (added 4 batch attendance integration tests)
+
+## Change Log
+
+- 2026-02-06: Implemented bulk attendance entry feature (Story 5.6)
+- 2026-02-09: Code review fixes - removed $any(), fixed ChangeDetectionStrategy import, removed duplicate error alert, removed unused FormsModule, fixed catchError returning of() to EMPTY, forwarded CancellationToken to Dapper CommandDefinition, added batch attendance unit and integration tests

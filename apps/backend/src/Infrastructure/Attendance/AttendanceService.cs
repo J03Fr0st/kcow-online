@@ -182,6 +182,81 @@ public class AttendanceService : IAttendanceService
         return MapToDto(updated!);
     }
 
+    /// <summary>
+    /// Batch creates or updates attendance records for a class group session.
+    /// Uses transaction for atomic all-or-nothing operation.
+    /// </summary>
+    public async Task<BatchAttendanceResponse> BatchSaveAsync(BatchAttendanceRequest request, string createdBy, CancellationToken cancellationToken = default)
+    {
+        var errors = new List<string>();
+        var attendanceRecords = new List<Domain.Entities.Attendance>();
+
+        // Validate all entries and convert to domain entities
+        foreach (var entry in request.Entries)
+        {
+            if (!TryParseStatus(entry.Status, out var statusEnum))
+            {
+                errors.Add($"Student {entry.StudentId}: Invalid status '{entry.Status}'. Valid values are: Present, Absent, Late");
+                continue;
+            }
+
+            attendanceRecords.Add(new Domain.Entities.Attendance
+            {
+                StudentId = entry.StudentId,
+                ClassGroupId = request.ClassGroupId,
+                SessionDate = request.SessionDate,
+                Status = statusEnum,
+                Notes = entry.Notes,
+                CreatedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            });
+        }
+
+        var response = new BatchAttendanceResponse();
+
+        if (errors.Count > 0)
+        {
+            response.Failed = errors.Count;
+            response.Errors = errors;
+            _logger.LogWarning("Batch attendance validation failed with {ErrorCount} errors", errors.Count);
+            return response;
+        }
+
+        try
+        {
+            // Perform batch save in transaction
+            var (created, updated) = await _attendanceRepository.BatchSaveAsync(attendanceRecords, cancellationToken);
+
+            response.Created = created;
+            response.Updated = updated;
+            response.Failed = 0;
+
+            // Log audit entry for the batch operation
+            await _auditService.LogChangeAsync(
+                "Attendance",
+                request.ClassGroupId,
+                "BatchSave",
+                null,
+                $"Batch attendance save for ClassGroup {request.ClassGroupId} on {request.SessionDate}: {created} created, {updated} updated",
+                createdBy,
+                cancellationToken);
+
+            _logger.LogInformation("Batch attendance save completed for ClassGroup {ClassGroupId} on {SessionDate}: {Created} created, {Updated} updated",
+                request.ClassGroupId, request.SessionDate, created, updated);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Batch attendance save failed for ClassGroup {ClassGroupId} on {SessionDate}",
+                request.ClassGroupId, request.SessionDate);
+
+            response.Failed = request.Entries.Count;
+            response.Errors = new List<string> { "Batch save operation failed. All changes were rolled back." };
+            return response;
+        }
+    }
+
     private static AttendanceDto MapToDto(AttendanceWithNames record)
     {
         var studentName = string.Join(" ",

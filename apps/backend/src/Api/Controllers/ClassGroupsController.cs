@@ -1,3 +1,4 @@
+using Kcow.Application.Attendance;
 using Kcow.Application.ClassGroups;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,16 @@ namespace Kcow.Api.Controllers;
 public class ClassGroupsController : ControllerBase
 {
     private readonly IClassGroupService _classGroupService;
+    private readonly IAttendanceService _attendanceService;
     private readonly ILogger<ClassGroupsController> _logger;
 
-    public ClassGroupsController(IClassGroupService classGroupService, ILogger<ClassGroupsController> logger)
+    public ClassGroupsController(
+        IClassGroupService classGroupService,
+        IAttendanceService attendanceService,
+        ILogger<ClassGroupsController> logger)
     {
         _classGroupService = classGroupService;
+        _attendanceService = attendanceService;
         _logger = logger;
     }
 
@@ -254,6 +260,82 @@ public class ClassGroupsController : ControllerBase
             _logger.LogError(ex, "Error checking conflicts for TruckId: {TruckId}", request.TruckId);
             return StatusCode(StatusCodes.Status500InternalServerError,
                 CreateServerErrorProblemDetails("An error occurred while checking for conflicts"));
+        }
+    }
+
+    /// <summary>
+    /// Batch saves attendance records for a class group session.
+    /// Creates new records or updates existing ones in a single atomic transaction.
+    /// </summary>
+    /// <param name="id">Class group ID</param>
+    /// <param name="request">Batch attendance request</param>
+    /// <returns>Batch attendance response with created/updated/failed counts</returns>
+    [HttpPost("{id}/attendance")]
+    [ProducesResponseType(typeof(BatchAttendanceResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> BatchAttendance(int id, [FromBody] BatchAttendanceRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Validation failed",
+                Status = 400,
+                Detail = "One or more validation errors occurred",
+                Extensions = { ["errors"] = ModelState }
+            });
+        }
+
+        // Ensure the class group ID in the URL matches the one in the request
+        if (request.ClassGroupId != id)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Validation failed",
+                Status = 400,
+                Detail = $"ClassGroupId in request ({request.ClassGroupId}) does not match ID in URL ({id})"
+            });
+        }
+
+        try
+        {
+            // Get current user from JWT claims - require authenticated user
+            var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value;
+
+            if (string.IsNullOrWhiteSpace(userEmail))
+            {
+                return Unauthorized(new ProblemDetails
+                {
+                    Title = "Authentication required",
+                    Status = 401,
+                    Detail = "Unable to identify user from authentication token. Please log in again."
+                });
+            }
+
+            var result = await _attendanceService.BatchSaveAsync(request, userEmail, cancellationToken);
+
+            if (result.Failed > 0)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Partial or complete failure",
+                    Status = 400,
+                    Detail = $"Batch save completed with {result.Failed} failures.",
+                    Extensions = { ["errors"] = result.Errors ?? new List<string>() }
+                });
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving batch attendance for ClassGroupId {ClassGroupId} on {SessionDate}",
+                request.ClassGroupId, request.SessionDate);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                CreateServerErrorProblemDetails("An error occurred while saving batch attendance"));
         }
     }
 
