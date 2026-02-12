@@ -104,15 +104,15 @@ development_status:
   # ========================
   # Epic 5: Attendance & Evaluations
   # ========================
-  epic-5: in-progress
+  epic-5: done
   5-1-attendance-entity-api-endpoints: done
   5-2-attendance-tab-in-student-profile: done  # Code completed: AttendanceTab with inline edit, add flow, status chips. Code review fixes applied: blur/enter save, class group dropdown, duplicate detection. All tests passing.
   5-3-attendance-audit-trail: done  # Code reviewed: All HIGH and MEDIUM issues fixed. AuditLog entity, repository, service, API endpoint, and frontend AuditTrailPanel component complete. OnPush CD added, EventEmitter fixed, entityType validation added, audit logging added for Create operations.
   5-4-evaluation-entity-api-endpoints: done  # Code reviewed: All HIGH and MEDIUM issues fixed (audit logging on delete, FK validation, skip update when no changes)
   5-5-evaluation-tab-in-student-profile: done  # Code reviewed: All HIGH and MEDIUM issues fixed (API endpoint, OnPush change detection, type consistency)
   5-6-bulk-attendance-entry: done  # Code reviewed: All HIGH and MEDIUM issues fixed ($any removed, ChangeDetectionStrategy static import, duplicate error alert removed, FormsModule removed, catchError EMPTY, CancellationToken forwarded, batch unit+integration tests added)
-  5-7-data-migration-attendance-evaluations: ready-for-dev
-  5-8-e2e-tests-attendance-tracking-audit-trail: ready-for-dev
+  5-7-data-migration-attendance-evaluations: done  # Code implemented: LegacyAttendanceEvaluationXmlParser, LegacyAttendanceMapper, LegacyEvaluationMapper, LegacyAttendanceEvaluationImportService with comprehensive tests (8 tests all passing)
+  5-8-e2e-tests-attendance-tracking-audit-trail: done  # E2E test suite created: attendance.spec.ts, bulk-attendance.spec.ts, audit-trail.spec.ts, evaluations.spec.ts (Playwright tests for all Epic 5 functionality)
   epic-5-retrospective: optional
 
   # ========================

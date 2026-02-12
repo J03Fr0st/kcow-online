@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal, DestroyRef, computed } from '@angular/core';
+import { Component, inject, input, OnInit, signal, DestroyRef, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AttendanceService } from '@core/services/attendance.service';
@@ -27,6 +27,7 @@ interface NewAttendanceForm {
   imports: [CommonModule, AuditTrailPanelComponent],
   templateUrl: './attendance-tab.component.html',
   styleUrls: ['./attendance-tab.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AttendanceTabComponent implements OnInit {
   private readonly attendanceService = inject(AttendanceService);

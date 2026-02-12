@@ -21,6 +21,8 @@ public class AttendanceRepository : IAttendanceRepository
         int? classGroupId = null,
         string? fromDate = null,
         string? toDate = null,
+        int page = 1,
+        int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
         using var connection = _connectionFactory.Create();
@@ -61,6 +63,13 @@ public class AttendanceRepository : IAttendanceRepository
         }
 
         sql += " ORDER BY a.session_date DESC, s.last_name, s.first_name";
+
+        // Add pagination
+        if (pageSize > 0)
+        {
+            var offset = (page - 1) * pageSize;
+            sql += $" LIMIT {pageSize} OFFSET {offset}";
+        }
 
         return await connection.QueryAsync<AttendanceWithNames>(sql, parameters);
     }
@@ -122,6 +131,16 @@ public class AttendanceRepository : IAttendanceRepository
         using var connection = _connectionFactory.Create();
         const string sql = "SELECT COUNT(1) FROM attendance WHERE id = @Id";
         var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
+        return count > 0;
+    }
+
+    public async Task<bool> ExistsByStudentClassGroupDateAsync(int studentId, int classGroupId, string sessionDate, CancellationToken cancellationToken = default)
+    {
+        using var connection = _connectionFactory.Create();
+        const string sql = @"
+            SELECT COUNT(1) FROM attendance
+            WHERE student_id = @StudentId AND class_group_id = @ClassGroupId AND session_date = @SessionDate";
+        var count = await connection.QuerySingleAsync<int>(sql, new { StudentId = studentId, ClassGroupId = classGroupId, SessionDate = sessionDate });
         return count > 0;
     }
 

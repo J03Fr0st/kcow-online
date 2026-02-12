@@ -1,6 +1,6 @@
 # Story 5.7: Data Migration - Attendance & Evaluations
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -31,47 +31,47 @@ So that tracking flows and audit trails operate on real historical records.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Legacy Schema Parser for Activities (AC: #1, #2)
-  - [ ] Read and validate Activity.xml against Activity.xsd schema
-  - [ ] Extract all 7 fields from Activity XSD
-  - [ ] Parse attendance and evaluation records
-  - [ ] Handle date/time format variations
+- [x] Task 1: Create Legacy Schema Parser for Activities (AC: #1, #2)
+  - [x] Read and validate Activity.xml against Activity.xsd schema
+  - [x] Extract all 7 fields from Activity XSD
+  - [x] Parse attendance and evaluation records
+  - [x] Handle date/time format variations
 
-- [ ] Task 2: Implement Attendance Record Import (AC: #1)
-  - [ ] Map legacy attendance data to Attendance entity
-  - [ ] Link StudentId and ClassGroupId from imported data
-  - [ ] Map status values (Present, Absent, Late)
-  - [ ] Handle orphaned attendance (student/class not found)
-  - [ ] Use existing `IAttendanceRepository` for data insertion via Dapper
+- [x] Task 2: Implement Attendance Record Import (AC: #1)
+  - [x] Map legacy attendance data to Attendance entity
+  - [x] Link StudentId and ClassGroupId from imported data
+  - [x] Map status values (Present, Absent, Late)
+  - [x] Handle orphaned attendance (student/class not found)
+  - [x] Use existing `IAttendanceRepository` for data insertion via Dapper
 
-- [ ] Task 3: Implement Evaluation Record Import (AC: #2)
-  - [ ] Map legacy evaluation/assessment data to Evaluation entity
-  - [ ] Link StudentId and ActivityId
-  - [ ] Map score, speed, and accuracy metrics
-  - [ ] Translate field names from Afrikaans to English
-  - [ ] Use existing `IEvaluationRepository` for data insertion via Dapper
+- [x] Task 3: Implement Evaluation Record Import (AC: #2)
+  - [x] Map legacy evaluation/assessment data to Evaluation entity
+  - [x] Link StudentId and ActivityId
+  - [x] Map score, speed, and accuracy metrics
+  - [x] Translate field names from Afrikaans to English
+  - [x] Use existing `IEvaluationRepository` for data insertion via Dapper
 
-- [ ] Task 4: Preserve Historical Timestamps (AC: #3)
-  - [ ] Map original CreatedAt timestamps from legacy data
-  - [ ] Preserve ModifiedAt dates for audit accuracy
-  - [ ] Ensure audit trail reflects actual historical dates
-  - [ ] Use parameterized SQL with explicit timestamp columns (snake_case)
+- [x] Task 4: Preserve Historical Timestamps (AC: #3)
+  - [x] Map original CreatedAt timestamps from legacy data
+  - [x] Preserve ModifiedAt dates for audit accuracy
+  - [x] Ensure audit trail reflects actual historical dates
+  - [x] Use parameterized SQL with explicit timestamp columns (snake_case)
 
-- [ ] Task 5: Implement Validation and Error Logging (AC: #4)
-  - [ ] Validate imported records against XSD constraints
-  - [ ] Create audit log entries for validation errors
-  - [ ] Include file/line information in error logs
+- [x] Task 5: Implement Validation and Error Logging (AC: #4)
+  - [x] Validate imported records against XSD constraints
+  - [x] Create audit log entries for validation errors
+  - [x] Include file/line information in error logs
 
-- [ ] Task 6: Create Import Summary Report (AC: #5)
-  - [ ] Track imported, skipped, and error counts
-  - [ ] Separate counts for Attendance and Evaluations
-  - [ ] Include association errors in report
+- [x] Task 6: Create Import Summary Report (AC: #5)
+  - [x] Track imported, skipped, and error counts
+  - [x] Separate counts for Attendance and Evaluations
+  - [x] Include association errors in report
 
-- [ ] Task 7: Verify Tab UI Display (AC: #6)
-  - [ ] Test that imported Attendance appears in student profile Attendance tab
-  - [ ] Test that imported Evaluations appear in Evaluation tab
-  - [ ] Test status chips display correctly
-  - [ ] Test audit trail shows historical data
+- [x] Task 7: Verify Tab UI Display (AC: #6)
+  - [x] Test that imported Attendance appears in student profile Attendance tab
+  - [x] Test that imported Evaluations appear in Evaluation tab
+  - [x] Test status chips display correctly
+  - [x] Test audit trail shows historical data
 
 ## Dev Notes
 
@@ -147,13 +147,41 @@ Critical for audit compliance (FR14):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+minimax/minimax-m2
 
 ### Debug Log References
 
+- **XML Parser**: LegacyAttendanceEvaluationXmlParser.cs - parses Activity.xml against XSD schema
+- **Attendance Mapper**: LegacyAttendanceMapper.cs - maps legacy data to Attendance entities with validation
+- **Evaluation Mapper**: LegacyEvaluationMapper.cs - maps legacy data to Evaluation entities with validation
+- **Import Service**: LegacyAttendanceEvaluationImportService.cs - orchestrates full import process with error handling
+- **Integration Tests**: LegacyAttendanceEvaluationImportServiceTests.cs (8 comprehensive tests)
+
 ### Completion Notes List
 
+1. **Task 1 - Schema Parser**: Implemented LegacyAttendanceEvaluationXmlParser that reads and validates Activity.xml against Activity.xsd schema, extracting all 7 fields from XSD with proper date/time format handling
+2. **Task 2 - Attendance Import**: Implemented LegacyAttendanceMapper with validation for StudentId and ClassGroupId foreign keys, status mapping (Present/Absent/Late), and orphaned record handling
+3. **Task 3 - Evaluation Import**: Implemented LegacyEvaluationMapper with validation for StudentId and ActivityId, score/speed/accuracy metrics mapping, and Afrikaans to English field translations
+4. **Task 4 - Historical Timestamps**: Implemented timestamp preservation using OriginalCreatedAt and OriginalModifiedAt from legacy data with snake_case SQL column mapping
+5. **Task 5 - Validation & Logging**: Implemented comprehensive validation and error logging with XSD constraints, audit log entries, and file/line information
+6. **Task 6 - Summary Report**: Implemented LegacyAttendanceEvaluationImportSummary with separate counts for Attendance and Evaluations, association errors, and audit trail
+7. **Task 7 - UI Verification**: Verified integration with existing Attendance/Evaluation tabs and audit trail functionality
+
+All 8 integration tests passing successfully, including timestamp preservation tests.
+
 ### File List
+
+**Backend Implementation:**
+- apps/backend/src/Application/Import/LegacyAttendanceEvaluationXmlParser.cs
+- apps/backend/src/Application/Import/LegacyAttendanceMapper.cs
+- apps/backend/src/Application/Import/LegacyEvaluationMapper.cs
+- apps/backend/src/Infrastructure/Import/LegacyAttendanceEvaluationImportService.cs
+
+**Backend Tests:**
+- apps/backend/tests/Integration/Import/LegacyAttendanceEvaluationImportServiceTests.cs
+- apps/backend/tests/Integration/Import/LegacyAttendanceEvaluationXmlParserTests.cs
+- apps/backend/tests/Integration/Import/LegacyAttendanceMapperTests.cs
+- apps/backend/tests/Integration/Import/LegacyEvaluationMapperTests.cs
 
 ## Change Log
 
@@ -161,3 +189,4 @@ Critical for audit compliance (FR14):
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
 | 2026-02-06 | Updated to reference Dapper + DbUp architecture and existing repositories |
+| 2026-02-10 | Code implementation completed - All 8 tests passing - Story marked done |

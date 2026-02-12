@@ -13,6 +13,8 @@ public interface IAttendanceRepository
         int? classGroupId = null,
         string? fromDate = null,
         string? toDate = null,
+        int page = 1,
+        int pageSize = 50,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -39,6 +41,11 @@ public interface IAttendanceRepository
     /// Checks if an attendance record exists by ID.
     /// </summary>
     Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if an attendance record exists for the same student, class group, and date.
+    /// </summary>
+    Task<bool> ExistsByStudentClassGroupDateAsync(int studentId, int classGroupId, string sessionDate, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Batch creates or updates attendance records for a class group session.

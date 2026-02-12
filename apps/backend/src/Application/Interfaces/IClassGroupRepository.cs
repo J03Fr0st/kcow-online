@@ -12,4 +12,9 @@ public interface IClassGroupRepository
     Task<int> CreateAsync(ClassGroup classGroup, CancellationToken cancellationToken = default);
     Task<bool> UpdateAsync(ClassGroup classGroup, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a class group exists by ID.
+    /// </summary>
+    Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
 }

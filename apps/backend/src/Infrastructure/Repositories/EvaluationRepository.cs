@@ -103,4 +103,66 @@ public class EvaluationRepository : IEvaluationRepository
         var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
         return count > 0;
     }
+
+    public async Task<(int created, int skipped)> BatchCreateAsync(
+        List<Kcow.Domain.Entities.Evaluation> evaluations,
+        CancellationToken cancellationToken = default)
+    {
+        using var connection = _connectionFactory.Create();
+        connection.Open();
+
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            int createdCount = 0;
+            int skippedCount = 0;
+
+            foreach (var record in evaluations)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Check for duplicate (same student, activity, and date)
+                const string checkSql = @"
+                    SELECT id FROM evaluations
+                    WHERE student_id = @StudentId AND activity_id = @ActivityId AND evaluation_date = @EvaluationDate
+                    LIMIT 1";
+
+                var checkCommand = new CommandDefinition(
+                    checkSql,
+                    new { record.StudentId, record.ActivityId, record.EvaluationDate },
+                    transaction,
+                    cancellationToken: cancellationToken);
+
+                var existingId = await connection.QuerySingleOrDefaultAsync<int?>(checkCommand);
+
+                if (existingId.HasValue)
+                {
+                    skippedCount++;
+                    continue;
+                }
+
+                const string insertSql = @"
+                    INSERT INTO evaluations (student_id, activity_id, evaluation_date, score, speed_metric, accuracy_metric, notes, created_at, modified_at)
+                    VALUES (@StudentId, @ActivityId, @EvaluationDate, @Score, @SpeedMetric, @AccuracyMetric, @Notes, @CreatedAt, @ModifiedAt)
+                    RETURNING id";
+
+                var insertCommand = new CommandDefinition(
+                    insertSql,
+                    record,
+                    transaction,
+                    cancellationToken: cancellationToken);
+
+                await connection.QuerySingleAsync<int>(insertCommand);
+                createdCount++;
+            }
+
+            transaction.Commit();
+            return (createdCount, skippedCount);
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 }

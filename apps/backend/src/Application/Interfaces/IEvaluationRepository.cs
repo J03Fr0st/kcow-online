@@ -39,6 +39,15 @@ public interface IEvaluationRepository
     /// Checks if an evaluation record exists by ID.
     /// </summary>
     Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Batch creates evaluation records using a transaction for atomic operation.
+    /// Skips duplicates (same student_id + activity_id + evaluation_date).
+    /// </summary>
+    /// <returns>Tuple with (created count, skipped count)</returns>
+    Task<(int created, int skipped)> BatchCreateAsync(
+        List<Kcow.Domain.Entities.Evaluation> evaluations,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

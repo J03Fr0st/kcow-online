@@ -12,15 +12,21 @@ namespace Kcow.Infrastructure.Attendance;
 public class AttendanceService : IAttendanceService
 {
     private readonly IAttendanceRepository _attendanceRepository;
+    private readonly IStudentRepository _studentRepository;
+    private readonly IClassGroupRepository _classGroupRepository;
     private readonly ILogger<AttendanceService> _logger;
     private readonly IAuditService _auditService;
 
     public AttendanceService(
         IAttendanceRepository attendanceRepository,
+        IStudentRepository studentRepository,
+        IClassGroupRepository classGroupRepository,
         ILogger<AttendanceService> logger,
         IAuditService auditService)
     {
         _attendanceRepository = attendanceRepository;
+        _studentRepository = studentRepository;
+        _classGroupRepository = classGroupRepository;
         _logger = logger;
         _auditService = auditService;
     }
@@ -33,14 +39,22 @@ public class AttendanceService : IAttendanceService
         int? classGroupId = null,
         string? fromDate = null,
         string? toDate = null,
+        int page = 1,
+        int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        var records = await _attendanceRepository.GetFilteredAsync(studentId, classGroupId, fromDate, toDate, cancellationToken);
+        // Validate pagination parameters
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 50;
+        if (pageSize > 100) pageSize = 100; // Limit max page size
+
+        var records = await _attendanceRepository.GetFilteredAsync(
+            studentId, classGroupId, fromDate, toDate, page, pageSize, cancellationToken);
 
         var dtos = records.Select(MapToDto).ToList();
 
-        _logger.LogInformation("Retrieved {Count} attendance records with filters: studentId={StudentId}, classGroupId={ClassGroupId}, fromDate={FromDate}, toDate={ToDate}",
-            dtos.Count, studentId, classGroupId, fromDate, toDate);
+        _logger.LogInformation("Retrieved {Count} attendance records with filters: studentId={StudentId}, classGroupId={ClassGroupId}, fromDate={FromDate}, toDate={ToDate}, page={Page}, pageSize={PageSize}",
+            dtos.Count, studentId, classGroupId, fromDate, toDate, page, pageSize);
 
         return dtos;
     }
@@ -82,6 +96,27 @@ public class AttendanceService : IAttendanceService
         if (!TryParseStatus(request.Status, out var statusEnum))
         {
             throw new InvalidOperationException($"Invalid attendance status: '{request.Status}'. Valid values are: Present, Absent, Late");
+        }
+
+        // Validate foreign keys exist
+        var studentExists = await _studentRepository.ExistsAsync(request.StudentId, cancellationToken);
+        if (!studentExists)
+        {
+            throw new InvalidOperationException($"Student with ID {request.StudentId} does not exist.");
+        }
+
+        var classGroupExists = await _classGroupRepository.ExistsAsync(request.ClassGroupId, cancellationToken);
+        if (!classGroupExists)
+        {
+            throw new InvalidOperationException($"Class group with ID {request.ClassGroupId} does not exist.");
+        }
+
+        // Check for duplicate attendance record
+        var duplicateExists = await _attendanceRepository.ExistsByStudentClassGroupDateAsync(
+            request.StudentId, request.ClassGroupId, request.SessionDate, cancellationToken);
+        if (duplicateExists)
+        {
+            throw new InvalidOperationException($"Attendance record already exists for student {request.StudentId}, class group {request.ClassGroupId} on date {request.SessionDate}.");
         }
 
         var attendance = new Domain.Entities.Attendance
@@ -197,6 +232,30 @@ public class AttendanceService : IAttendanceService
             if (!TryParseStatus(entry.Status, out var statusEnum))
             {
                 errors.Add($"Student {entry.StudentId}: Invalid status '{entry.Status}'. Valid values are: Present, Absent, Late");
+                continue;
+            }
+
+            // Validate foreign keys exist
+            var studentExists = await _studentRepository.ExistsAsync(entry.StudentId, cancellationToken);
+            if (!studentExists)
+            {
+                errors.Add($"Student {entry.StudentId}: Student with ID {entry.StudentId} does not exist.");
+                continue;
+            }
+
+            var classGroupExists = await _classGroupRepository.ExistsAsync(request.ClassGroupId, cancellationToken);
+            if (!classGroupExists)
+            {
+                errors.Add($"Student {entry.StudentId}: Class group with ID {request.ClassGroupId} does not exist.");
+                continue;
+            }
+
+            // Check for duplicate attendance record
+            var duplicateExists = await _attendanceRepository.ExistsByStudentClassGroupDateAsync(
+                entry.StudentId, request.ClassGroupId, request.SessionDate, cancellationToken);
+            if (duplicateExists)
+            {
+                errors.Add($"Student {entry.StudentId}: Attendance record already exists for student {entry.StudentId}, class group {request.ClassGroupId} on date {request.SessionDate}.");
                 continue;
             }
 

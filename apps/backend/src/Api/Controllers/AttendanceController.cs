@@ -33,11 +33,13 @@ public class AttendanceController : ControllerBase
         [FromQuery] int? classGroupId = null,
         [FromQuery] string? fromDate = null,
         [FromQuery] string? toDate = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var records = await _attendanceService.GetFilteredAsync(studentId, classGroupId, fromDate, toDate, cancellationToken);
+            var records = await _attendanceService.GetFilteredAsync(studentId, classGroupId, fromDate, toDate, page, pageSize, cancellationToken);
             return Ok(records);
         }
         catch (Exception ex)
@@ -169,7 +171,7 @@ public class AttendanceController : ControllerBase
 
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                return BadRequest(new ProblemDetails
+                return Unauthorized(new ProblemDetails
                 {
                     Title = "Authentication required",
                     Status = 401,

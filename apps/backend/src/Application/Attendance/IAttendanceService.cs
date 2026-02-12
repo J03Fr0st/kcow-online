@@ -13,6 +13,8 @@ public interface IAttendanceService
         int? classGroupId = null,
         string? fromDate = null,
         string? toDate = null,
+        int page = 1,
+        int pageSize = 50,
         CancellationToken cancellationToken = default);
 
     /// <summary>
