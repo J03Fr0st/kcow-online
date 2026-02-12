@@ -10,15 +10,21 @@ namespace Kcow.Unit.Tests;
 public class AttendanceServiceTests
 {
     private readonly IAttendanceRepository _attendanceRepository;
+    private readonly IStudentRepository _studentRepository;
+    private readonly IClassGroupRepository _classGroupRepository;
     private readonly IAuditService _auditService;
     private readonly Infrastructure.Attendance.AttendanceService _service;
 
     public AttendanceServiceTests()
     {
         _attendanceRepository = Substitute.For<IAttendanceRepository>();
+        _studentRepository = Substitute.For<IStudentRepository>();
+        _classGroupRepository = Substitute.For<IClassGroupRepository>();
         _auditService = Substitute.For<IAuditService>();
         _service = new Infrastructure.Attendance.AttendanceService(
             _attendanceRepository,
+            _studentRepository,
+            _classGroupRepository,
             NullLogger<Infrastructure.Attendance.AttendanceService>.Instance,
             _auditService);
     }
@@ -242,7 +248,7 @@ public class AttendanceServiceTests
             }
         };
 
-        _attendanceRepository.GetFilteredAsync(10, null, null, null, Arg.Any<CancellationToken>())
+        _attendanceRepository.GetFilteredAsync(10, null, null, null, 1, 50, Arg.Any<CancellationToken>())
             .Returns(records);
 
         // Act

@@ -3,6 +3,7 @@ using Kcow.Application.Activities;
 using Kcow.Application.Audit;
 using Kcow.Application.Attendance;
 using Kcow.Application.Auth;
+using Kcow.Application.Billing;
 using Kcow.Application.ClassGroups;
 using Kcow.Application.Evaluations;
 using Kcow.Application.Families;
@@ -13,6 +14,7 @@ using Kcow.Application.Trucks;
 using Kcow.Infrastructure.Activities;
 using Kcow.Infrastructure.Audit;
 using Kcow.Infrastructure.Auth;
+using Kcow.Infrastructure.Billing;
 using Kcow.Infrastructure.ClassGroups;
 using Kcow.Infrastructure.Database.Seeders;
 using Kcow.Infrastructure.Database;
@@ -69,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IEvaluationRepository, EvaluationRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
 
         // Register authentication services
         services.AddScoped<IAuthService, AuthService>();
@@ -101,6 +105,9 @@ public static class DependencyInjection
 
         // Register evaluation services
         services.AddScoped<IEvaluationService, EvaluationService>();
+
+        // Register billing services
+        services.AddScoped<IBillingService, BillingService>();
 
         return services;
     }

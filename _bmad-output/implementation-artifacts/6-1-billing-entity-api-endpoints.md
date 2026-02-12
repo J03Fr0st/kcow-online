@@ -1,6 +1,6 @@
 # Story 6.1: Billing Entity & API Endpoints
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -43,39 +43,39 @@ so that **financial data can be tracked per student**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create Invoice entity (AC: #1)
-  - [ ] Create `Domain/Entities/Invoice.cs` with flat properties (no navigation properties)
-  - [ ] Use integer status codes (0=Pending, 1=Paid, 2=Overdue)
-- [ ] Task 2: Create Payment entity (AC: #1)
-  - [ ] Create `Domain/Entities/Payment.cs` with flat properties (no navigation properties)
-  - [ ] Use integer payment method codes (0=Cash, 1=Card, 2=EFT, 3=Other)
-- [ ] Task 3: Create DbUp migration scripts (AC: #2)
-  - [ ] Create `Infrastructure/Migrations/Scripts/NNN_CreateInvoices.sql` with snake_case columns
-  - [ ] Create `Infrastructure/Migrations/Scripts/NNN_CreatePayments.sql` with snake_case columns
-  - [ ] Create `Infrastructure/Migrations/Scripts/NNN_CreateReceipts.sql` with snake_case columns
-  - [ ] Include foreign key constraints to `students` table
-- [ ] Task 4: Create repository interfaces (AC: #3)
-  - [ ] Create `Application/Interfaces/IInvoiceRepository.cs`
-  - [ ] Create `Application/Interfaces/IPaymentRepository.cs`
-  - [ ] Define CRUD + query methods (GetByStudentIdAsync, GetByIdAsync, CreateAsync, UpdateAsync)
-- [ ] Task 5: Create repository implementations (AC: #4)
-  - [ ] Create `Infrastructure/Repositories/InvoiceRepository.cs` using `IDbConnectionFactory` + Dapper
-  - [ ] Create `Infrastructure/Repositories/PaymentRepository.cs` using `IDbConnectionFactory` + Dapper
-  - [ ] Use `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync`
-  - [ ] Parameterized SQL only, snake_case column names
-- [ ] Task 6: Create billing service (AC: #5)
-  - [ ] Create `Infrastructure/Billing/BillingService.cs`
-  - [ ] Calculate balance (Sum invoices - Sum payments)
-  - [ ] Generate receipt numbers (RCP-{YYYYMMDD}-{sequence})
-  - [ ] Invoice status management
-- [ ] Task 7: Register DI services (AC: #4)
-  - [ ] Register `IInvoiceRepository` / `InvoiceRepository` in `Infrastructure/DependencyInjection.cs`
-  - [ ] Register `IPaymentRepository` / `PaymentRepository` in `Infrastructure/DependencyInjection.cs`
-  - [ ] Register `IBillingService` / `BillingService`
-- [ ] Task 8: Create endpoints (AC: #5, #6)
-  - [ ] Add `BillingController` or extend `StudentsController`
-  - [ ] Implement all billing endpoints
-  - [ ] Add authentication requirement
+- [x] Task 1: Create Invoice entity (AC: #1)
+  - [x] Create `Domain/Entities/Invoice.cs` with flat properties (no navigation properties)
+  - [x] Use integer status codes (0=Pending, 1=Paid, 2=Overdue)
+- [x] Task 2: Create Payment entity (AC: #1)
+  - [x] Create `Domain/Entities/Payment.cs` with flat properties (no navigation properties)
+  - [x] Use integer payment method codes (0=Cash, 1=Card, 2=EFT, 3=Other)
+- [x] Task 3: Create DbUp migration scripts (AC: #2)
+  - [x] Create `Infrastructure/Migrations/Scripts/013_CreateInvoices.sql` with snake_case columns
+  - [x] Create `Infrastructure/Migrations/Scripts/014_CreatePayments.sql` with snake_case columns
+  - [x] Create `Infrastructure/Migrations/Scripts/015_CreateReceipts.sql` with snake_case columns
+  - [x] Include foreign key constraints to `students` table
+- [x] Task 4: Create repository interfaces (AC: #3)
+  - [x] Create `Application/Interfaces/IInvoiceRepository.cs`
+  - [x] Create `Application/Interfaces/IPaymentRepository.cs`
+  - [x] Define CRUD + query methods (GetByStudentIdAsync, GetByIdAsync, CreateAsync, UpdateAsync)
+- [x] Task 5: Create repository implementations (AC: #4)
+  - [x] Create `Infrastructure/Repositories/InvoiceRepository.cs` using `IDbConnectionFactory` + Dapper
+  - [x] Create `Infrastructure/Repositories/PaymentRepository.cs` using `IDbConnectionFactory` + Dapper
+  - [x] Use `QueryAsync<T>`, `QueryFirstOrDefaultAsync<T>`, `ExecuteAsync`
+  - [x] Parameterized SQL only, snake_case column names
+- [x] Task 6: Create billing service (AC: #5)
+  - [x] Create `Infrastructure/Billing/BillingService.cs`
+  - [x] Calculate balance (Sum invoices - Sum payments)
+  - [x] Generate receipt numbers (RCP-{YYYYMMDD}-{sequence})
+  - [x] Invoice status management
+- [x] Task 7: Register DI services (AC: #4)
+  - [x] Register `IInvoiceRepository` / `InvoiceRepository` in `Infrastructure/DependencyInjection.cs`
+  - [x] Register `IPaymentRepository` / `PaymentRepository` in `Infrastructure/DependencyInjection.cs`
+  - [x] Register `IBillingService` / `BillingService`
+- [x] Task 8: Create endpoints (AC: #5, #6)
+  - [x] Add `BillingController` with student-scoped billing routes
+  - [x] Implement all billing endpoints (GET/POST for billing summary, invoices, payments)
+  - [x] Add authentication requirement via [Authorize] attribute
 
 ## Dev Notes
 
@@ -209,10 +209,72 @@ CREATE TABLE IF NOT EXISTS invoices (
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Fixed pre-existing compilation errors in `AttendanceServiceTests.cs` (constructor signature mismatch and `GetFilteredAsync` parameter count)
+
 ### Completion Notes List
 
+- Implemented Invoice and Payment domain entities as flat POCOs matching story specifications
+- Created 3 DbUp migration scripts (013-015) for invoices, payments, and receipts tables with FK constraints and indexes
+- Created repository interfaces with CancellationToken support following project patterns
+- Implemented Dapper-based repositories using IDbConnectionFactory and parameterized SQL with snake_case columns
+- Built BillingService with balance calculation, receipt number generation (RCP-YYYYMMDD-NNNNN), and automatic invoice paid status management
+- Created BillingController with 5 endpoints nested under `/api/students/{studentId}/` routes, all requiring [Authorize]
+- Registered all new services in DependencyInjection.cs (repositories as Scoped, service as Scoped)
+- Created Application layer: IBillingService, InvoiceDto, PaymentDto, BillingSummaryDto, CreateInvoiceRequest, CreatePaymentRequest with validation attributes
+- 12 unit tests covering billing service logic (summary calculation, invoice/payment CRUD, validation, invoice auto-payment marking)
+- 11 integration tests covering authentication requirements and endpoint validation
+- All 23 billing tests pass; pre-existing test failures in Attendance/ClassGroup tests are unrelated
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Joe on 2026-02-12
+**Outcome:** Approved with fixes applied
+
+**Issues Found:** 3 High, 4 Medium, 1 Low -- all HIGH and MEDIUM fixed automatically
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| H1 | HIGH | Receipt number generation used `Ticks % 100000` -- not unique, can collide | Changed to use payment ID (`RCP-{date}-{paymentId:D5}`), added `UpdateReceiptNumberAsync` to IPaymentRepository, added UNIQUE index on `payments.receipt_number` |
+| H2 | HIGH | `receipts` table (migration 015) created but never used by any code | Kept table (satisfies AC#2), uniqueness constraint added to `payments.receipt_number` instead |
+| H3 | HIGH | `amount` columns use `REAL` (floating-point) for financial data | Changed to `TEXT` in migrations 013 and 014 -- Dapper handles TEXT-to-decimal mapping |
+| M1 | MEDIUM | POST endpoints return 400 for student/invoice-not-found instead of 404 | Added exception filter `when (ex.Message.Contains("does not exist"))` → returns 404 |
+| M2 | MEDIUM | Overdue amount sums full invoice amount, ignoring partial payments | Changed to per-invoice calculation: `invoice.Amount - paymentsForInvoice` |
+| M3 | MEDIUM | Integration tests accept OR-assertions (404 or 400) -- vague | Changed to assert specific `HttpStatusCode.NotFound` |
+| M4 | MEDIUM | CancellationToken accepted but never forwarded to Dapper calls | NOT FIXED -- systemic project-wide pattern, would break consistency |
+| L1 | LOW | `sprint-status.yaml` not documented in story File List | NOT FIXED -- trivial documentation gap |
+
+### Change Log
+
+- 2026-02-12: Code review fixes -- receipt number uniqueness (H1), TEXT for financial amounts (H3), POST endpoint 404 handling (M1), overdue calculation accuracy (M2), integration test assertions (M3)
+- 2026-02-12: Implemented billing entity and API endpoints (Story 6.1) - Invoice/Payment entities, repositories, service, controller, migrations, and tests
+
 ### File List
+
+**New files:**
+- apps/backend/src/Domain/Entities/Invoice.cs
+- apps/backend/src/Domain/Entities/Payment.cs
+- apps/backend/src/Application/Interfaces/IInvoiceRepository.cs
+- apps/backend/src/Application/Interfaces/IPaymentRepository.cs
+- apps/backend/src/Application/Billing/IBillingService.cs
+- apps/backend/src/Application/Billing/InvoiceDto.cs
+- apps/backend/src/Application/Billing/PaymentDto.cs
+- apps/backend/src/Application/Billing/BillingSummaryDto.cs
+- apps/backend/src/Application/Billing/CreateInvoiceRequest.cs
+- apps/backend/src/Application/Billing/CreatePaymentRequest.cs
+- apps/backend/src/Infrastructure/Repositories/InvoiceRepository.cs
+- apps/backend/src/Infrastructure/Repositories/PaymentRepository.cs
+- apps/backend/src/Infrastructure/Billing/BillingService.cs
+- apps/backend/src/Infrastructure/Migrations/Scripts/013_CreateInvoices.sql
+- apps/backend/src/Infrastructure/Migrations/Scripts/014_CreatePayments.sql
+- apps/backend/src/Infrastructure/Migrations/Scripts/015_CreateReceipts.sql
+- apps/backend/src/Api/Controllers/BillingController.cs
+- apps/backend/tests/Unit/BillingServiceTests.cs
+- apps/backend/tests/Integration/Billing/BillingControllerTests.cs
+
+**Modified files:**
+- apps/backend/src/Infrastructure/DependencyInjection.cs (added billing DI registrations)
+- apps/backend/tests/Unit/AttendanceServiceTests.cs (fixed pre-existing compilation errors)
