@@ -1,4 +1,6 @@
+using Kcow.Application.Import;
 using Kcow.Application.Interfaces;
+using Kcow.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,8 +21,11 @@ public class ImportAuditLogController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetRecent([FromQuery] int count = 10, CancellationToken cancellationToken = default)
     {
+        if (count < 1) count = 1;
+        if (count > 100) count = 100;
+
         var logs = await _repository.GetRecentAsync(count, cancellationToken);
-        return Ok(logs);
+        return Ok(logs.Select(MapToDto));
     }
 
     [HttpGet("{id}")]
@@ -28,6 +33,25 @@ public class ImportAuditLogController : ControllerBase
     {
         var log = await _repository.GetByIdAsync(id, cancellationToken);
         if (log is null) return NotFound();
-        return Ok(log);
+        return Ok(MapToDto(log));
     }
+
+    private static ImportAuditLogDto MapToDto(ImportAuditLog log) => new()
+    {
+        Id = log.Id,
+        StartedAt = log.StartedAt,
+        CompletedAt = log.CompletedAt,
+        RunBy = log.RunBy,
+        SourcePath = log.SourcePath,
+        Status = log.Status,
+        SchoolsCreated = log.SchoolsCreated,
+        ClassGroupsCreated = log.ClassGroupsCreated,
+        ActivitiesCreated = log.ActivitiesCreated,
+        StudentsCreated = log.StudentsCreated,
+        TotalCreated = log.TotalCreated,
+        TotalFailed = log.TotalFailed,
+        TotalSkipped = log.TotalSkipped,
+        ExceptionsFilePath = log.ExceptionsFilePath,
+        Notes = log.Notes
+    };
 }

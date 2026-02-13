@@ -1,6 +1,6 @@
 # Story 7.5: Import Audit Log
 
-Status: review
+Status: done
 
 ## Story
 
@@ -83,3 +83,24 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-13: Story 7.5 implemented - ImportAuditLog entity, repository, API endpoint, CLI history command. 3 unit tests + 5 integration tests all passing.
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Joe (AI-assisted) on 2026-02-13
+**Outcome:** Approved with fixes applied
+
+**Issues Found and Fixed (Epic-wide review):**
+- [CRITICAL] Missing DI registrations for ILegacyParser and IImportExecutionService in DependencyInjection.cs — Fixed
+- [CRITICAL] 37+ Student fields missing from INSERT/UPDATE SQL in ImportExecutionService — Fixed (all XSD fields now mapped)
+- [CRITICAL] ImportAuditLogController returned entities directly — Fixed (created ImportAuditLogDto, added count validation)
+- [CRITICAL] ClassGroupDataMapper.MapMany always reported Success=true — Fixed (now checks allErrors.Count == 0)
+- [CRITICAL] LegacyParser directly instantiated concrete parsers — Fixed (added constructor injection)
+- [HIGH] SQL injection risk via table name interpolation in FindByLegacyIdAsync — Fixed (added whitelist validation)
+- [HIGH] ImportAuditLogRepository used blocking Create() and ignored CancellationToken — Fixed (uses CreateAsync + CommandDefinition)
+- [HIGH] Missing UNIQUE constraint on legacy_id indexes — Fixed (partial unique indexes)
+- [HIGH] ImportExceptionWriter had no null checks or path validation — Fixed (added ArgumentNullException, path canonicalization, CancellationToken)
+- [HIGH] School INSERT/UPDATE missing school_description, phone, scheduling_notes, omsendbriewe columns — Fixed
+- [MEDIUM] ImportHistoryCommand had no error handling for repository calls — Fixed (try-catch added)
+- [MEDIUM] ImportHistoryCommand accepted negative count values — Fixed (validation added)
+
+**Test Results:** 86 unit tests PASS, 126 integration tests PASS (2 pre-existing failures unrelated to Epic 7)

@@ -7,6 +7,7 @@ using Kcow.Application.Billing;
 using Kcow.Application.ClassGroups;
 using Kcow.Application.Evaluations;
 using Kcow.Application.Families;
+using Kcow.Application.Import;
 using Kcow.Application.Interfaces;
 using Kcow.Application.Schools;
 using Kcow.Application.Students;
@@ -20,6 +21,7 @@ using Kcow.Infrastructure.Database.Seeders;
 using Kcow.Infrastructure.Database;
 using Kcow.Infrastructure.Evaluations;
 using Kcow.Infrastructure.Families;
+using Kcow.Infrastructure.Import;
 using Kcow.Infrastructure.Repositories;
 using Kcow.Infrastructure.Schools;
 using Kcow.Infrastructure.Students;
@@ -74,6 +76,10 @@ public static class DependencyInjection
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IImportAuditLogRepository, ImportAuditLogRepository>();
+
+        // Register import services
+        services.AddScoped<ILegacyParser, LegacyParser>();
+        services.AddScoped<IImportExecutionService, ImportExecutionService>();
 
         // Register authentication services
         services.AddScoped<IAuthService, AuthService>();

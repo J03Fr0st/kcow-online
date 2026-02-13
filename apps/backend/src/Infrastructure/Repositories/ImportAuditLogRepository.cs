@@ -16,17 +16,17 @@ public sealed class ImportAuditLogRepository : IImportAuditLogRepository
 
     public async Task<int> CreateAsync(ImportAuditLog auditLog, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             INSERT INTO import_audit_log (started_at, run_by, source_path, status)
             VALUES (@StartedAt, @RunBy, @SourcePath, @Status)
             RETURNING id";
-        return await connection.QuerySingleAsync<int>(sql, auditLog);
+        return await connection.QuerySingleAsync<int>(new CommandDefinition(sql, auditLog, cancellationToken: cancellationToken));
     }
 
     public async Task UpdateAsync(ImportAuditLog auditLog, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             UPDATE import_audit_log
             SET completed_at = @CompletedAt,
@@ -40,12 +40,12 @@ public sealed class ImportAuditLogRepository : IImportAuditLogRepository
                 exceptions_file_path = @ExceptionsFilePath,
                 notes = @Notes
             WHERE id = @Id";
-        await connection.ExecuteAsync(sql, auditLog);
+        await connection.ExecuteAsync(new CommandDefinition(sql, auditLog, cancellationToken: cancellationToken));
     }
 
     public async Task<ImportAuditLog?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT id, started_at, completed_at, run_by, source_path, status,
                    schools_created, class_groups_created, activities_created,
@@ -53,12 +53,13 @@ public sealed class ImportAuditLogRepository : IImportAuditLogRepository
                    exceptions_file_path, notes
             FROM import_audit_log
             WHERE id = @Id";
-        return await connection.QuerySingleOrDefaultAsync<ImportAuditLog>(sql, new { Id = id });
+        return await connection.QuerySingleOrDefaultAsync<ImportAuditLog>(
+            new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<ImportAuditLog>> GetRecentAsync(int count = 10, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT id, started_at, completed_at, run_by, source_path, status,
                    schools_created, class_groups_created, activities_created,
@@ -67,6 +68,7 @@ public sealed class ImportAuditLogRepository : IImportAuditLogRepository
             FROM import_audit_log
             ORDER BY started_at DESC
             LIMIT @Count";
-        return await connection.QueryAsync<ImportAuditLog>(sql, new { Count = count });
+        return await connection.QueryAsync<ImportAuditLog>(
+            new CommandDefinition(sql, new { Count = count }, cancellationToken: cancellationToken));
     }
 }

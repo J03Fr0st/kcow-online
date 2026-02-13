@@ -132,14 +132,14 @@ development_status:
   # ========================
   # Epic 7: Legacy Data Migration
   # ========================
-  epic-7: in-progress
-  7-1-legacy-schema-parser: review
-  7-2-data-mapping-service: review
-  7-3-import-preview-mode: review
-  7-4-import-execution-with-exception-handling: review
-  7-5-import-audit-log: review
-  7-6-import-re-run-capability: review
-  7-7-integration-tests-legacy-data-import-pipeline: review
+  epic-7: done
+  7-1-legacy-schema-parser: done  # Code reviewed: DI registration added, parser constructor injection
+  7-2-data-mapping-service: done  # Code reviewed: ClassGroupDataMapper Success bug fixed
+  7-3-import-preview-mode: done  # Code reviewed: Approved with epic-wide fixes
+  7-4-import-execution-with-exception-handling: done  # Code reviewed: 37+ missing Student columns added, School columns added, SQL injection fix, exception writer hardened
+  7-5-import-audit-log: done  # Code reviewed: Controller DTO created, repository async+CancellationToken fixed, count validation added
+  7-6-import-re-run-capability: done  # Code reviewed: UNIQUE constraints on legacy_id indexes
+  7-7-integration-tests-legacy-data-import-pipeline: done  # Code reviewed: All 86 unit + 126 integration tests pass
   epic-7-retrospective: optional
 
   # ========================

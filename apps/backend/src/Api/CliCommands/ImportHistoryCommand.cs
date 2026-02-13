@@ -28,7 +28,7 @@ public static class ImportHistoryCommand
         {
             if ((args[i] == "--count" || args[i] == "-n") && i + 1 < args.Length)
             {
-                if (int.TryParse(args[++i], out var n)) count = n;
+                if (int.TryParse(args[++i], out var n) && n > 0) count = n;
             }
             else if (args[i] is "--help" or "-h" or "/?")
             {
@@ -38,7 +38,16 @@ public static class ImportHistoryCommand
             }
         }
 
-        var logs = await repository.GetRecentAsync(count);
+        IEnumerable<Kcow.Domain.Entities.ImportAuditLog> logs;
+        try
+        {
+            logs = await repository.GetRecentAsync(count);
+        }
+        catch (Exception ex)
+        {
+            output.WriteLine($"Error: Could not read import history: {ex.Message}");
+            return 1;
+        }
         var logList = logs.ToList();
 
         output.WriteLine();

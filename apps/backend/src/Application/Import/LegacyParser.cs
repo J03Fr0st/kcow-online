@@ -6,10 +6,26 @@ namespace Kcow.Application.Import;
 /// </summary>
 public sealed class LegacyParser : ILegacyParser
 {
-    private readonly LegacySchoolXmlParser _schoolParser = new();
-    private readonly LegacyClassGroupXmlParser _classGroupParser = new();
-    private readonly LegacyActivityXmlParser _activityParser = new();
-    private readonly LegacyChildXmlParser _childParser = new();
+    private readonly LegacySchoolXmlParser _schoolParser;
+    private readonly LegacyClassGroupXmlParser _classGroupParser;
+    private readonly LegacyActivityXmlParser _activityParser;
+    private readonly LegacyChildXmlParser _childParser;
+
+    public LegacyParser()
+        : this(new LegacySchoolXmlParser(), new LegacyClassGroupXmlParser(),
+               new LegacyActivityXmlParser(), new LegacyChildXmlParser()) { }
+
+    public LegacyParser(
+        LegacySchoolXmlParser schoolParser,
+        LegacyClassGroupXmlParser classGroupParser,
+        LegacyActivityXmlParser activityParser,
+        LegacyChildXmlParser childParser)
+    {
+        _schoolParser = schoolParser;
+        _classGroupParser = classGroupParser;
+        _activityParser = activityParser;
+        _childParser = childParser;
+    }
 
     /// <inheritdoc />
     public ParseResult<LegacySchoolRecord> ParseSchools(string xmlPath, string xsdPath)

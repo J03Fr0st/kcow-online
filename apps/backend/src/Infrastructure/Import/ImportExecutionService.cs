@@ -323,10 +323,17 @@ public sealed class ImportExecutionService : IImportExecutionService
 
     // Conflict detection: find existing record by legacy_id
 
+    private static readonly HashSet<string> AllowedTableNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "schools", "class_groups", "activities", "students"
+    };
+
     private static async Task<T?> FindByLegacyIdAsync<T>(
         IDbConnection connection, IDbTransaction transaction, string tableName, string? legacyId)
     {
         if (string.IsNullOrEmpty(legacyId)) return default;
+        if (!AllowedTableNames.Contains(tableName))
+            throw new ArgumentException($"Invalid table name: {tableName}", nameof(tableName));
         var sql = $"SELECT * FROM {tableName} WHERE legacy_id = @LegacyId LIMIT 1";
         return await connection.QuerySingleOrDefaultAsync<T>(sql, new { LegacyId = legacyId }, transaction);
     }
@@ -360,18 +367,18 @@ public sealed class ImportExecutionService : IImportExecutionService
     private static async Task InsertSchoolAsync(IDbConnection connection, IDbTransaction transaction, School school)
     {
         const string sql = @"
-            INSERT INTO schools (name, short_name, truck_id, price, fee_description, formula,
-                   visit_day, visit_sequence, contact_person, contact_cell, telephone, fax, email,
+            INSERT INTO schools (name, short_name, school_description, truck_id, price, fee_description, formula,
+                   visit_day, visit_sequence, contact_person, contact_cell, phone, telephone, fax, email,
                    circulars_email, address, address2, headmaster, headmaster_cell, is_active, language,
                    print_invoice, import_flag, afterschool1_name, afterschool1_contact, afterschool2_name,
-                   afterschool2_contact, money_message, safe_notes, web_page,
-                   kcow_web_page_link, legacy_id, created_at)
-            VALUES (@Name, @ShortName, @TruckId, @Price, @FeeDescription, @Formula,
-                   @VisitDay, @VisitSequence, @ContactPerson, @ContactCell, @Telephone, @Fax, @Email,
+                   afterschool2_contact, scheduling_notes, money_message, safe_notes, web_page,
+                   omsendbriewe, kcow_web_page_link, legacy_id, created_at)
+            VALUES (@Name, @ShortName, @SchoolDescription, @TruckId, @Price, @FeeDescription, @Formula,
+                   @VisitDay, @VisitSequence, @ContactPerson, @ContactCell, @Phone, @Telephone, @Fax, @Email,
                    @CircularsEmail, @Address, @Address2, @Headmaster, @HeadmasterCell, @IsActive, @Language,
                    @PrintInvoice, @ImportFlag, @Afterschool1Name, @Afterschool1Contact, @Afterschool2Name,
-                   @Afterschool2Contact, @MoneyMessage, @SafeNotes, @WebPage,
-                   @KcowWebPageLink, @LegacyId, @CreatedAt)";
+                   @Afterschool2Contact, @SchedulingNotes, @MoneyMessage, @SafeNotes, @WebPage,
+                   @Omsendbriewe, @KcowWebPageLink, @LegacyId, @CreatedAt)";
         await connection.ExecuteAsync(sql, school, transaction);
     }
 
@@ -407,6 +414,15 @@ public sealed class ImportExecutionService : IImportExecutionService
                    address1, address2, postal_code, school_name, school_id, class_group_code, class_group_id,
                    grade, teacher, attending_kcow_at, aftercare, extra, home_time, start_classes,
                    terms, seat, truck, family, sequence, financial_code, charge, deposit, pay_date,
+                   tshirt_code, tshirt_money_1, tshirt_money_date_1, tshirt_received_1, tshirt_rec_date_1,
+                   receive_note_1, tshirt_size1, tshirt_color1, tshirt_design1,
+                   tshirt_size2, tshirt_money_2, tshirt_money_date_2, tshirt_received_2, tshirt_rec_date_2,
+                   receive_note_2, tshirt_color2, tshirt_design2,
+                   indicator1, indicator2, general_note, print_id_card, accept_terms_cond,
+                   status, sms_or_email, school_close, cnt, online_entry,
+                   created, submitted, updated,
+                   book_email, report1_given_out, account_given_out, certificate_printed,
+                   report2_given_out, social, activity_report_given_out, photo_url, photo_updated,
                    is_active, legacy_id, created_at)
             VALUES (@Reference, @FirstName, @LastName, @DateOfBirth, @Gender, @Language,
                    @AccountPersonName, @AccountPersonSurname, @AccountPersonIdNumber,
@@ -417,6 +433,15 @@ public sealed class ImportExecutionService : IImportExecutionService
                    @Address1, @Address2, @PostalCode, @SchoolName, @SchoolId, @ClassGroupCode, @ClassGroupId,
                    @Grade, @Teacher, @AttendingKcowAt, @Aftercare, @Extra, @HomeTime, @StartClasses,
                    @Terms, @Seat, @Truck, @Family, @Sequence, @FinancialCode, @Charge, @Deposit, @PayDate,
+                   @TshirtCode, @TshirtMoney1, @TshirtMoneyDate1, @TshirtReceived1, @TshirtRecDate1,
+                   @ReceiveNote1, @TshirtSize1, @TshirtColor1, @TshirtDesign1,
+                   @TshirtSize2, @TshirtMoney2, @TshirtMoneyDate2, @TshirtReceived2, @TshirtRecDate2,
+                   @ReceiveNote2, @TshirtColor2, @TshirtDesign2,
+                   @Indicator1, @Indicator2, @GeneralNote, @PrintIdCard, @AcceptTermsCond,
+                   @Status, @SmsOrEmail, @SchoolClose, @Cnt, @OnlineEntry,
+                   @LegacyCreated, @Submitted, @LegacyUpdated,
+                   @BookEmail, @Report1GivenOut, @AccountGivenOut, @CertificatePrinted,
+                   @Report2GivenOut, @Social, @ActivityReportGivenOut, @PhotoUrl, @PhotoUpdated,
                    @IsActive, @LegacyId, @CreatedAt)";
         await connection.ExecuteAsync(sql, student, transaction);
     }
@@ -426,17 +451,20 @@ public sealed class ImportExecutionService : IImportExecutionService
     private static async Task UpdateSchoolAsync(IDbConnection connection, IDbTransaction transaction, School school)
     {
         const string sql = @"
-            UPDATE schools SET name = @Name, short_name = @ShortName, truck_id = @TruckId,
+            UPDATE schools SET name = @Name, short_name = @ShortName,
+                   school_description = @SchoolDescription, truck_id = @TruckId,
                    price = @Price, fee_description = @FeeDescription, formula = @Formula,
                    visit_day = @VisitDay, visit_sequence = @VisitSequence, contact_person = @ContactPerson,
-                   contact_cell = @ContactCell, telephone = @Telephone, fax = @Fax, email = @Email,
+                   contact_cell = @ContactCell, phone = @Phone, telephone = @Telephone, fax = @Fax, email = @Email,
                    circulars_email = @CircularsEmail, address = @Address, address2 = @Address2,
                    headmaster = @Headmaster, headmaster_cell = @HeadmasterCell, is_active = @IsActive,
                    language = @Language, print_invoice = @PrintInvoice, import_flag = @ImportFlag,
                    afterschool1_name = @Afterschool1Name, afterschool1_contact = @Afterschool1Contact,
                    afterschool2_name = @Afterschool2Name, afterschool2_contact = @Afterschool2Contact,
-                   money_message = @MoneyMessage, safe_notes = @SafeNotes, web_page = @WebPage,
-                   kcow_web_page_link = @KcowWebPageLink, updated_at = @UpdatedAt
+                   scheduling_notes = @SchedulingNotes, money_message = @MoneyMessage,
+                   safe_notes = @SafeNotes, web_page = @WebPage,
+                   omsendbriewe = @Omsendbriewe, kcow_web_page_link = @KcowWebPageLink,
+                   updated_at = @UpdatedAt
             WHERE id = @Id";
         await connection.ExecuteAsync(sql, school, transaction);
     }
@@ -489,6 +517,27 @@ public sealed class ImportExecutionService : IImportExecutionService
                    start_classes = @StartClasses, terms = @Terms, seat = @Seat, truck = @Truck,
                    family = @Family, sequence = @Sequence, financial_code = @FinancialCode,
                    charge = @Charge, deposit = @Deposit, pay_date = @PayDate,
+                   tshirt_code = @TshirtCode,
+                   tshirt_money_1 = @TshirtMoney1, tshirt_money_date_1 = @TshirtMoneyDate1,
+                   tshirt_received_1 = @TshirtReceived1, tshirt_rec_date_1 = @TshirtRecDate1,
+                   receive_note_1 = @ReceiveNote1, tshirt_size1 = @TshirtSize1,
+                   tshirt_color1 = @TshirtColor1, tshirt_design1 = @TshirtDesign1,
+                   tshirt_size2 = @TshirtSize2,
+                   tshirt_money_2 = @TshirtMoney2, tshirt_money_date_2 = @TshirtMoneyDate2,
+                   tshirt_received_2 = @TshirtReceived2, tshirt_rec_date_2 = @TshirtRecDate2,
+                   receive_note_2 = @ReceiveNote2, tshirt_color2 = @TshirtColor2,
+                   tshirt_design2 = @TshirtDesign2,
+                   indicator1 = @Indicator1, indicator2 = @Indicator2,
+                   general_note = @GeneralNote, print_id_card = @PrintIdCard,
+                   accept_terms_cond = @AcceptTermsCond, status = @Status,
+                   sms_or_email = @SmsOrEmail, school_close = @SchoolClose,
+                   cnt = @Cnt, online_entry = @OnlineEntry,
+                   created = @LegacyCreated, submitted = @Submitted, updated = @LegacyUpdated,
+                   book_email = @BookEmail, report1_given_out = @Report1GivenOut,
+                   account_given_out = @AccountGivenOut, certificate_printed = @CertificatePrinted,
+                   report2_given_out = @Report2GivenOut, social = @Social,
+                   activity_report_given_out = @ActivityReportGivenOut,
+                   photo_url = @PhotoUrl, photo_updated = @PhotoUpdated,
                    is_active = @IsActive, updated_at = @UpdatedAt
             WHERE id = @Id";
         await connection.ExecuteAsync(sql, student, transaction);

@@ -169,7 +169,7 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
         return new MappingResult<List<ClassGroup>>
         {
             Data = groups,
-            Success = true, // batch succeeds even if individual records fail
+            Success = allErrors.Count == 0,
             Warnings = allWarnings,
             Errors = allErrors
         };

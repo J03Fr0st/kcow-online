@@ -16,8 +16,15 @@ public static class ImportExceptionWriter
     /// <summary>
     /// Writes the import result exceptions to a JSON file.
     /// </summary>
-    public static async Task WriteAsync(ImportExecutionResult result, string outputPath)
+    public static async Task WriteAsync(ImportExecutionResult result, string outputPath, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        if (string.IsNullOrWhiteSpace(outputPath))
+            throw new ArgumentException("Output path is required.", nameof(outputPath));
+
+        // Resolve to full path to prevent path traversal
+        outputPath = Path.GetFullPath(outputPath);
+
         var report = new
         {
             importRun = new
@@ -43,7 +50,7 @@ public static class ImportExceptionWriter
             Directory.CreateDirectory(dir);
         }
 
-        await File.WriteAllTextAsync(outputPath, json);
+        await File.WriteAllTextAsync(outputPath, json, cancellationToken);
     }
 
     /// <summary>
