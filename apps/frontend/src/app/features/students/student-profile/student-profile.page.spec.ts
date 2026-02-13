@@ -202,10 +202,8 @@ describe('StudentProfilePage', () => {
         it('should display status indicators in column 3', () => {
             const content = fixture.nativeElement.textContent;
             expect(content).toContain('Status Overview');
+            expect(content).toContain('Billing Status');
             expect(content).toContain('Attendance');
-            expect(content).toContain('Epic 5');
-            expect(content).toContain('Financial');
-            expect(content).toContain('Epic 6');
         });
     });
 
@@ -273,31 +271,28 @@ describe('StudentProfilePage', () => {
             expect(content).toContain('Doe Family');
         });
 
-        it('should display financial placeholder', () => {
+        it('should display financial tab component', () => {
             component.setActiveTab('financial');
             fixture.detectChanges();
 
-            const content = fixture.nativeElement.textContent;
-            expect(content).toContain('Financial Information');
-            expect(content).toContain('Epic 6');
+            const financialTab = fixture.debugElement.query(By.css('app-financial-tab'));
+            expect(financialTab).toBeTruthy();
         });
 
-        it('should display attendance placeholder', () => {
+        it('should display attendance tab component', () => {
             component.setActiveTab('attendance');
             fixture.detectChanges();
 
-            const content = fixture.nativeElement.textContent;
-            expect(content).toContain('Attendance Records');
-            expect(content).toContain('Epic 5');
+            const attendanceTab = fixture.debugElement.query(By.css('app-attendance-tab'));
+            expect(attendanceTab).toBeTruthy();
         });
 
-        it('should display evaluation placeholder', () => {
+        it('should display evaluation tab component', () => {
             component.setActiveTab('evaluation');
             fixture.detectChanges();
 
-            const content = fixture.nativeElement.textContent;
-            expect(content).toContain('Student Evaluations');
-            expect(content).toContain('Epic 5');
+            const evaluationTab = fixture.debugElement.query(By.css('app-evaluation-tab'));
+            expect(evaluationTab).toBeTruthy();
         });
     });
 

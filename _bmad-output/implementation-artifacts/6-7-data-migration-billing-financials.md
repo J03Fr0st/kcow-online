@@ -1,6 +1,6 @@
 # Story 6.7: Data Migration - Billing & Financials
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -182,9 +182,20 @@ Claude Opus 4.6
 **New Files:**
 - `apps/backend/src/Application/Import/LegacyBillingMapper.cs` - Mapper for legacy billing data to Invoice/Payment entities
 - `apps/backend/src/Infrastructure/Import/LegacyBillingImportService.cs` - Service for billing import orchestration
-- `apps/backend/tests/Unit/LegacyBillingMapperTests.cs` - Unit tests for billing mapper (18 tests)
+- `apps/backend/tests/Unit/LegacyBillingMapperTests.cs` - Unit tests for billing mapper (15 tests)
 - `apps/backend/tests/Unit/LegacyBillingImportServiceTests.cs` - Unit tests for summary types (3 tests)
 - `apps/backend/tests/Integration/Import/LegacyBillingImportServiceTests.cs` - Integration tests (5 tests)
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Joe on 2026-02-13
+**Outcome:** Approved with fixes applied
+
+**Issues Found:** 0 High, 1 Medium, 0 Low -- all HIGH and MEDIUM fixed automatically
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| M6 | MEDIUM | Mapper test count claims 18, actual is 15 | Fixed: Corrected test count in story file (18 to 15) |
 
 ## Change Log
 
@@ -193,3 +204,4 @@ Claude Opus 4.6
 | 2026-01-06 | Story file created from backlog |
 | 2026-02-06 | Updated to reference Dapper + DbUp architecture (no EF Core) |
 | 2026-02-13 | Implemented Tasks 1-6: Billing mapper, import service, school price fallback, validation, summary report |
+| 2026-02-13 | Code review - fixed status field, corrected test count (18->15) |

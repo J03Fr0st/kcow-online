@@ -138,7 +138,7 @@ describe('FinancialTabComponent', () => {
       expect(component.payments()).toEqual(mockPayments);
     });
 
-    it('should handle error when loading billing summary', () => {
+    it('should handle error when loading billing data', () => {
       billingServiceSpy.getBillingSummary.mockReturnValue(throwError(() => new Error('API Error')));
       billingServiceSpy.getInvoices.mockReturnValue(of([]));
       billingServiceSpy.getPayments.mockReturnValue(of([]));
@@ -146,7 +146,7 @@ describe('FinancialTabComponent', () => {
       component.ngOnInit();
       fixture.detectChanges();
 
-      expect(component.error()).toBe('Failed to load billing summary');
+      expect(component.error()).toBe('Failed to load billing data');
     });
 
     it('should handle empty arrays', () => {
@@ -378,6 +378,7 @@ describe('FinancialTabComponent', () => {
     it('should reset payment form on cancel', () => {
       component.showAddPaymentForm();
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: 100,
         paymentMethod: 1,
         invoiceId: 1,
@@ -407,6 +408,7 @@ describe('FinancialTabComponent', () => {
 
     it('should validate payment form - amount required', () => {
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: null,
         paymentMethod: 0,
         invoiceId: null,
@@ -415,6 +417,7 @@ describe('FinancialTabComponent', () => {
       expect(component.isPaymentFormValid()).toBe(false);
 
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: 0,
         paymentMethod: 0,
         invoiceId: null,
@@ -423,6 +426,7 @@ describe('FinancialTabComponent', () => {
       expect(component.isPaymentFormValid()).toBe(false);
 
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: 100,
         paymentMethod: 0,
         invoiceId: null,
@@ -462,6 +466,7 @@ describe('FinancialTabComponent', () => {
       billingServiceSpy.createPayment.mockReturnValue(of(newPayment));
 
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: 500,
         paymentMethod: 0,
         invoiceId: null,
@@ -482,6 +487,7 @@ describe('FinancialTabComponent', () => {
 
     it('should show error when submitting with invalid amount', () => {
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: null,
         paymentMethod: 0,
         invoiceId: null,
@@ -501,6 +507,7 @@ describe('FinancialTabComponent', () => {
       billingServiceSpy.createPayment.mockReturnValue(throwError(() => new Error('API Error')));
 
       component.paymentForm.set({
+        paymentDate: '2026-02-13',
         amount: 500,
         paymentMethod: 0,
         invoiceId: null,
@@ -525,7 +532,7 @@ describe('FinancialTabComponent', () => {
     it('should return correct payment method label', () => {
       expect(component.getPaymentMethodLabel(0)).toBe('Cash');
       expect(component.getPaymentMethodLabel(1)).toBe('Card');
-      expect(component.getPaymentMethodLabel(2)).toBe('Transfer');
+      expect(component.getPaymentMethodLabel(2)).toBe('EFT');
       expect(component.getPaymentMethodLabel(3)).toBe('Other');
     });
   });
@@ -555,6 +562,7 @@ describe('FinancialTabComponent', () => {
     it('should reset invoice form on cancel', () => {
       component.showAddInvoiceForm();
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 100,
         dueDate: '2026-02-20',
         description: 'Test invoice',
@@ -584,24 +592,27 @@ describe('FinancialTabComponent', () => {
 
     it('should validate invoice form - amount required', () => {
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: null,
-        dueDate: '2026-02-20',
+        dueDate: '2026-12-20',
         description: '',
         notes: '',
       });
       expect(component.isInvoiceFormValid()).toBe(false);
 
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 0,
-        dueDate: '2026-02-20',
+        dueDate: '2026-12-20',
         description: '',
         notes: '',
       });
       expect(component.isInvoiceFormValid()).toBe(false);
 
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 100,
-        dueDate: '2026-02-20',
+        dueDate: '2026-12-20',
         description: '',
         notes: '',
       });
@@ -610,6 +621,7 @@ describe('FinancialTabComponent', () => {
 
     it('should validate invoice form - due date required', () => {
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 100,
         dueDate: '',
         description: '',
@@ -618,8 +630,9 @@ describe('FinancialTabComponent', () => {
       expect(component.isInvoiceFormValid()).toBe(false);
 
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 100,
-        dueDate: '2026-02-20',
+        dueDate: '2026-12-20',
         description: '',
         notes: '',
       });
@@ -642,7 +655,7 @@ describe('FinancialTabComponent', () => {
         studentId: 1,
         invoiceDate: '2026-02-13',
         amount: 500,
-        dueDate: '2026-02-27',
+        dueDate: '2026-12-27',
         status: 0, // Pending
         description: 'Test invoice',
         notes: 'Test notes',
@@ -651,8 +664,9 @@ describe('FinancialTabComponent', () => {
       billingServiceSpy.createInvoice.mockReturnValue(of(newInvoice));
 
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 500,
-        dueDate: '2026-02-27',
+        dueDate: '2026-12-27',
         description: 'Test invoice',
         notes: 'Test notes',
       });
@@ -661,7 +675,7 @@ describe('FinancialTabComponent', () => {
       expect(billingServiceSpy.createInvoice).toHaveBeenCalledWith(1, {
         invoiceDate: expect.any(String),
         amount: 500,
-        dueDate: '2026-02-27',
+        dueDate: '2026-12-27',
         description: 'Test invoice',
         notes: 'Test notes',
       } as CreateInvoiceRequest);
@@ -671,8 +685,9 @@ describe('FinancialTabComponent', () => {
 
     it('should show error when submitting with invalid amount', () => {
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: null,
-        dueDate: '2026-02-27',
+        dueDate: '2026-12-27',
         description: '',
         notes: '',
       });
@@ -688,6 +703,7 @@ describe('FinancialTabComponent', () => {
 
     it('should show error when submitting without due date', () => {
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 500,
         dueDate: '',
         description: '',
@@ -707,8 +723,9 @@ describe('FinancialTabComponent', () => {
       billingServiceSpy.createInvoice.mockReturnValue(throwError(() => new Error('API Error')));
 
       component.invoiceForm.set({
+        invoiceDate: '2026-02-13',
         amount: 500,
-        dueDate: '2026-02-27',
+        dueDate: '2026-12-27',
         description: '',
         notes: '',
       });

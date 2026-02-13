@@ -16,7 +16,7 @@ export const InvoiceStatusValues: Record<number, InvoiceStatus> = {
 /**
  * Payment method enum matching backend PaymentMethod enum
  */
-export type PaymentMethod = 'Cash' | 'Card' | 'Transfer' | 'Other';
+export type PaymentMethod = 'Cash' | 'Card' | 'EFT' | 'Other';
 
 /**
  * Payment method numeric values from backend
@@ -24,7 +24,7 @@ export type PaymentMethod = 'Cash' | 'Card' | 'Transfer' | 'Other';
 export const PaymentMethodValues: Record<number, PaymentMethod> = {
   0: 'Cash',
   1: 'Card',
-  2: 'Transfer',
+  2: 'EFT',
   3: 'Other',
 };
 

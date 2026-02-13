@@ -118,15 +118,15 @@ development_status:
   # ========================
   # Epic 6: Billing & Financials
   # ========================
-  epic-6: in-progress
+  epic-6: done
   6-1-billing-entity-api-endpoints: done  # Code reviewed: All HIGH and MEDIUM issues fixed (receipt uniqueness, TEXT for amounts, 404 handling, overdue calc, test assertions)
-  6-2-financial-tab-in-student-profile: review
-  6-3-record-payment: review
-  6-4-create-invoice: review
-  6-5-billing-audit-trail: review  # Code implemented: Audit logging for Invoice/Payment creation and status changes, View History buttons in FinancialTab, AuditTrailPanel integration
-  6-6-billing-status-in-profile-header: review  # Code implemented: Billing status display in profile header with balance indicators (green/red) and overdue warning badge
-  6-7-data-migration-billing-financials: review  # Code implemented: LegacyBillingMapper, LegacyBillingImportService with 18 unit tests + 5 integration tests
-  6-8-e2e-tests-billing-management-financial-accuracy: review  # E2E test suite created: 53 tests across 6 spec files (159 across 3 browsers)
+  6-2-financial-tab-in-student-profile: done  # Code reviewed: Stale test assertions fixed, isLoading race condition fixed with forkJoin
+  6-3-record-payment: done  # Code reviewed: EFT/Transfer label aligned, payment date picker added
+  6-4-create-invoice: done  # Code reviewed: Invoice date picker added, past-date validation on due date
+  6-5-billing-audit-trail: done  # Code reviewed: Approved (L5 noted - no update endpoints is broader scope)
+  6-6-billing-status-in-profile-header: done  # Code reviewed: Stale test assertions updated
+  6-7-data-migration-billing-financials: done  # Code reviewed: Status field fixed, test count corrected (18→15)
+  6-8-e2e-tests-billing-management-financial-accuracy: done  # Code reviewed: Per-file test counts corrected (53 tests across 6 spec files)
   epic-6-retrospective: optional
 
   # ========================

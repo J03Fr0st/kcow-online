@@ -1,6 +1,6 @@
 # Story 6.4: Create Invoice
 
-Status: review
+Status: done
 
 ## Story
 
@@ -110,6 +110,19 @@ None required - straightforward implementation.
 - apps/frontend/src/app/features/students/student-profile/components/financial-tab/financial-tab.component.html
 - apps/frontend/src/app/features/students/student-profile/components/financial-tab/financial-tab.component.spec.ts
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Joe on 2026-02-13
+**Outcome:** Approved with fixes applied
+
+**Issues Found:** 0 High, 2 Medium, 0 Low -- all HIGH and MEDIUM fixed automatically
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| M4 | MEDIUM | Invoice date hardcoded to today with no date picker | Fixed: Added invoiceDate field to InvoiceForm and date input to HTML |
+| M5 | MEDIUM | No past-date validation on invoice due date | Fixed: Added validation in isInvoiceFormValid() to reject due dates before today |
+
 ## Change Log
 
 - 2026-02-13: Initial implementation - Invoice creation form with validation and API integration
+- 2026-02-13: Code review fixes - added invoice date picker (M4), due date past-date validation (M5)

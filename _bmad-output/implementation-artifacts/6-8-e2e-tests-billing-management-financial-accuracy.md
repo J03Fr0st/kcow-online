@@ -1,6 +1,6 @@
 # Story 6.8: E2E Tests - Billing Management & Financial Accuracy
 
-Status: review
+Status: done
 
 ## Story
 
@@ -206,9 +206,20 @@ Claude Opus 4.6
 - `apps/frontend/e2e/billing/financial-tab.spec.ts` - Financial tab E2E tests (5 tests)
 - `apps/frontend/e2e/billing/payments.spec.ts` - Record payment E2E tests (10 tests)
 - `apps/frontend/e2e/billing/invoicing.spec.ts` - Create invoice E2E tests (10 tests)
-- `apps/frontend/e2e/billing/profile-header-billing.spec.ts` - Profile header billing E2E tests (7 tests)
-- `apps/frontend/e2e/billing/billing-audit-trail.spec.ts` - Billing audit trail E2E tests (10 tests)
-- `apps/frontend/e2e/billing/financial-calculations.spec.ts` - Financial calculations E2E tests (10 tests)
+- `apps/frontend/e2e/billing/profile-header-billing.spec.ts` - Profile header billing E2E tests (8 tests)
+- `apps/frontend/e2e/billing/billing-audit-trail.spec.ts` - Billing audit trail E2E tests (11 tests)
+- `apps/frontend/e2e/billing/financial-calculations.spec.ts` - Financial calculations E2E tests (9 tests)
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Joe on 2026-02-13
+**Outcome:** Approved with fixes applied
+
+**Issues Found:** 0 High, 1 Medium, 0 Low -- all HIGH and MEDIUM fixed automatically
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| M7 | MEDIUM | Per-file E2E test counts wrong in 3 of 6 files | Fixed: Corrected per-file test counts in story file |
 
 ## Change Log
 
@@ -217,3 +228,4 @@ Claude Opus 4.6
 | 2026-01-06 | Story file created from backlog |
 | 2026-02-06 | Updated to reference Dapper + DbUp architecture (no EF Core) |
 | 2026-02-13 | Implemented all E2E tests for billing functionality |
+| 2026-02-13 | Code review - corrected per-file test counts |

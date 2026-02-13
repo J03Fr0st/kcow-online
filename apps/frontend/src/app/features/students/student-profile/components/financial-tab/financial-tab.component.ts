@@ -1,6 +1,7 @@
 import { Component, inject, input, OnInit, signal, DestroyRef, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 import { BillingService } from '@core/services/billing.service';
 import { NotificationService } from '@core/services/notification.service';
 import { AuditTrailPanelComponent } from '../audit-trail-panel/audit-trail-panel.component';
@@ -8,6 +9,7 @@ import type { BillingSummary, Invoice, Payment, InvoiceStatus, PaymentMethod, Cr
 import { InvoiceStatusValues, PaymentMethodValues } from '@features/billing/models/billing.model';
 
 interface PaymentForm {
+  paymentDate: string;
   amount: number | null;
   paymentMethod: number;
   invoiceId: number | null;
@@ -15,6 +17,7 @@ interface PaymentForm {
 }
 
 interface InvoiceForm {
+  invoiceDate: string;
   amount: number | null;
   dueDate: string;
   description: string;
@@ -51,6 +54,7 @@ export class FinancialTabComponent implements OnInit {
   readonly showPaymentForm = signal<boolean>(false);
   readonly isSavingPayment = signal<boolean>(false);
   readonly paymentForm = signal<PaymentForm>({
+    paymentDate: new Date().toISOString().split('T')[0],
     amount: null,
     paymentMethod: 0, // Cash
     invoiceId: null,
@@ -61,7 +65,7 @@ export class FinancialTabComponent implements OnInit {
   readonly paymentMethodOptions: { value: number; label: PaymentMethod }[] = [
     { value: 0, label: 'Cash' },
     { value: 1, label: 'Card' },
-    { value: 2, label: 'Transfer' },
+    { value: 2, label: 'EFT' },
     { value: 3, label: 'Other' },
   ];
 
@@ -69,6 +73,7 @@ export class FinancialTabComponent implements OnInit {
   readonly showInvoiceForm = signal<boolean>(false);
   readonly isSavingInvoice = signal<boolean>(false);
   readonly invoiceForm = signal<InvoiceForm>({
+    invoiceDate: new Date().toISOString().split('T')[0],
     amount: null,
     dueDate: '',
     description: '',
@@ -115,41 +120,22 @@ export class FinancialTabComponent implements OnInit {
 
     const studentId = this.studentId();
 
-    // Load billing summary
-    this.billingService.getBillingSummary(studentId).pipe(
+    forkJoin({
+      summary: this.billingService.getBillingSummary(studentId),
+      invoices: this.billingService.getInvoices(studentId),
+      payments: this.billingService.getPayments(studentId),
+    }).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
-      next: (summary) => {
+      next: ({ summary, invoices, payments }) => {
         this.billingSummary.set(summary);
-      },
-      error: (err) => {
-        console.error('Error loading billing summary:', err);
-        this.error.set('Failed to load billing summary');
-      },
-    });
-
-    // Load invoices
-    this.billingService.getInvoices(studentId).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (invoices) => {
         this.invoices.set(Array.isArray(invoices) ? invoices : []);
-      },
-      error: (err) => {
-        console.error('Error loading invoices:', err);
-      },
-    });
-
-    // Load payments
-    this.billingService.getPayments(studentId).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (payments) => {
         this.payments.set(Array.isArray(payments) ? payments : []);
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.error('Error loading payments:', err);
+        console.error('Error loading billing data:', err);
+        this.error.set('Failed to load billing data');
         this.isLoading.set(false);
       },
     });
@@ -238,6 +224,7 @@ export class FinancialTabComponent implements OnInit {
   showAddPaymentForm(): void {
     this.showPaymentForm.set(true);
     this.paymentForm.set({
+      paymentDate: new Date().toISOString().split('T')[0],
       amount: null,
       paymentMethod: 0,
       invoiceId: null,
@@ -251,6 +238,7 @@ export class FinancialTabComponent implements OnInit {
   cancelPaymentForm(): void {
     this.showPaymentForm.set(false);
     this.paymentForm.set({
+      paymentDate: new Date().toISOString().split('T')[0],
       amount: null,
       paymentMethod: 0,
       invoiceId: null,
@@ -288,7 +276,7 @@ export class FinancialTabComponent implements OnInit {
     this.isSavingPayment.set(true);
 
     const request: CreatePaymentRequest = {
-      paymentDate: new Date().toISOString().split('T')[0],
+      paymentDate: form.paymentDate,
       amount: form.amount,
       paymentMethod: form.paymentMethod,
       invoiceId: form.invoiceId ?? undefined,
@@ -334,6 +322,7 @@ export class FinancialTabComponent implements OnInit {
   showAddInvoiceForm(): void {
     this.showInvoiceForm.set(true);
     this.invoiceForm.set({
+      invoiceDate: new Date().toISOString().split('T')[0],
       amount: null,
       dueDate: '',
       description: '',
@@ -347,6 +336,7 @@ export class FinancialTabComponent implements OnInit {
   cancelInvoiceForm(): void {
     this.showInvoiceForm.set(false);
     this.invoiceForm.set({
+      invoiceDate: new Date().toISOString().split('T')[0],
       amount: null,
       dueDate: '',
       description: '',
@@ -367,7 +357,9 @@ export class FinancialTabComponent implements OnInit {
    */
   isInvoiceFormValid(): boolean {
     const form = this.invoiceForm();
-    return form.amount !== null && form.amount > 0 && !!form.dueDate;
+    if (!form.amount || form.amount <= 0 || !form.dueDate || !form.invoiceDate) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return form.dueDate >= today;
   }
 
   /**
@@ -389,7 +381,7 @@ export class FinancialTabComponent implements OnInit {
     this.isSavingInvoice.set(true);
 
     const request: CreateInvoiceRequest = {
-      invoiceDate: new Date().toISOString().split('T')[0],
+      invoiceDate: form.invoiceDate,
       amount: form.amount,
       dueDate: form.dueDate,
       description: form.description || undefined,

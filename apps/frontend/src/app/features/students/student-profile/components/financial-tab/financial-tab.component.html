@@ -146,6 +146,20 @@
       <div class="card-body">
         <h4 class="card-title text-base">Create Invoice</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Invoice Date input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Invoice Date</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              type="date"
+              class="input input-bordered input-sm"
+              [value]="invoiceForm().invoiceDate"
+              (input)="updateInvoiceForm('invoiceDate', $any($event.target).value)"
+            />
+          </div>
+
           <!-- Amount input -->
           <div class="form-control">
             <label class="label">
@@ -281,6 +295,20 @@
       <div class="card-body">
         <h4 class="card-title text-base">Record Payment</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Payment Date input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Payment Date</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              type="date"
+              class="input input-bordered input-sm"
+              [value]="paymentForm().paymentDate"
+              (input)="updatePaymentForm('paymentDate', $any($event.target).value)"
+            />
+          </div>
+
           <!-- Amount input -->
           <div class="form-control">
             <label class="label">
