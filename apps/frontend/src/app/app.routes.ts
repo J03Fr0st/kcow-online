@@ -66,6 +66,18 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'profile',
+        loadComponent: () =>
+          import('@features/profile/profile.component').then((m) => m.ProfileComponent),
+        data: {
+          breadcrumb: 'Profile',
+          breadcrumbIcon: '👤',
+          title: 'My Profile',
+          description: 'Manage your account information and security settings',
+          keywords: 'profile, account, user, settings',
+        },
+      },
+      {
         path: 'workspace-settings',
         loadComponent: () =>
           import('@features/workspace-settings/workspace-settings.component').then(

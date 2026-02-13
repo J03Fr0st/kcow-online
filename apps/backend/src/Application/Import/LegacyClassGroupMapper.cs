@@ -130,7 +130,7 @@ public sealed class LegacyClassGroupMapper
             Name = name,
             DayTruck = Trim(record.DayTruck),
             Description = Trim(record.Description),
-            SchoolId = record.SchoolId,
+            SchoolId = record.SchoolId == 0 ? null : (int)record.SchoolId,
             TruckId = truckId,
             DayOfWeek = dayOfWeek,
             StartTime = startTime ?? new TimeOnly(8, 0), // Default 8:00 AM

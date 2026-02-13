@@ -266,12 +266,12 @@ public class ClassGroupService : IClassGroupService
             if (cg.StartTime < request.EndTime && request.StartTime < cg.EndTime)
             {
                 // Load school name for conflict display
-                var school = await _schoolRepository.GetByIdAsync(cg.SchoolId, cancellationToken);
+                School? school = cg.SchoolId.HasValue ? await _schoolRepository.GetByIdAsync(cg.SchoolId.Value, cancellationToken) : null;
                 conflicts.Add(new ScheduleConflictDto
                 {
                     Id = cg.Id,
                     Name = cg.Name,
-                    SchoolName = school?.Name ?? $"School {cg.SchoolId}",
+                    SchoolName = school?.Name ?? (cg.SchoolId.HasValue ? $"School {cg.SchoolId}" : "Unknown"),
                     StartTime = cg.StartTime,
                     EndTime = cg.EndTime
                 });
@@ -305,7 +305,7 @@ public class ClassGroupService : IClassGroupService
 
                 if (includeDetails)
                 {
-                    var school = await _schoolRepository.GetByIdAsync(group.SchoolId, cancellationToken);
+                    var school = group.SchoolId.HasValue ? await _schoolRepository.GetByIdAsync(group.SchoolId.Value, cancellationToken) : null;
                     if (school != null)
                     {
                         schoolDto = new SchoolDto { Id = school.Id, Name = school.Name, ShortName = school.ShortName };
@@ -401,9 +401,9 @@ public class ClassGroupService : IClassGroupService
     private async Task<ClassGroupDto> MapToDtoAsync(ClassGroup cg, CancellationToken cancellationToken = default)
     {
         SchoolDto? schoolDto = null;
-        if (cg.SchoolId > 0)
+        if (cg.SchoolId.HasValue && cg.SchoolId > 0)
         {
-            var school = await _schoolRepository.GetByIdAsync(cg.SchoolId, cancellationToken);
+            var school = await _schoolRepository.GetByIdAsync(cg.SchoolId.Value, cancellationToken);
             if (school != null)
             {
                 schoolDto = new SchoolDto

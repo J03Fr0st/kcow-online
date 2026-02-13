@@ -1,5 +1,6 @@
 using Kcow.Application.Import;
 using Kcow.Application.Interfaces;
+using Kcow.Domain.Entities;
 
 namespace Kcow.Infrastructure.Import;
 
@@ -74,7 +75,9 @@ public sealed class LegacyClassGroupImportService
             // Let's assume for now we just try to create and catch exceptions or similar, OR fetch all for that school and check in memory.
             
             // Optimization: Load all class groups for the school to check duplicates in memory.
-            var existingGroups = await _classGroupRepository.GetBySchoolIdAsync(mapping.ClassGroup.SchoolId, cancellationToken);
+            var existingGroups = mapping.ClassGroup.SchoolId.HasValue
+                ? await _classGroupRepository.GetBySchoolIdAsync(mapping.ClassGroup.SchoolId.Value, cancellationToken)
+                : Enumerable.Empty<ClassGroup>();
             var exists = existingGroups.Any(cg => 
                 cg.Name == mapping.ClassGroup.Name && 
                 cg.DayOfWeek == mapping.ClassGroup.DayOfWeek);

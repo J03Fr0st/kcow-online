@@ -41,17 +41,21 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
         var name = Trim(source.Description) ?? Trim(source.ClassGroup) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(name))
         {
-            return MappingResult<ClassGroup>.Fail("Name", "Class Group is missing a description and name.");
-        }
-
-        // Validate SchoolId
-        if (_validSchoolIds.Count > 0 && !_validSchoolIds.Contains(source.SchoolId))
-        {
-            return MappingResult<ClassGroup>.Fail("SchoolId",
-                $"Class Group references invalid SchoolId {source.SchoolId}.");
+            name = $"ClassGroup-{source.SchoolId}-Unnamed";
         }
 
         var result = new MappingResult<ClassGroup> { Success = true };
+
+        // Validate SchoolId - treat 0 as null (missing from legacy data)
+        int? schoolId = source.SchoolId == 0 ? null : (int)source.SchoolId;
+        if (schoolId.HasValue && _validSchoolIds.Count > 0 && !_validSchoolIds.Contains(schoolId.Value))
+        {
+            // Invalid school reference - set to null rather than failing
+            schoolId = null;
+            result.Warnings.Add(new MappingWarning("SchoolId",
+                $"Class Group references invalid SchoolId {source.SchoolId}. Set to null.",
+                source.SchoolId.ToString(), null));
+        }
 
         // Parse DayId to DayOfWeek (1=Monday, 2=Tuesday, etc.)
         var dayOfWeek = DayOfWeek.Monday;
@@ -99,8 +103,11 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
 
         if (startTime.HasValue && endTime.HasValue && endTime <= startTime)
         {
-            return MappingResult<ClassGroup>.Fail("EndTime",
-                "End Time must be after Start Time.");
+            // Swap times if end is before start
+            (startTime, endTime) = (endTime, startTime);
+            result.Warnings.Add(new MappingWarning("EndTime",
+                "End Time was before Start Time - times were swapped.",
+                source.EndTime, endTime.ToString()));
         }
 
         // Parse TruckId from DayTruck
@@ -128,7 +135,7 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
             Name = name,
             DayTruck = Trim(source.DayTruck),
             Description = Trim(source.Description),
-            SchoolId = source.SchoolId,
+            SchoolId = schoolId,
             TruckId = truckId,
             DayOfWeek = dayOfWeek,
             StartTime = startTime ?? new TimeOnly(8, 0),

@@ -18,8 +18,8 @@ public class ClassGroup
     // XSD Field: "Description" (35 chars max)
     public string? Description { get; set; }
 
-    // XSD Field: "School_x0020_Id" (smallint)
-    public int SchoolId { get; set; }
+    // XSD Field: "School_x0020_Id" (smallint) - Nullable for legacy records with missing/invalid school
+    public int? SchoolId { get; set; }
 
     // Optional truck assignment
     public int? TruckId { get; set; }
@@ -67,7 +67,7 @@ public class ClassGroup
     public DateTime? UpdatedAt { get; set; }
 
     // Navigation properties
-    public School School { get; set; } = null!;
+    public School? School { get; set; }
     public Truck? Truck { get; set; }
     public ICollection<Student> Students { get; set; } = new List<Student>();
 }

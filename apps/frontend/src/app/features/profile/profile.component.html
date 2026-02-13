@@ -1,0 +1,212 @@
+<div class="p-6 max-w-4xl mx-auto">
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold">My Profile</h1>
+      <p class="text-base-content/60 mt-1">Manage your account information and security settings</p>
+    </div>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="card bg-base-100 shadow-sm border border-base-300 mb-6">
+    <div class="card-body flex flex-row items-center gap-6">
+      <div class="avatar placeholder">
+        <div class="bg-primary text-primary-content rounded-full w-20">
+          <span class="text-2xl">{{ userInitials }}</span>
+        </div>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-xl font-semibold">{{ user()?.name ?? 'User' }}</h2>
+        <p class="text-base-content/60">{{ user()?.email }}</p>
+        <div class="badge badge-outline mt-2">{{ user()?.role }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs tabs-boxed mb-6 bg-base-200 p-1">
+    <button
+      class="tab"
+      [class.tab-active]="activeTab() === 'overview'"
+      (click)="switchTab('overview')">
+      Account Details
+    </button>
+    <button
+      class="tab"
+      [class.tab-active]="activeTab() === 'security'"
+      (click)="switchTab('security')">
+      Security
+    </button>
+  </div>
+
+  <!-- Overview Tab -->
+  @if (activeTab() === 'overview') {
+    <div class="card bg-base-100 shadow-sm border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-lg mb-4">Account Information</h3>
+
+        @if (saveSuccess()) {
+          <div class="alert alert-success mb-4">
+            <span>Profile updated successfully!</span>
+          </div>
+        }
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <div class="form-control mb-4">
+            <label class="label" for="name">
+              <span class="label-text">Full Name</span>
+            </label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              class="input input-bordered"
+              placeholder="Enter your full name" />
+            @if (profileForm.get('name')?.touched && profileForm.get('name')?.hasError('required')) {
+              <label class="label">
+                <span class="label-text-alt text-error">Name is required</span>
+              </label>
+            }
+            @if (profileForm.get('name')?.touched && profileForm.get('name')?.hasError('minlength')) {
+              <label class="label">
+                <span class="label-text-alt text-error">Name must be at least 2 characters</span>
+              </label>
+            }
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label" for="email">
+              <span class="label-text">Email Address</span>
+            </label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              class="input input-bordered"
+              placeholder="Enter your email" />
+            @if (profileForm.get('email')?.touched && profileForm.get('email')?.hasError('required')) {
+              <label class="label">
+                <span class="label-text-alt text-error">Email is required</span>
+              </label>
+            }
+            @if (profileForm.get('email')?.touched && profileForm.get('email')?.hasError('email')) {
+              <label class="label">
+                <span class="label-text-alt text-error">Please enter a valid email address</span>
+              </label>
+            }
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text">Role</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered"
+              [value]="user()?.role"
+              disabled />
+            <label class="label">
+              <span class="label-text-alt text-base-content/50">Contact an administrator to change your role</span>
+            </label>
+          </div>
+
+          <div class="card-actions justify-end mt-6">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="profileForm.invalid || profileForm.pristine || isSaving()">
+              @if (isSaving()) {
+                <span class="loading loading-spinner loading-sm"></span>
+              }
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Security Tab -->
+  @if (activeTab() === 'security') {
+    <div class="card bg-base-100 shadow-sm border border-base-300">
+      <div class="card-body">
+        <h3 class="card-title text-lg mb-4">Change Password</h3>
+
+        @if (passwordSuccess()) {
+          <div class="alert alert-success mb-4">
+            <span>Password changed successfully!</span>
+          </div>
+        }
+
+        @if (passwordError()) {
+          <div class="alert alert-error mb-4">
+            <span>{{ passwordError() }}</span>
+          </div>
+        }
+
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <div class="form-control mb-4">
+            <label class="label" for="currentPassword">
+              <span class="label-text">Current Password</span>
+            </label>
+            <input
+              id="currentPassword"
+              type="password"
+              formControlName="currentPassword"
+              class="input input-bordered"
+              placeholder="Enter current password" />
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label" for="newPassword">
+              <span class="label-text">New Password</span>
+            </label>
+            <input
+              id="newPassword"
+              type="password"
+              formControlName="newPassword"
+              class="input input-bordered"
+              placeholder="Enter new password" />
+            @if (passwordForm.get('newPassword')?.touched && passwordForm.get('newPassword')?.hasError('minlength')) {
+              <label class="label">
+                <span class="label-text-alt text-error">Password must be at least 8 characters</span>
+              </label>
+            }
+          </div>
+
+          <div class="form-control mb-4">
+            <label class="label" for="confirmPassword">
+              <span class="label-text">Confirm New Password</span>
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              formControlName="confirmPassword"
+              class="input input-bordered"
+              placeholder="Confirm new password" />
+          </div>
+
+          <div class="card-actions justify-end mt-6">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="passwordForm.invalid">
+              Update Password
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Session Info -->
+    <div class="card bg-base-100 shadow-sm border border-base-300 mt-6">
+      <div class="card-body">
+        <h3 class="card-title text-lg mb-4">Session</h3>
+        <p class="text-base-content/60 mb-4">You are currently logged in. You can end your session by logging out.</p>
+        <button class="btn btn-error btn-outline" (click)="logout()">
+          Logout
+        </button>
+      </div>
+    </div>
+  }
+</div>

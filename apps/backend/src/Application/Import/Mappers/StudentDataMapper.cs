@@ -44,12 +44,14 @@ public sealed class StudentDataMapper : IDataMapper<LegacyChildRecord, StudentMa
         _classGroupIdsByCode = classGroupIdsByCode ?? EmptyDict;
     }
 
+    private int _autoRefCounter;
+
     public MappingResult<StudentMappingData> Map(LegacyChildRecord source)
     {
-        if (string.IsNullOrWhiteSpace(source.Reference))
+        var reference = source.Reference;
+        if (string.IsNullOrWhiteSpace(reference))
         {
-            return MappingResult<StudentMappingData>.Fail("Reference",
-                "Student has no Reference - skipping import.");
+            reference = $"AUTO-{++_autoRefCounter:D6}";
         }
 
         var result = new MappingResult<StudentMappingData> { Success = true };
@@ -89,7 +91,7 @@ public sealed class StudentDataMapper : IDataMapper<LegacyChildRecord, StudentMa
 
         var student = new Student
         {
-            Reference = source.Reference,
+            Reference = reference,
             FirstName = source.ChildName,
             LastName = source.ChildSurname,
             DateOfBirth = dateOfBirth,
@@ -178,7 +180,7 @@ public sealed class StudentDataMapper : IDataMapper<LegacyChildRecord, StudentMa
             PhotoUrl = source.Photo,
             PhotoUpdated = ParseDateTime(source.PhotoUpdated),
             IsActive = true,
-            LegacyId = source.Reference,
+            LegacyId = reference,
             CreatedAt = DateTime.UtcNow
         };
 

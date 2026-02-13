@@ -10,7 +10,7 @@ public class ClassGroupDto
     public required string Name { get; set; }
     public string? DayTruck { get; set; }
     public string? Description { get; set; }
-    public int SchoolId { get; set; }
+    public int? SchoolId { get; set; }
     public int? TruckId { get; set; }
     public DayOfWeek DayOfWeek { get; set; }
     public TimeOnly StartTime { get; set; }

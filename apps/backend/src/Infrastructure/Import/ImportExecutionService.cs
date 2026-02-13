@@ -131,7 +131,10 @@ public sealed class ImportExecutionService : IImportExecutionService
         var parseResult = _parser.ParseClassGroups(xmlPath, xsdPath);
         AddParseExceptions(parseResult, "ClassGroup", exceptions);
 
-        var mapper = new ClassGroupDataMapper();
+        // Load valid school IDs so the mapper can null-out invalid FK references
+        var validSchoolIds = new HashSet<int>(
+            (await connection.QueryAsync<int>("SELECT id FROM schools")).ToList());
+        var mapper = new ClassGroupDataMapper(validSchoolIds);
         var mapResult = mapper.MapMany(parseResult.Records);
         AddMappingExceptions(mapResult, "ClassGroup", exceptions, ref counts);
 

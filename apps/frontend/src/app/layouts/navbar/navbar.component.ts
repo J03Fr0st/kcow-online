@@ -34,6 +34,10 @@ export class NavbarComponent {
     this.breadcrumbService.navigateTo(crumb);
   }
 
+  navigateTo(path: string): void {
+    this.router.navigate([path]);
+  }
+
   logout(): void {
     this.authService.clearSessionAndRedirect();
   }

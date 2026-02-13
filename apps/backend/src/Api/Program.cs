@@ -32,7 +32,20 @@ if (ImportRunCommand.IsImportRunCommand(args))
         .CreateBootstrapLogger();
 
     var parser = new LegacyParser();
-    var exitCode = await ImportRunCommand.ExecuteAsync(args, parser, Console.Out);
+
+    // Build a minimal service provider with database access for full imports
+    var cliBuilder = WebApplication.CreateBuilder(Array.Empty<string>());
+    cliBuilder.Services.AddInfrastructure(cliBuilder.Configuration);
+    cliBuilder.Services.AddLogging(lb => lb.AddConsole());
+    var cliApp = cliBuilder.Build();
+
+    // Run migrations to ensure DB schema is up to date
+    await cliApp.Services.InitializeDatabaseAsync();
+
+    using var scope = cliApp.Services.CreateScope();
+    var importService = scope.ServiceProvider.GetService<IImportExecutionService>();
+
+    var exitCode = await ImportRunCommand.ExecuteAsync(args, parser, Console.Out, importService);
     Environment.Exit(exitCode);
     return;
 }

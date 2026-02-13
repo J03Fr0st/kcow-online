@@ -46,6 +46,9 @@ public static class DependencyInjection
         // Enable Dapper snake_case column to PascalCase property mapping
         DefaultTypeMap.MatchNamesWithUnderscores = true;
 
+        // Register Dapper type handlers for types not natively supported
+        SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
+
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Data Source=kcow.db";
 
