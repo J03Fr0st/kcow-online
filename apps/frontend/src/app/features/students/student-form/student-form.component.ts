@@ -12,6 +12,8 @@ import { NotificationService } from '@core/services/notification.service';
 import { ModalService } from '@core/services/modal.service';
 import { CreateFamilyModalComponent } from '@shared/components/create-family-modal/create-family-modal.component';
 import { FamilyService, type Family } from '@core/services/family.service';
+import { AttendanceTabComponent } from '../student-profile/components/attendance-tab/attendance-tab.component';
+import { EvaluationTabComponent } from '../student-profile/components/evaluation-tab/evaluation-tab.component';
 import { firstValueFrom } from 'rxjs';
 
 /**
@@ -45,7 +47,9 @@ function positiveIntegerValidator(): ValidatorFn {
         SchoolSelectComponent,
         ClassGroupSelectComponent,
         FamilySelectComponent,
-        StudentAvatarComponent
+        StudentAvatarComponent,
+        AttendanceTabComponent,
+        EvaluationTabComponent
     ],
     template: `
 <div class="student-form p-4">
@@ -368,18 +372,40 @@ function positiveIntegerValidator(): ValidatorFn {
       </div>
       }
 
-      <!-- Other Tabs Placeholders -->
+      <!-- Tab: Child Attendance -->
       @if (activeTab === 'attendance') {
-      <div class="alert"><span>📋 Child Attendance module coming soon.</span></div>
+        @if (studentId()) {
+          <app-attendance-tab [studentId]="studentId()!" />
+        } @else {
+          <div class="alert alert-info"><span>Save the student first to manage attendance.</span></div>
+        }
       }
+
+      <!-- Tab: Class Groups Attendance -->
       @if (activeTab === 'cg-attendance') {
-      <div class="alert"><span>📊 Class Groups Attendance module coming soon.</span></div>
+        @if (studentId()) {
+          <app-attendance-tab [studentId]="studentId()!" />
+        } @else {
+          <div class="alert alert-info"><span>Save the student first to manage attendance.</span></div>
+        }
       }
+
+      <!-- Tab: Child Evaluation -->
       @if (activeTab === 'evaluation') {
-      <div class="alert"><span>📝 Child Evaluation module coming soon.</span></div>
+        @if (studentId()) {
+          <app-evaluation-tab [studentId]="studentId()!" />
+        } @else {
+          <div class="alert alert-info"><span>Save the student first to manage evaluations.</span></div>
+        }
       }
+
+      <!-- Tab: Class Groups Evaluation -->
       @if (activeTab === 'cg-evaluation') {
-      <div class="alert"><span>📈 Class Groups Evaluation module coming soon.</span></div>
+        @if (studentId()) {
+          <app-evaluation-tab [studentId]="studentId()!" />
+        } @else {
+          <div class="alert alert-info"><span>Save the student first to manage evaluations.</span></div>
+        }
       }
 
     </div>
