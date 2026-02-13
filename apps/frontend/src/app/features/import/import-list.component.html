@@ -1,0 +1,122 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-base-content">Import History</h1>
+    <p class="text-base-content/60">View audit logs for legacy data imports</p>
+  </div>
+
+  <!-- Error State -->
+  @if (error(); as errorMsg) {
+    <div role="alert" class="alert alert-error shadow-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <h3 class="font-bold">Error</h3>
+        <div class="text-xs">{{ errorMsg }}</div>
+      </div>
+      <button class="btn btn-sm btn-ghost" (click)="loadImports()">Retry</button>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="flex justify-center p-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  } @else {
+    <!-- Empty State -->
+    @if (records().length === 0 && !error()) {
+      <div class="flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+        <div class="text-6xl mb-4">📥</div>
+        <h3 class="text-xl font-semibold">No import records</h3>
+        <p class="text-base-content/60 mb-6 text-center max-w-sm">
+          No legacy data imports have been run yet. Import records will appear here after an import is executed.
+        </p>
+      </div>
+    } @else if (records().length > 0) {
+      <!-- Table -->
+      <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+        <table class="table table-zebra table-sm">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Started</th>
+              <th>Status</th>
+              <th>Run By</th>
+              <th>Source</th>
+              <th>Created</th>
+              <th>Failed</th>
+              <th>Skipped</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of records(); track record.id) {
+              <tr class="hover cursor-pointer" (click)="toggleExpand(record.id)">
+                <td class="w-8">
+                  <span class="text-xs">{{ expandedId() === record.id ? '▼' : '▶' }}</span>
+                </td>
+                <td>{{ formatDateTime(record.startedAt) }}</td>
+                <td>
+                  <span class="badge badge-sm" [ngClass]="getStatusBadgeClass(record.status)">
+                    {{ record.status }}
+                  </span>
+                </td>
+                <td>{{ record.runBy || '-' }}</td>
+                <td class="max-w-xs truncate">{{ record.sourcePath || '-' }}</td>
+                <td class="text-success">{{ record.totalCreated }}</td>
+                <td class="text-error">{{ record.totalFailed }}</td>
+                <td>{{ record.totalSkipped }}</td>
+              </tr>
+              <!-- Expanded Details -->
+              @if (expandedId() === record.id) {
+                <tr>
+                  <td colspan="8" class="bg-base-200/50 p-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <span class="font-semibold block text-xs text-base-content/60">Completed</span>
+                        {{ formatDateTime(record.completedAt) }}
+                      </div>
+                      <div>
+                        <span class="font-semibold block text-xs text-base-content/60">Schools Created</span>
+                        {{ record.schoolsCreated }}
+                      </div>
+                      <div>
+                        <span class="font-semibold block text-xs text-base-content/60">Class Groups Created</span>
+                        {{ record.classGroupsCreated }}
+                      </div>
+                      <div>
+                        <span class="font-semibold block text-xs text-base-content/60">Activities Created</span>
+                        {{ record.activitiesCreated }}
+                      </div>
+                      <div>
+                        <span class="font-semibold block text-xs text-base-content/60">Students Created</span>
+                        {{ record.studentsCreated }}
+                      </div>
+                      @if (record.exceptionsFilePath) {
+                        <div>
+                          <span class="font-semibold block text-xs text-base-content/60">Exceptions File</span>
+                          {{ record.exceptionsFilePath }}
+                        </div>
+                      }
+                      @if (record.notes) {
+                        <div class="col-span-2">
+                          <span class="font-semibold block text-xs text-base-content/60">Notes</span>
+                          {{ record.notes }}
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="text-sm text-base-content/60">
+        Showing {{ records().length }} import(s)
+      </div>
+    }
+  }
+</div>

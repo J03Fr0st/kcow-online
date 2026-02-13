@@ -16,6 +16,19 @@ export class EvaluationService {
   private readonly apiUrl = `${environment.apiUrl}/evaluations`;
 
   /**
+   * Get all evaluation records (no student filter).
+   * @returns Observable of all evaluation records
+   */
+  getAllEvaluations(): Observable<Evaluation[]> {
+    return this.http.get<Evaluation[]>(this.apiUrl).pipe(
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error loading all evaluation records:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
    * Get evaluation records with optional filters.
    * @param studentId Student ID to filter by
    * @returns Observable of evaluation records array

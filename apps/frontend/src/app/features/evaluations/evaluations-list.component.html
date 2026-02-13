@@ -1,0 +1,98 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-base-content">Evaluations</h1>
+    <p class="text-base-content/60">View student evaluation records and progress</p>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="form-control w-40">
+          <label class="label py-1">
+            <span class="label-text text-xs">From Date</span>
+          </label>
+          <input type="date" class="input input-bordered input-sm"
+            [ngModel]="filterFromDate()"
+            (ngModelChange)="onFromDateChange($event)" />
+        </div>
+        <div class="form-control w-40">
+          <label class="label py-1">
+            <span class="label-text text-xs">To Date</span>
+          </label>
+          <input type="date" class="input input-bordered input-sm"
+            [ngModel]="filterToDate()"
+            (ngModelChange)="onToDateChange($event)" />
+        </div>
+        <button class="btn btn-ghost btn-sm" (click)="clearFilters()">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  @if (error(); as errorMsg) {
+    <div role="alert" class="alert alert-error shadow-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <h3 class="font-bold">Error</h3>
+        <div class="text-xs">{{ errorMsg }}</div>
+      </div>
+      <button class="btn btn-sm btn-ghost" (click)="loadEvaluations()">Retry</button>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="flex justify-center p-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  } @else {
+    <!-- Empty State -->
+    @if (filteredRecords().length === 0 && !error()) {
+      <div class="flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+        <div class="text-6xl mb-4">📊</div>
+        <h3 class="text-xl font-semibold">No evaluations found</h3>
+        <p class="text-base-content/60 mb-6 text-center max-w-sm">
+          No evaluation records match your current filters. Try adjusting the date range.
+        </p>
+      </div>
+    } @else if (filteredRecords().length > 0) {
+      <!-- Table -->
+      <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+        <table class="table table-zebra table-sm">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Activity</th>
+              <th>Date</th>
+              <th>Score</th>
+              <th>Speed</th>
+              <th>Accuracy</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of filteredRecords(); track record.id) {
+              <tr class="hover">
+                <td class="font-medium">{{ record.studentName || 'Student #' + record.studentId }}</td>
+                <td>{{ record.activityName || 'Activity #' + record.activityId }}</td>
+                <td>{{ record.evaluationDate }}</td>
+                <td>{{ formatScore(record.score) }}</td>
+                <td>{{ formatScore(record.speedMetric) }}</td>
+                <td>{{ formatScore(record.accuracyMetric) }}</td>
+                <td class="max-w-xs truncate">{{ record.notes || '-' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="text-sm text-base-content/60">
+        Showing {{ filteredRecords().length }} record(s)
+      </div>
+    }
+  }
+</div>

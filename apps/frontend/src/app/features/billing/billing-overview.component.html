@@ -1,0 +1,176 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-base-content">Billing</h1>
+    <p class="text-base-content/60">Search for a student to view their billing details</p>
+  </div>
+
+  <!-- Student Search -->
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4">
+      <div class="form-control relative">
+        <label class="label py-1">
+          <span class="label-text text-xs">Search Student</span>
+        </label>
+        <div class="flex gap-2">
+          <input type="text" class="input input-bordered input-sm flex-1"
+            placeholder="Type student name (min 2 characters)..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchInput($event)" />
+          @if (selectedStudent()) {
+            <button class="btn btn-ghost btn-sm" (click)="clearSelection()">Clear</button>
+          }
+        </div>
+
+        <!-- Search Results Dropdown -->
+        @if (searchResults().length > 0 && !selectedStudent()) {
+          <ul class="absolute top-full left-0 right-0 z-20 mt-1 menu bg-base-100 rounded-box shadow-lg border border-base-200 max-h-60 overflow-y-auto">
+            @for (result of searchResults(); track result.id) {
+              <li>
+                <button class="text-left" (click)="selectStudent(result)">
+                  <div>
+                    <div class="font-medium">{{ result.fullName }}</div>
+                    <div class="text-xs text-base-content/60">
+                      {{ result.schoolName }} &middot; {{ result.grade }} &middot; {{ result.classGroupName }}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (isSearching()) {
+          <div class="absolute top-full left-0 right-0 z-20 mt-1 p-3 bg-base-100 rounded-box shadow-lg border border-base-200 text-center">
+            <span class="loading loading-spinner loading-sm"></span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  @if (error(); as errorMsg) {
+    <div role="alert" class="alert alert-error shadow-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ errorMsg }}</span>
+    </div>
+  }
+
+  @if (!selectedStudent() && !isSearching()) {
+    <!-- No Student Selected State -->
+    <div class="flex flex-col items-center justify-center p-12 bg-base-200 rounded-xl border-2 border-dashed border-base-300">
+      <div class="text-6xl mb-4">💰</div>
+      <h3 class="text-xl font-semibold">Select a student</h3>
+      <p class="text-base-content/60 text-center max-w-sm">
+        Use the search above to find a student and view their billing summary, invoices, and payments.
+      </p>
+    </div>
+  }
+
+  @if (isLoadingBilling()) {
+    <div class="flex justify-center p-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  }
+
+  <!-- Billing Data -->
+  @if (selectedStudent() && billingSummary() && !isLoadingBilling()) {
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="stat bg-base-100 rounded-xl shadow-sm border border-base-200 p-4">
+        <div class="stat-title text-xs">Current Balance</div>
+        <div class="stat-value text-lg">{{ formatCurrency(billingSummary()!.currentBalance) }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-xl shadow-sm border border-base-200 p-4">
+        <div class="stat-title text-xs">Total Invoiced</div>
+        <div class="stat-value text-lg">{{ formatCurrency(billingSummary()!.totalInvoiced) }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-xl shadow-sm border border-base-200 p-4">
+        <div class="stat-title text-xs">Total Paid</div>
+        <div class="stat-value text-lg text-success">{{ formatCurrency(billingSummary()!.totalPaid) }}</div>
+      </div>
+      <div class="stat bg-base-100 rounded-xl shadow-sm border border-base-200 p-4">
+        <div class="stat-title text-xs">Overdue</div>
+        <div class="stat-value text-lg" [class.text-error]="billingSummary()!.overdueAmount > 0">
+          {{ formatCurrency(billingSummary()!.overdueAmount) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoices -->
+    <div class="space-y-2">
+      <h2 class="text-lg font-semibold">Invoices</h2>
+      @if (invoices().length === 0) {
+        <p class="text-base-content/60 text-sm">No invoices found for this student.</p>
+      } @else {
+        <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+          <table class="table table-zebra table-sm">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (invoice of invoices(); track invoice.id) {
+                <tr class="hover">
+                  <td>{{ invoice.invoiceDate }}</td>
+                  <td>{{ invoice.description || '-' }}</td>
+                  <td>{{ formatCurrency(invoice.amount) }}</td>
+                  <td>{{ invoice.dueDate }}</td>
+                  <td>
+                    <span class="badge badge-sm" [ngClass]="getInvoiceStatusClass(invoice.status)">
+                      {{ getInvoiceStatus(invoice.status) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <!-- Payments -->
+    <div class="space-y-2">
+      <h2 class="text-lg font-semibold">Payments</h2>
+      @if (payments().length === 0) {
+        <p class="text-base-content/60 text-sm">No payments found for this student.</p>
+      } @else {
+        <div class="overflow-x-auto bg-base-100 rounded-xl shadow-sm border border-base-200">
+          <table class="table table-zebra table-sm">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Receipt #</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of payments(); track payment.id) {
+                <tr class="hover">
+                  <td>{{ payment.paymentDate }}</td>
+                  <td class="text-success">{{ formatCurrency(payment.amount) }}</td>
+                  <td>
+                    <span class="badge badge-ghost badge-sm">{{ getPaymentMethod(payment.paymentMethod) }}</span>
+                  </td>
+                  <td>{{ payment.receiptNumber || '-' }}</td>
+                  <td class="max-w-xs truncate">{{ payment.notes || '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+</div>

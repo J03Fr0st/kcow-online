@@ -192,53 +192,53 @@ export const routes: Routes = [
       {
         path: 'attendance',
         loadComponent: () =>
-          import('@features/attendance/attendance-placeholder.component').then(
-            (m) => m.AttendancePlaceholderComponent,
+          import('@features/attendance/attendance-list.component').then(
+            (m) => m.AttendanceListComponent,
           ),
         data: {
           breadcrumb: 'Attendance',
           breadcrumbIcon: '✅',
           title: 'Attendance',
-          description: 'Attendance tracking - Coming soon',
+          description: 'View and manage attendance records',
         },
       },
       {
         path: 'evaluations',
         loadComponent: () =>
-          import('@features/evaluations/evaluations-placeholder.component').then(
-            (m) => m.EvaluationsPlaceholderComponent,
+          import('@features/evaluations/evaluations-list.component').then(
+            (m) => m.EvaluationsListComponent,
           ),
         data: {
           breadcrumb: 'Evaluations',
           breadcrumbIcon: '📊',
           title: 'Evaluations',
-          description: 'Student evaluations and progress - Coming soon',
+          description: 'Student evaluations and progress tracking',
         },
       },
       {
         path: 'billing',
         loadComponent: () =>
-          import('@features/billing/billing-placeholder.component').then(
-            (m) => m.BillingPlaceholderComponent,
+          import('@features/billing/billing-overview.component').then(
+            (m) => m.BillingOverviewComponent,
           ),
         data: {
           breadcrumb: 'Billing',
           breadcrumbIcon: '💰',
           title: 'Billing',
-          description: 'Billing and payments - Coming soon',
+          description: 'Student billing, invoices, and payments',
         },
       },
       {
         path: 'import',
         loadComponent: () =>
-          import('@features/import/import-placeholder.component').then(
-            (m) => m.ImportPlaceholderComponent,
+          import('@features/import/import-list.component').then(
+            (m) => m.ImportListComponent,
           ),
         data: {
           breadcrumb: 'Import',
           breadcrumbIcon: '📥',
           title: 'Import',
-          description: 'Legacy data import - Coming soon',
+          description: 'Legacy data import audit log',
         },
       },
     ],
