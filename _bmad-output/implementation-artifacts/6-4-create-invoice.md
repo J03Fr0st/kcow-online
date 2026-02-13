@@ -1,6 +1,6 @@
 # Story 6.4: Create Invoice
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -25,17 +25,17 @@ so that **I can track amounts owed**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create invoice form (AC: #1)
-  - [ ] Inline form in Financial tab
-  - [ ] Amount input
-  - [ ] Due date picker
-  - [ ] Description field
-  - [ ] Notes field
-- [ ] Task 2: Submit invoice (AC: #2)
-  - [ ] Call POST invoice API (backed by Dapper repository)
-  - [ ] Refresh invoices list
-  - [ ] Recalculate balance
-  - [ ] Confirm creation
+- [x] Task 1: Create invoice form (AC: #1)
+  - [x] Inline form in Financial tab
+  - [x] Amount input
+  - [x] Due date picker
+  - [x] Description field
+  - [x] Notes field
+- [x] Task 2: Submit invoice (AC: #2)
+  - [x] Call POST invoice API (backed by Dapper repository)
+  - [x] Refresh invoices list
+  - [x] Recalculate balance
+  - [x] Confirm creation
 
 ## Dev Notes
 
@@ -88,10 +88,28 @@ so that **I can track amounts owed**.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None required - straightforward implementation.
+
 ### Completion Notes List
 
+- Implemented invoice creation form in FinancialTabComponent following the existing payment form pattern
+- Added InvoiceForm interface and signals: showInvoiceForm, isSavingInvoice, invoiceForm
+- Added methods: showAddInvoiceForm(), cancelInvoiceForm(), updateInvoiceForm(), isInvoiceFormValid(), submitInvoice()
+- Form includes: Amount (required), Due Date (required), Description (optional), Notes (optional)
+- Validation ensures amount > 0 and due date is provided before submission
+- On successful creation: invoice added to list, billing data reloaded to update balance, success notification shown
+- All 49 unit tests pass for financial-tab component
+
 ### File List
+
+- apps/frontend/src/app/features/students/student-profile/components/financial-tab/financial-tab.component.ts
+- apps/frontend/src/app/features/students/student-profile/components/financial-tab/financial-tab.component.html
+- apps/frontend/src/app/features/students/student-profile/components/financial-tab/financial-tab.component.spec.ts
+
+## Change Log
+
+- 2026-02-13: Initial implementation - Invoice creation form with validation and API integration

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Kcow.Application.Billing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,17 @@ public class BillingController : ControllerBase
     {
         _billingService = billingService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Gets the current authenticated user's name for audit logging.
+    /// </summary>
+    private string GetCurrentUser()
+    {
+        return User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(ClaimTypes.Name)?.Value
+            ?? User.Identity?.Name
+            ?? "Unknown";
     }
 
     [HttpGet]
@@ -101,7 +113,8 @@ public class BillingController : ControllerBase
 
         try
         {
-            var invoice = await _billingService.CreateInvoiceAsync(studentId, request, cancellationToken);
+            var currentUser = GetCurrentUser();
+            var invoice = await _billingService.CreateInvoiceAsync(studentId, request, currentUser, cancellationToken);
             return CreatedAtAction(nameof(GetInvoices), new { studentId }, invoice);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))
@@ -185,7 +198,8 @@ public class BillingController : ControllerBase
 
         try
         {
-            var payment = await _billingService.CreatePaymentAsync(studentId, request, cancellationToken);
+            var currentUser = GetCurrentUser();
+            var payment = await _billingService.CreatePaymentAsync(studentId, request, currentUser, cancellationToken);
             return CreatedAtAction(nameof(GetPayments), new { studentId }, payment);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))

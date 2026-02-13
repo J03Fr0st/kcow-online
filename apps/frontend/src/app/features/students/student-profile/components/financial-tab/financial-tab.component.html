@@ -1,0 +1,438 @@
+<div class="financial-tab space-y-6">
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-8" aria-busy="true" aria-label="Loading financial data">
+      <span class="loading loading-spinner text-primary"></span>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error(); as errorMsg) {
+    <div role="alert" class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ errorMsg }}</span>
+    </div>
+  }
+
+  @if (billingSummary(); as summary) {
+    <!-- Financial Summary Card -->
+    <div class="card bg-base-200 shadow-sm">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold">Financial Summary</h3>
+          <button class="btn btn-ghost btn-sm btn-circle" (click)="refresh()" title="Refresh">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Current Balance -->
+          <div class="stat bg-base-100 rounded-lg p-4">
+            <div class="stat-title text-sm">Current Balance</div>
+            <div class="stat-value text-2xl" [class]="getBalanceClass(summary.currentBalance)">
+              {{ formatCurrency(summary.currentBalance) }}
+            </div>
+            @if (summary.currentBalance > 0) {
+              <div class="stat-desc text-error">Amount owed</div>
+            } @else {
+              <div class="stat-desc text-success">No balance</div>
+            }
+          </div>
+
+          <!-- Last Payment -->
+          <div class="stat bg-base-100 rounded-lg p-4">
+            <div class="stat-title text-sm">Last Payment</div>
+            @if (summary.lastPaymentAmount !== null && summary.lastPaymentDate) {
+              <div class="stat-value text-2xl text-success">{{ formatCurrency(summary.lastPaymentAmount) }}</div>
+              <div class="stat-desc">{{ formatDate(summary.lastPaymentDate) }}</div>
+            } @else {
+              <div class="stat-value text-2xl text-base-content/50">-</div>
+              <div class="stat-desc">No payments yet</div>
+            }
+          </div>
+
+          <!-- Outstanding Invoices -->
+          <div class="stat bg-base-100 rounded-lg p-4">
+            <div class="stat-title text-sm">Outstanding Invoices</div>
+            <div class="stat-value text-2xl" [class.text-warning]="summary.outstandingInvoicesCount > 0">
+              {{ summary.outstandingInvoicesCount }}
+            </div>
+            @if (summary.overdueAmount > 0) {
+              <div class="stat-desc text-error">Overdue: {{ formatCurrency(summary.overdueAmount) }}</div>
+            } @else {
+              <div class="stat-desc">No overdue invoices</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Invoices Section -->
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Invoices</h3>
+        @if (!showInvoiceForm()) {
+          <button class="btn btn-primary btn-sm" (click)="showAddInvoiceForm()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Invoice
+          </button>
+        }
+      </div>
+
+      @if (sortedInvoices().length === 0 && !isLoading()) {
+        <div class="text-center py-8 text-base-content/60">
+          <p>No invoices found</p>
+        </div>
+      } @else if (sortedInvoices().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Description</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (invoice of sortedInvoices(); track invoice.id) {
+                <tr
+                  class="hover cursor-pointer"
+                  [class.bg-base-200]="selectedInvoice()?.id === invoice.id"
+                  (click)="selectInvoice(invoice)"
+                >
+                  <td>{{ formatDate(invoice.invoiceDate) }}</td>
+                  <td>{{ formatDate(invoice.dueDate) }}</td>
+                  <td class="font-medium">{{ formatCurrency(invoice.amount) }}</td>
+                  <td>
+                    <span class="badge badge-sm" [class]="getStatusClass(invoice.status)">
+                      {{ getInvoiceStatus(invoice.status) }}
+                    </span>
+                  </td>
+                  <td>{{ invoice.description || '-' }}</td>
+                  <td>
+                    <button
+                      class="btn btn-ghost btn-xs"
+                      (click)="viewInvoiceHistory(invoice); $event.stopPropagation()"
+                      title="View history"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Invoice Form -->
+  @if (showInvoiceForm()) {
+    <div class="card bg-base-200 shadow-sm border border-primary">
+      <div class="card-body">
+        <h4 class="card-title text-base">Create Invoice</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Amount input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Amount (R)</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              type="number"
+              class="input input-bordered input-sm"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
+              [value]="invoiceForm().amount ?? ''"
+              (input)="updateInvoiceForm('amount', parseFloat($any($event.target).value) || null)"
+            />
+          </div>
+
+          <!-- Due Date input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Due Date</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              type="date"
+              class="input input-bordered input-sm"
+              [value]="invoiceForm().dueDate"
+              (input)="updateInvoiceForm('dueDate', $any($event.target).value)"
+            />
+          </div>
+
+          <!-- Description input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Description</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm"
+              placeholder="Invoice description"
+              [value]="invoiceForm().description"
+              (input)="updateInvoiceForm('description', $any($event.target).value)"
+            />
+          </div>
+
+          <!-- Notes input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Notes</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm"
+              placeholder="Optional notes"
+              [value]="invoiceForm().notes"
+              (input)="updateInvoiceForm('notes', $any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="card-actions justify-end mt-4">
+          <button class="btn btn-ghost btn-sm" (click)="cancelInvoiceForm()">Cancel</button>
+          <button
+            class="btn btn-primary btn-sm"
+            [disabled]="!isInvoiceFormValid() || isSavingInvoice()"
+            (click)="submitInvoice()"
+          >
+            @if (isSavingInvoice()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            Create Invoice
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Invoice Detail Modal -->
+  @if (selectedInvoice(); as invoice) {
+    <div class="modal modal-open">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg mb-4">Invoice Details</h3>
+
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-base-content/60">Invoice ID:</span>
+            <span class="font-medium">#{{ invoice.id }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/60">Date:</span>
+            <span>{{ formatDate(invoice.invoiceDate) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/60">Due Date:</span>
+            <span>{{ formatDate(invoice.dueDate) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/60">Amount:</span>
+            <span class="font-bold text-lg">{{ formatCurrency(invoice.amount) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/60">Status:</span>
+            <span class="badge" [class]="getStatusClass(invoice.status)">
+              {{ getInvoiceStatus(invoice.status) }}
+            </span>
+          </div>
+          @if (invoice.description) {
+            <div class="pt-2 border-t border-base-300">
+              <span class="text-base-content/60">Description:</span>
+              <p class="mt-1">{{ invoice.description }}</p>
+            </div>
+          }
+          @if (invoice.notes) {
+            <div>
+              <span class="text-base-content/60">Notes:</span>
+              <p class="mt-1 text-sm">{{ invoice.notes }}</p>
+            </div>
+          }
+        </div>
+
+        <div class="modal-action">
+          <button class="btn btn-ghost" (click)="closeInvoiceDetail()">Close</button>
+        </div>
+      </div>
+      <div class="modal-backdrop" (click)="closeInvoiceDetail()"></div>
+    </div>
+  }
+
+  <!-- Payment Form -->
+  @if (showPaymentForm()) {
+    <div class="card bg-base-200 shadow-sm border border-primary">
+      <div class="card-body">
+        <h4 class="card-title text-base">Record Payment</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Amount input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Amount (R)</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <input
+              type="number"
+              class="input input-bordered input-sm"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
+              [value]="paymentForm().amount ?? ''"
+              (input)="updatePaymentForm('amount', parseFloat($any($event.target).value) || null)"
+            />
+          </div>
+
+          <!-- Payment Method dropdown -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Payment Method</span>
+            </label>
+            <select
+              class="select select-bordered select-sm"
+              [value]="paymentForm().paymentMethod"
+              (change)="updatePaymentForm('paymentMethod', parseInt($any($event.target).value))"
+            >
+              @for (method of paymentMethodOptions; track method.value) {
+                <option [value]="method.value">{{ method.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Invoice dropdown (optional) -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Apply to Invoice (optional)</span>
+            </label>
+            <select
+              class="select select-bordered select-sm"
+              [value]="paymentForm().invoiceId ?? ''"
+              (change)="updatePaymentForm('invoiceId', parseInt($any($event.target).value) || null)"
+            >
+              <option value="">-- No specific invoice --</option>
+              @for (invoice of pendingInvoices(); track invoice.id) {
+                <option [value]="invoice.id">
+                  #{{ invoice.id }} - {{ formatDate(invoice.invoiceDate) }} - {{ formatCurrency(invoice.amount) }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <!-- Notes input -->
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Notes</span>
+            </label>
+            <input
+              type="text"
+              class="input input-bordered input-sm"
+              placeholder="Optional notes"
+              [value]="paymentForm().notes"
+              (input)="updatePaymentForm('notes', $any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="card-actions justify-end mt-4">
+          <button class="btn btn-ghost btn-sm" (click)="cancelPaymentForm()">Cancel</button>
+          <button
+            class="btn btn-primary btn-sm"
+            [disabled]="!isPaymentFormValid() || isSavingPayment()"
+            (click)="submitPayment()"
+          >
+            @if (isSavingPayment()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            Save Payment
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Payments Section -->
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Payments</h3>
+        @if (!showPaymentForm()) {
+          <button class="btn btn-primary btn-sm" (click)="showAddPaymentForm()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Record Payment
+          </button>
+        }
+      </div>
+
+      @if (sortedPayments().length === 0 && !isLoading()) {
+        <div class="text-center py-8 text-base-content/60">
+          <p>No payments found</p>
+        </div>
+      } @else if (sortedPayments().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Receipt #</th>
+                <th>Method</th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (payment of sortedPayments(); track payment.id) {
+                <tr>
+                  <td>{{ formatDate(payment.paymentDate) }}</td>
+                  <td class="font-medium text-success">{{ formatCurrency(payment.amount) }}</td>
+                  <td>
+                    <span class="font-mono text-sm">{{ payment.receiptNumber }}</span>
+                  </td>
+                  <td>{{ getPaymentMethodLabel(payment.paymentMethod) }}</td>
+                  <td>{{ payment.notes || '-' }}</td>
+                  <td>
+                    <button
+                      class="btn btn-ghost btn-xs"
+                      (click)="viewPaymentHistory(payment)"
+                      title="View history"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Audit Trail Panel -->
+  <app-audit-trail-panel
+    [entityType]="auditEntityType()"
+    [entityId]="auditEntityId()"
+    [isOpen]="showAuditTrail()"
+    (close)="closeAuditTrail()"
+  />
+</div>

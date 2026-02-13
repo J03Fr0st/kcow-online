@@ -2,12 +2,16 @@ import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal,
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { StudentService, type Student, type ProblemDetails } from '@core/services/student.service';
+import { StudentService } from '@core/services/student.service';
+import type { Student, ProblemDetails } from '@core/services/student.service';
+import { BillingService } from '@core/services/billing.service';
+import type { BillingSummary } from '@features/billing/models/billing.model';
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
 import { ChildInfoTabComponent } from './components/child-info-tab/child-info-tab.component';
 import { FamilySectionComponent } from './components/family-section/family-section.component';
 import { AttendanceTabComponent } from './components/attendance-tab/attendance-tab.component';
 import { EvaluationTabComponent } from './components/evaluation-tab/evaluation-tab.component';
+import { FinancialTabComponent } from './components/financial-tab/financial-tab.component';
 
 type TabId = 'child-info' | 'financial' | 'attendance' | 'evaluation';
 
@@ -20,7 +24,7 @@ interface Tab {
 @Component({
     selector: 'app-student-profile',
     standalone: true,
-    imports: [CommonModule, StudentAvatarComponent, RouterLink, ChildInfoTabComponent, FamilySectionComponent, AttendanceTabComponent, EvaluationTabComponent],
+    imports: [CommonModule, StudentAvatarComponent, RouterLink, ChildInfoTabComponent, FamilySectionComponent, AttendanceTabComponent, EvaluationTabComponent, FinancialTabComponent],
     templateUrl: './student-profile.page.html',
     styleUrls: ['./student-profile.page.scss'],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,9 +33,11 @@ export class StudentProfilePage implements OnInit {
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private studentService = inject(StudentService);
+    private billingService = inject(BillingService);
     private destroyRef = inject(DestroyRef);
 
     protected student: WritableSignal<Student | null> = signal(null);
+    protected billingSummary: WritableSignal<BillingSummary | null> = signal(null);
     protected isLoading = signal(false);
     protected error = signal<ProblemDetails | null>(null);
     protected activeTab: WritableSignal<TabId> = signal('child-info');
@@ -65,10 +71,30 @@ export class StudentProfilePage implements OnInit {
             next: (student) => {
                 this.student.set(student);
                 this.isLoading.set(false);
+                // Load billing summary after student loads
+                this.loadBillingSummary(id);
             },
             error: (err: ProblemDetails) => {
                 this.error.set(err);
                 this.isLoading.set(false);
+            },
+        });
+    }
+
+    /**
+     * Load billing summary for the student
+     */
+    private loadBillingSummary(studentId: number): void {
+        this.billingService.getBillingSummary(studentId).pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe({
+            next: (summary) => {
+                this.billingSummary.set(summary);
+            },
+            error: (err) => {
+                // Log error but don't fail the page load
+                console.error('Failed to load billing summary:', err);
+                this.billingSummary.set(null);
             },
         });
     }

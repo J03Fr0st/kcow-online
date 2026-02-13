@@ -1,0 +1,63 @@
+.financial-tab {
+  // Summary stats styling
+  .stat {
+    &.bg-base-100 {
+      border: 1px solid oklch(var(--b2));
+    }
+  }
+
+  // Balance indicator colors
+  .text-error {
+    color: oklch(var(--er));
+  }
+
+  .text-success {
+    color: oklch(var(--su));
+  }
+
+  .text-warning {
+    color: oklch(var(--wa));
+  }
+
+  // Table row hover effect
+  .table {
+    tr {
+      &.hover {
+        &:hover {
+          background-color: oklch(var(--b2));
+          cursor: pointer;
+        }
+      }
+
+      &.bg-base-200 {
+        background-color: oklch(var(--b2));
+      }
+    }
+  }
+
+  // Badge status styling
+  .badge-success {
+    background-color: oklch(var(--su));
+    color: oklch(var(--suc));
+  }
+
+  .badge-warning {
+    background-color: oklch(var(--wa));
+    color: oklch(var(--wac));
+  }
+
+  .badge-error {
+    background-color: oklch(var(--er));
+    color: oklch(var(--erc));
+  }
+
+  .badge-ghost {
+    background-color: oklch(var(--b2) / 0.5);
+    color: oklch(var(--bc) / 0.5);
+  }
+
+  // Modal styling
+  .modal-backdrop {
+    cursor: pointer;
+  }
+}

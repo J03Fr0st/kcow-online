@@ -122,26 +122,36 @@
         }
       </div>
 
-      <!-- Column 3: Status Indicators (Placeholders) -->
+      <!-- Column 3: Status Indicators -->
       <div class="space-y-4">
         <h2 class="text-lg font-semibold border-b border-base-300 pb-2">Status Overview</h2>
-        <div class="alert alert-info">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <div>
-            <h3 class="font-bold">Attendance</h3>
-            <div class="text-xs">Coming in Epic 5</div>
-          </div>
+
+        <!-- Billing Status (Story 6.6) -->
+        <div class="stat bg-base-200 rounded-lg p-3">
+          <div class="stat-title text-xs">Billing Status</div>
+          @if (billingSummary(); as bs) {
+            <div class="stat-value text-lg" [ngClass]="{'text-success': bs.currentBalance === 0, 'text-error': bs.currentBalance > 0}">
+              {{ bs.currentBalance === 0 ? 'Up to date' : 'Balance due: R ' + bs.currentBalance.toFixed(2) }}
+            </div>
+            @if (bs.overdueAmount > 0) {
+              <div class="stat-desc text-warning mt-1">
+                <span class="badge badge-warning badge-sm gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Overdue: R {{ bs.overdueAmount.toFixed(2) }}
+                </span>
+              </div>
+            }
+          } @else {
+            <div class="stat-value text-lg text-base-content/50">Loading...</div>
+          }
         </div>
-        <div class="alert alert-success">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <div>
-            <h3 class="font-bold">Financial</h3>
-            <div class="text-xs">Coming in Epic 6</div>
-          </div>
+
+        <!-- Attendance Status (placeholder for now) -->
+        <div class="stat bg-base-200 rounded-lg p-3">
+          <div class="stat-title text-xs">Attendance</div>
+          <div class="stat-value text-lg text-base-content/50">—</div>
         </div>
       </div>
     </div>
@@ -177,12 +187,12 @@
           </div>
         }
 
-        <!-- Financial Tab (Placeholder) -->
+        <!-- Financial Tab -->
         @if (isTabActive('financial')) {
-          <div id="panel-financial" role="tabpanel" aria-labelledby="tab-financial" class="flex flex-col items-center justify-center py-12">
-            <div class="text-6xl mb-4" aria-hidden="true">💰</div>
-            <h3 class="text-xl font-semibold">Financial Information</h3>
-            <p class="text-base-content/60 mt-2">Financial details coming in Epic 6</p>
+          <div id="panel-financial" role="tabpanel" aria-labelledby="tab-financial">
+            @if (student()) {
+              <app-financial-tab [studentId]="student()!.id" />
+            }
           </div>
         }
 

@@ -19,7 +19,9 @@ public class AuditService : Application.Audit.IAuditService
         "ClassGroup",
         "Activity",
         "Billing",
-        "Evaluation"
+        "Evaluation",
+        "Invoice",
+        "Payment"
     };
 
     public AuditService(IAuditLogRepository auditLogRepository)

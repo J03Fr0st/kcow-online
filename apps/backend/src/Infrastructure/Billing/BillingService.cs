@@ -1,3 +1,4 @@
+using Kcow.Application.Audit;
 using Kcow.Application.Billing;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
@@ -10,17 +11,20 @@ public class BillingService : IBillingService
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IPaymentRepository _paymentRepository;
     private readonly IStudentRepository _studentRepository;
+    private readonly IAuditService _auditService;
     private readonly ILogger<BillingService> _logger;
 
     public BillingService(
         IInvoiceRepository invoiceRepository,
         IPaymentRepository paymentRepository,
         IStudentRepository studentRepository,
+        IAuditService auditService,
         ILogger<BillingService> logger)
     {
         _invoiceRepository = invoiceRepository;
         _paymentRepository = paymentRepository;
         _studentRepository = studentRepository;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -67,7 +71,7 @@ public class BillingService : IBillingService
         return invoices.Select(MapToInvoiceDto).ToList();
     }
 
-    public async Task<InvoiceDto> CreateInvoiceAsync(int studentId, CreateInvoiceRequest request, CancellationToken cancellationToken = default)
+    public async Task<InvoiceDto> CreateInvoiceAsync(int studentId, CreateInvoiceRequest request, string createdBy, CancellationToken cancellationToken = default)
     {
         await ValidateStudentExistsAsync(studentId, cancellationToken);
 
@@ -86,6 +90,16 @@ public class BillingService : IBillingService
         var id = await _invoiceRepository.CreateAsync(invoice, cancellationToken);
         invoice.Id = id;
 
+        // Log audit entry for invoice creation
+        await _auditService.LogChangeAsync(
+            "Invoice",
+            id,
+            "Created",
+            null,
+            $"Invoice created - Amount: {request.Amount}, DueDate: {request.DueDate}",
+            createdBy,
+            cancellationToken);
+
         _logger.LogInformation("Created invoice {InvoiceId} for student {StudentId}", id, studentId);
         return MapToInvoiceDto(invoice);
     }
@@ -98,7 +112,7 @@ public class BillingService : IBillingService
         return payments.Select(MapToPaymentDto).ToList();
     }
 
-    public async Task<PaymentDto> CreatePaymentAsync(int studentId, CreatePaymentRequest request, CancellationToken cancellationToken = default)
+    public async Task<PaymentDto> CreatePaymentAsync(int studentId, CreatePaymentRequest request, string createdBy, CancellationToken cancellationToken = default)
     {
         await ValidateStudentExistsAsync(studentId, cancellationToken);
 
@@ -128,17 +142,27 @@ public class BillingService : IBillingService
         payment.ReceiptNumber = GenerateReceiptNumber(request.PaymentDate, id);
         await _paymentRepository.UpdateReceiptNumberAsync(id, payment.ReceiptNumber, cancellationToken);
 
+        // Log audit entry for payment creation
+        await _auditService.LogChangeAsync(
+            "Payment",
+            id,
+            "Created",
+            null,
+            $"Payment created - Amount: {request.Amount}, Receipt: {payment.ReceiptNumber}",
+            createdBy,
+            cancellationToken);
+
         // If payment is linked to an invoice, check if invoice should be marked as Paid
         if (request.InvoiceId.HasValue)
         {
-            await TryMarkInvoicePaidAsync(request.InvoiceId.Value, cancellationToken);
+            await TryMarkInvoicePaidAsync(request.InvoiceId.Value, createdBy, cancellationToken);
         }
 
         _logger.LogInformation("Created payment {PaymentId} for student {StudentId} with receipt {ReceiptNumber}", id, studentId, payment.ReceiptNumber);
         return MapToPaymentDto(payment);
     }
 
-    private async Task TryMarkInvoicePaidAsync(int invoiceId, CancellationToken cancellationToken)
+    private async Task TryMarkInvoicePaidAsync(int invoiceId, string changedBy, CancellationToken cancellationToken)
     {
         var invoice = await _invoiceRepository.GetByIdAsync(invoiceId, cancellationToken);
         if (invoice == null) return;
@@ -148,10 +172,34 @@ public class BillingService : IBillingService
 
         if (invoicePayments >= invoice.Amount)
         {
+            var oldStatus = GetInvoiceStatusString(invoice.Status);
             invoice.Status = 1; // Paid
             await _invoiceRepository.UpdateAsync(invoice, cancellationToken);
+
+            // Log audit entry for invoice status change
+            await _auditService.LogChangeAsync(
+                "Invoice",
+                invoiceId,
+                "Status",
+                oldStatus,
+                "Paid",
+                changedBy,
+                cancellationToken);
+
             _logger.LogInformation("Invoice {InvoiceId} marked as Paid (total payments: {TotalPayments})", invoiceId, invoicePayments);
         }
+    }
+
+    private static string GetInvoiceStatusString(int status)
+    {
+        return status switch
+        {
+            0 => "Pending",
+            1 => "Paid",
+            2 => "Overdue",
+            3 => "Cancelled",
+            _ => $"Unknown({status})"
+        };
     }
 
     private static string GenerateReceiptNumber(string paymentDate, int paymentId)

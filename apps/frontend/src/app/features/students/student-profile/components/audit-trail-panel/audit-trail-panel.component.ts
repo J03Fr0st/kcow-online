@@ -1,4 +1,4 @@
-import { Component, inject, input, signal, OnInit, DestroyRef, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef, effect } from '@angular/core';
+import { Component, inject, input, signal, DestroyRef, Output, EventEmitter, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuditLogService, AuditLog } from '@core/services/audit-log.service';
@@ -12,7 +12,7 @@ import { NotificationService } from '@core/services/notification.service';
   styleUrls: ['./audit-trail-panel.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuditTrailPanelComponent implements OnInit {
+export class AuditTrailPanelComponent {
   private readonly auditLogService = inject(AuditLogService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
@@ -30,7 +30,7 @@ export class AuditTrailPanelComponent implements OnInit {
   readonly isLoading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
 
-  ngOnInit(): void {
+  constructor() {
     // Watch for changes to isOpen and entityId inputs
     effect(() => {
       if (this.isOpen()) {
@@ -83,6 +83,14 @@ export class AuditTrailPanelComponent implements OnInit {
       'SessionDate': 'Session Date',
       'ClassGroupId': 'Class Group',
       'StudentId': 'Student',
+      'Amount': 'Amount',
+      'Description': 'Description',
+      'DueDate': 'Due Date',
+      'InvoiceDate': 'Invoice Date',
+      'PaymentDate': 'Payment Date',
+      'PaymentMethod': 'Payment Method',
+      'ReceiptNumber': 'Receipt Number',
+      'Created': 'Created',
     };
     return fieldLabels[field] || field;
   }

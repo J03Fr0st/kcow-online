@@ -1,6 +1,6 @@
 # Story 6.8: E2E Tests - Billing Management & Financial Accuracy
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -79,58 +79,58 @@ So that invoicing, payments, and balance calculations are validated end-to-end.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Set Up E2E Test Infrastructure (AC: #7, #8)
-  - [ ] Create `e2e/billing/` test directory
-  - [ ] Create test fixtures with students, invoices, payments
-  - [ ] Include records with various balance states
+- [x] Task 1: Set Up E2E Test Infrastructure (AC: #7, #8)
+  - [x] Create `e2e/billing/` test directory
+  - [x] Create test fixtures with students, invoices, payments
+  - [x] Include records with various balance states
 
-- [ ] Task 2: Implement Financial Tab Tests (AC: #1)
-  - [ ] Test navigation to Financial tab
-  - [ ] Test billing summary display
-  - [ ] Test invoices list display
-  - [ ] Test payments list display
-  - [ ] Test updates after changes
+- [x] Task 2: Implement Financial Tab Tests (AC: #1)
+  - [x] Test navigation to Financial tab
+  - [x] Test billing summary display
+  - [x] Test invoices list display
+  - [x] Test payments list display
+  - [x] Test updates after changes
 
-- [ ] Task 3: Implement Record Payment Tests (AC: #2)
-  - [ ] Test "Record Payment" button
-  - [ ] Test form display and fields
-  - [ ] Test payment submission
-  - [ ] Test payments list update
-  - [ ] Test balance update
-  - [ ] Test receipt generation
-  - [ ] Test invoice status update
+- [x] Task 3: Implement Record Payment Tests (AC: #2)
+  - [x] Test "Record Payment" button
+  - [x] Test form display and fields
+  - [x] Test payment submission
+  - [x] Test payments list update
+  - [x] Test balance update
+  - [x] Test receipt generation
+  - [x] Test invoice status update
 
-- [ ] Task 4: Implement Create Invoice Tests (AC: #3)
-  - [ ] Test "Create Invoice" button
-  - [ ] Test form display and fields
-  - [ ] Test invoice submission
-  - [ ] Test invoices list update
-  - [ ] Test balance update
-  - [ ] Test initial "Pending" status
+- [x] Task 4: Implement Create Invoice Tests (AC: #3)
+  - [x] Test "Create Invoice" button
+  - [x] Test form display and fields
+  - [x] Test invoice submission
+  - [x] Test invoices list update
+  - [x] Test balance update
+  - [x] Test initial "Pending" status
 
-- [ ] Task 5: Implement Profile Header Billing Tests (AC: #4)
-  - [ ] Test billing status in header
-  - [ ] Test balance color indicators
-  - [ ] Test status text
-  - [ ] Test overdue warning
+- [x] Task 5: Implement Profile Header Billing Tests (AC: #4)
+  - [x] Test billing status in header
+  - [x] Test balance color indicators
+  - [x] Test status text
+  - [x] Test overdue warning
 
-- [ ] Task 6: Implement Billing Audit Trail Tests (AC: #5, #9)
-  - [ ] Test audit log creation on update
-  - [ ] Test audit entry content
-  - [ ] Test "View History" button
-  - [ ] Test Audit Trail Panel display
-  - [ ] Test read-only nature
+- [x] Task 6: Implement Billing Audit Trail Tests (AC: #5, #9)
+  - [x] Test audit log creation on update
+  - [x] Test audit entry content
+  - [x] Test "View History" button
+  - [x] Test Audit Trail Panel display
+  - [x] Test read-only nature
 
-- [ ] Task 7: Implement Financial Calculation Tests (AC: #6, #9)
-  - [ ] Test balance calculation on invoice creation
-  - [ ] Test balance calculation on payment
-  - [ ] Test applied payment calculations
-  - [ ] Test accuracy across scenarios
+- [x] Task 7: Implement Financial Calculation Tests (AC: #6, #9)
+  - [x] Test balance calculation on invoice creation
+  - [x] Test balance calculation on payment
+  - [x] Test applied payment calculations
+  - [x] Test accuracy across scenarios
 
-- [ ] Task 8: Validate Epic 6 Completion (AC: #10)
-  - [ ] Run full test suite
-  - [ ] Document test coverage
-  - [ ] Fix any failing tests
+- [x] Task 8: Validate Epic 6 Completion (AC: #10)
+  - [x] Run full test suite
+  - [x] Document test coverage
+  - [x] Fix any failing tests
 
 ## Dev Notes
 
@@ -188,13 +188,27 @@ Test these exact mappings:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Created 6 E2E test files in `apps/frontend/e2e/billing/` directory
+- Total of ~52 test cases covering all acceptance criteria
+- Tests use API for test data setup (via `page.request.post`)
+- Tests clean up by deleting student (cascades to invoices/payments)
+- Adjusted tests to use actual API endpoints: `/api/students/{studentId}/invoices` and `/api/students/{studentId}/payments`
+- Audit trail tests use `/api/audit-log` endpoint
+
 ### File List
+
+- `apps/frontend/e2e/billing/financial-tab.spec.ts` - Financial tab E2E tests (5 tests)
+- `apps/frontend/e2e/billing/payments.spec.ts` - Record payment E2E tests (10 tests)
+- `apps/frontend/e2e/billing/invoicing.spec.ts` - Create invoice E2E tests (10 tests)
+- `apps/frontend/e2e/billing/profile-header-billing.spec.ts` - Profile header billing E2E tests (7 tests)
+- `apps/frontend/e2e/billing/billing-audit-trail.spec.ts` - Billing audit trail E2E tests (10 tests)
+- `apps/frontend/e2e/billing/financial-calculations.spec.ts` - Financial calculations E2E tests (10 tests)
 
 ## Change Log
 
@@ -202,3 +216,4 @@ Test these exact mappings:
 |------|--------|
 | 2026-01-06 | Story file created from backlog |
 | 2026-02-06 | Updated to reference Dapper + DbUp architecture (no EF Core) |
+| 2026-02-13 | Implemented all E2E tests for billing functionality |

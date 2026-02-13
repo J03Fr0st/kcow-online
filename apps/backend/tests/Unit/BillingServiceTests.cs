@@ -1,3 +1,4 @@
+using Kcow.Application.Audit;
 using Kcow.Application.Billing;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
@@ -11,6 +12,7 @@ public class BillingServiceTests
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IPaymentRepository _paymentRepository;
     private readonly IStudentRepository _studentRepository;
+    private readonly IAuditService _auditService;
     private readonly Infrastructure.Billing.BillingService _service;
 
     public BillingServiceTests()
@@ -18,10 +20,12 @@ public class BillingServiceTests
         _invoiceRepository = Substitute.For<IInvoiceRepository>();
         _paymentRepository = Substitute.For<IPaymentRepository>();
         _studentRepository = Substitute.For<IStudentRepository>();
+        _auditService = Substitute.For<IAuditService>();
         _service = new Infrastructure.Billing.BillingService(
             _invoiceRepository,
             _paymentRepository,
             _studentRepository,
+            _auditService,
             NullLogger<Infrastructure.Billing.BillingService>.Instance);
     }
 
@@ -134,7 +138,7 @@ public class BillingServiceTests
         };
 
         // Act
-        var result = await _service.CreateInvoiceAsync(1, request);
+        var result = await _service.CreateInvoiceAsync(1, request, "test-user");
 
         // Assert
         Assert.Equal(42, result.Id);
@@ -162,7 +166,7 @@ public class BillingServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.CreateInvoiceAsync(999, request));
+            () => _service.CreateInvoiceAsync(999, request, "test-user"));
         Assert.Contains("Student with ID 999 does not exist", exception.Message);
     }
 
@@ -207,7 +211,7 @@ public class BillingServiceTests
         };
 
         // Act
-        var result = await _service.CreatePaymentAsync(1, request);
+        var result = await _service.CreatePaymentAsync(1, request, "test-user");
 
         // Assert
         Assert.Equal(42, result.Id);
@@ -245,7 +249,7 @@ public class BillingServiceTests
         };
 
         // Act
-        var result = await _service.CreatePaymentAsync(1, request);
+        var result = await _service.CreatePaymentAsync(1, request, "test-user");
 
         // Assert
         Assert.Equal(10, result.InvoiceId);
@@ -272,7 +276,7 @@ public class BillingServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.CreatePaymentAsync(1, request));
+            () => _service.CreatePaymentAsync(1, request, "test-user"));
         Assert.Contains("Invoice with ID 999 does not exist", exception.Message);
     }
 
@@ -291,7 +295,7 @@ public class BillingServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.CreatePaymentAsync(999, request));
+            () => _service.CreatePaymentAsync(999, request, "test-user"));
         Assert.Contains("Student with ID 999 does not exist", exception.Message);
     }
 
@@ -319,7 +323,7 @@ public class BillingServiceTests
         };
 
         // Act
-        await _service.CreatePaymentAsync(1, request);
+        await _service.CreatePaymentAsync(1, request, "test-user");
 
         // Assert - Invoice should NOT be updated since partial payment
         await _invoiceRepository.DidNotReceive().UpdateAsync(Arg.Any<Invoice>(), Arg.Any<CancellationToken>());

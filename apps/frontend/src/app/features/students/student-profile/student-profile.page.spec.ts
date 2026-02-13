@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { StudentProfilePage } from './student-profile.page';
-import { StudentService, type Student, type ProblemDetails } from '@core/services/student.service';
+import { StudentService } from '@core/services/student.service';
+import type { Student, ProblemDetails } from '@core/services/student.service';
+import { BillingService } from '@core/services/billing.service';
+import type { BillingSummary } from '@features/billing/models/billing.model';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of, throwError, Observable } from 'rxjs';
 import { By } from '@angular/platform-browser';
@@ -9,10 +12,15 @@ interface MockStudentService {
     getStudentById: jest.Mock<Observable<Student>, [number]>;
 }
 
+interface MockBillingService {
+    getBillingSummary: jest.Mock<Observable<BillingSummary>, [number]>;
+}
+
 describe('StudentProfilePage', () => {
     let component: StudentProfilePage;
     let fixture: ComponentFixture<StudentProfilePage>;
     let mockStudentService: MockStudentService;
+    let mockBillingService: MockBillingService;
     let mockRouter: jest.Mocked<Partial<Router>>;
     let mockActivatedRoute: Partial<ActivatedRoute>;
 
@@ -41,9 +49,24 @@ describe('StudentProfilePage', () => {
         updatedAt: '2024-01-01T00:00:00Z',
     };
 
+    const mockBillingSummary: BillingSummary = {
+        studentId: 1,
+        currentBalance: 0,
+        totalInvoiced: 1000,
+        totalPaid: 1000,
+        overdueAmount: 0,
+        lastPaymentDate: '2024-01-15T00:00:00Z',
+        lastPaymentAmount: 500,
+        outstandingInvoicesCount: 0,
+    };
+
     beforeEach(async () => {
         mockStudentService = {
             getStudentById: jest.fn().mockReturnValue(of(mockStudent)),
+        };
+
+        mockBillingService = {
+            getBillingSummary: jest.fn().mockReturnValue(of(mockBillingSummary)),
         };
 
         mockRouter = {
@@ -60,6 +83,7 @@ describe('StudentProfilePage', () => {
             imports: [StudentProfilePage],
             providers: [
                 { provide: StudentService, useValue: mockStudentService },
+                { provide: BillingService, useValue: mockBillingService },
                 { provide: Router, useValue: mockRouter },
                 { provide: ActivatedRoute, useValue: mockActivatedRoute },
             ],
@@ -423,6 +447,116 @@ describe('StudentProfilePage', () => {
             expect(component['isLoading']).toBeDefined();
             expect(component['error']).toBeDefined();
             expect(component['activeTab']).toBeDefined();
+        });
+    });
+
+    describe('Billing Status in Header (Story 6.6)', () => {
+        describe('Task 1: Fetch billing summary with profile', () => {
+            it('should load billing summary when student is loaded', () => {
+                fixture.detectChanges();
+
+                expect(mockBillingService.getBillingSummary).toHaveBeenCalledWith(1);
+            });
+
+            it('should have billingSummary signal', () => {
+                expect(component['billingSummary']).toBeDefined();
+            });
+
+            it('should store billing summary in signal after loading', () => {
+                fixture.detectChanges();
+
+                expect(component['billingSummary']()).toEqual(mockBillingSummary);
+            });
+        });
+
+        describe('Task 2: Display in header column 3 (AC #1)', () => {
+            it('should display Billing Status section in column 3', () => {
+                fixture.detectChanges();
+
+                const column3 = fixture.debugElement.queryAll(By.css('.grid-cols-1.md\\:grid-cols-3 > div'))[2];
+                expect(column3.nativeElement.textContent).toContain('Billing Status');
+            });
+
+            it('should show "Up to date" when balance is 0', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    currentBalance: 0,
+                }));
+                fixture.detectChanges();
+
+                const content = fixture.nativeElement.textContent;
+                expect(content).toContain('Up to date');
+            });
+
+            it('should show green styling when balance is 0', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    currentBalance: 0,
+                }));
+                fixture.detectChanges();
+
+                const billingStatus = fixture.debugElement.query(By.css('.text-success'));
+                expect(billingStatus).toBeTruthy();
+            });
+
+            it('should show "Balance due" with amount when balance > 0', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    currentBalance: 250.50,
+                }));
+                fixture.detectChanges();
+
+                const content = fixture.nativeElement.textContent;
+                expect(content).toContain('Balance due');
+                expect(content).toContain('R 250.50');
+            });
+
+            it('should show red styling when balance > 0', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    currentBalance: 100,
+                }));
+                fixture.detectChanges();
+
+                const billingStatus = fixture.debugElement.query(By.css('.text-error'));
+                expect(billingStatus).toBeTruthy();
+            });
+        });
+
+        describe('Task 3: Add overdue indicator (AC #2)', () => {
+            it('should show overdue badge when overdueAmount > 0', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    overdueAmount: 150,
+                }));
+                fixture.detectChanges();
+
+                const overdueBadge = fixture.debugElement.query(By.css('.badge-warning'));
+                expect(overdueBadge).toBeTruthy();
+                expect(overdueBadge.nativeElement.textContent).toContain('Overdue');
+            });
+
+            it('should not show overdue badge when overdueAmount is 0', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    overdueAmount: 0,
+                }));
+                fixture.detectChanges();
+
+                const overdueBadge = fixture.debugElement.query(By.css('.badge-warning'));
+                expect(overdueBadge).toBeFalsy();
+            });
+
+            it('should show overdue amount in tooltip or text', () => {
+                mockBillingService.getBillingSummary.mockReturnValue(of({
+                    ...mockBillingSummary,
+                    overdueAmount: 200,
+                }));
+                fixture.detectChanges();
+
+                const content = fixture.nativeElement.textContent;
+                expect(content).toContain('R 200');
+            });
         });
     });
 });
