@@ -1,7 +1,7 @@
 <div class="student-avatar" [class]="sizeClasses()">
-  @if (photoUrl() && !imageLoadFailed()) {
+  @if (resolvedPhotoSrc() && !imageLoadFailed()) {
     <img
-      [src]="photoUrl()!"
+      [src]="resolvedPhotoSrc()!"
       [alt]="firstName() + ' ' + lastName()"
       class="avatar object-cover"
       (error)="onImageError()"

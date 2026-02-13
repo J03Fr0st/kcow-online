@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, DestroyRef, output, input, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, output, input, ChangeDetectionStrategy, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -481,6 +481,7 @@ export class StudentFormComponent implements OnInit {
     private destroyRef = inject(DestroyRef);
     private modalService = inject(ModalService);
     private familyService = inject(FamilyService);
+    private cdr = inject(ChangeDetectorRef);
 
     // Family state
     family = signal<Family | null>(null);
@@ -639,10 +640,12 @@ export class StudentFormComponent implements OnInit {
                 }
 
                 this.isLoading = false;
+                this.cdr.markForCheck();
             },
             error: (err: ProblemDetails) => {
                 this.error = err;
                 this.isLoading = false;
+                this.cdr.markForCheck();
                 this.notificationService.error(err.detail || 'Failed to load student');
             },
         });
@@ -719,12 +722,14 @@ export class StudentFormComponent implements OnInit {
             ).subscribe({
                 next: (student) => {
                     this.isSaving = false;
+                    this.cdr.markForCheck();
                     this.notificationService.success('Student updated successfully');
                     this.saved.emit(student);
                 },
                 error: (err: ProblemDetails) => {
                     this.error = err;
                     this.isSaving = false;
+                    this.cdr.markForCheck();
                     this.notificationService.error(err.detail || 'Failed to update student');
                 },
             });
@@ -737,12 +742,14 @@ export class StudentFormComponent implements OnInit {
             ).subscribe({
                 next: (student) => {
                     this.isSaving = false;
+                    this.cdr.markForCheck();
                     this.notificationService.success('Student created successfully');
                     this.saved.emit(student);
                 },
                 error: (err: ProblemDetails) => {
                     this.error = err;
                     this.isSaving = false;
+                    this.cdr.markForCheck();
                     this.notificationService.error(err.detail || 'Failed to create student');
                 },
             });

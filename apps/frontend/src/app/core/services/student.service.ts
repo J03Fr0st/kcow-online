@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, tap, catchError, finalize, throwError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -291,6 +291,20 @@ export interface Student {
     familyName?: string; // Computed from StudentFamilies relationship
 }
 
+/** Shape returned by the backend StudentListDto */
+export interface StudentListItemDto {
+    id: number;
+    reference: string;
+    firstName?: string;
+    lastName?: string;
+    grade?: string;
+    isActive: boolean;
+    status?: string;
+    school?: { id: number; name: string } | null;
+    classGroup?: { id: number; name: string } | null;
+}
+
+/** Flattened shape used by the UI */
 export interface StudentListItem {
     id: number;
     reference: string;
@@ -298,17 +312,20 @@ export interface StudentListItem {
     lastName?: string;
     grade?: string;
     schoolName?: string;
+    classGroupName?: string;
     familyName?: string;
     photoUrl?: string;
     isActive: boolean;
     status?: string;
 }
 
+/** Shape returned by the backend PagedResponse<T> */
 export interface PaginatedStudentsResponse {
     items: StudentListItem[];
     totalCount: number;
     page: number;
     pageSize: number;
+    totalPages: number;
 }
 
 export interface ProblemDetails {
@@ -427,22 +444,38 @@ export class StudentService {
             httpParams = httpParams.set('sortDirection', params.sortDirection);
         }
 
-        return this.http.get<StudentListItem[]>(this.apiUrl, {
+        interface BackendPagedResponse {
+            items: StudentListItemDto[];
+            totalCount: number;
+            page: number;
+            pageSize: number;
+            totalPages: number;
+        }
+
+        return this.http.get<BackendPagedResponse>(this.apiUrl, {
             withCredentials: true,
             params: httpParams,
-            observe: 'response'
         }).pipe(
             map((response) => {
-                // Extract pagination headers
-                const totalCount = response.headers.get('X-Total-Count');
-                const page = response.headers.get('X-Page');
-                const pageSize = response.headers.get('X-PageSize');
+                // Flatten nested DTOs to UI-friendly shape
+                const items: StudentListItem[] = (response.items ?? []).map(dto => ({
+                    id: dto.id,
+                    reference: dto.reference,
+                    firstName: dto.firstName,
+                    lastName: dto.lastName,
+                    grade: dto.grade,
+                    schoolName: dto.school?.name,
+                    classGroupName: dto.classGroup?.name,
+                    isActive: dto.isActive,
+                    status: dto.status,
+                }));
 
                 const result: PaginatedStudentsResponse = {
-                    items: Array.isArray(response.body) ? response.body : [],
-                    totalCount: totalCount ? parseInt(totalCount, 10) : 0,
-                    page: page ? parseInt(page, 10) : 1,
-                    pageSize: pageSize ? parseInt(pageSize, 10) : 25,
+                    items,
+                    totalCount: response.totalCount ?? 0,
+                    page: response.page ?? 1,
+                    pageSize: response.pageSize ?? 25,
+                    totalPages: response.totalPages ?? 0,
                 };
 
                 // Update signals
