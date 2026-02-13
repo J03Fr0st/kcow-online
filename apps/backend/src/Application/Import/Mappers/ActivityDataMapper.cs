@@ -42,22 +42,8 @@ public sealed class ActivityDataMapper : IDataMapper<LegacyActivityRecord, Activ
             result.Warnings.Add(new MappingWarning("GradeLevel",
                 $"Activity {source.ActivityId}: Grade (GradeLevel) truncated from {source.Grade.Length} to {MaxFieldLength} characters."));
 
-        // Icon validation
-        if (!string.IsNullOrEmpty(source.Icon))
-        {
-            if (source.Icon.Length > 100_000)
-            {
-                var sizeKB = source.Icon.Length / 1024;
-                result.Warnings.Add(new MappingWarning("Icon",
-                    $"Activity {source.ActivityId}: Large icon data detected ({sizeKB}KB base64)."));
-            }
-
-            if (!source.Icon.StartsWith("/9j/") && !source.Icon.StartsWith("iVBOR"))
-            {
-                result.Warnings.Add(new MappingWarning("Icon",
-                    $"Activity {source.ActivityId}: Icon data may contain OLE wrapper (does not start with standard JPG/PNG signature). Verify rendering."));
-            }
-        }
+        // Icon: strip OLE wrapper and extract raw image data
+        var icon = StripOleWrapper(source.Icon, source.ActivityId, result);
 
         result.Data = new Activity
         {
@@ -67,7 +53,7 @@ public sealed class ActivityDataMapper : IDataMapper<LegacyActivityRecord, Activ
             Description = source.EducationalFocus,
             Folder = folder,
             GradeLevel = gradeLevel,
-            Icon = source.Icon,
+            Icon = icon,
             IsActive = true,
             LegacyId = source.ActivityId.ToString(),
             CreatedAt = DateTime.UtcNow
@@ -100,6 +86,60 @@ public sealed class ActivityDataMapper : IDataMapper<LegacyActivityRecord, Activ
             Warnings = allWarnings,
             Errors = allErrors
         };
+    }
+
+    /// <summary>
+    /// Strips OLE Object wrapper from base64-encoded icon data exported from MS Access.
+    /// OLE objects contain a header followed by the actual image (typically BMP).
+    /// We find the BMP signature (0x42 0x4D = "BM") and return only the image data.
+    /// </summary>
+    private static string? StripOleWrapper(string? base64Data, int activityId, MappingResult<Activity> result)
+    {
+        if (string.IsNullOrEmpty(base64Data))
+            return null;
+
+        try
+        {
+            var raw = Convert.FromBase64String(base64Data);
+
+            // Already a valid image? (JPEG, PNG, BMP at offset 0)
+            if (raw.Length >= 2 && raw[0] == 0xFF && raw[1] == 0xD8) return base64Data; // JPEG
+            if (raw.Length >= 4 && raw[0] == 0x89 && raw[1] == 0x50) return base64Data; // PNG
+            if (raw.Length >= 2 && raw[0] == 0x42 && raw[1] == 0x4D) return base64Data; // BMP
+
+            // Search for BMP signature within OLE wrapper
+            for (var i = 1; i < Math.Min(raw.Length - 1, 512); i++)
+            {
+                if (raw[i] == 0x42 && raw[i + 1] == 0x4D) // "BM"
+                {
+                    var imageData = new byte[raw.Length - i];
+                    Array.Copy(raw, i, imageData, 0, imageData.Length);
+                    return Convert.ToBase64String(imageData);
+                }
+            }
+
+            // Search for JPEG signature
+            for (var i = 1; i < Math.Min(raw.Length - 2, 512); i++)
+            {
+                if (raw[i] == 0xFF && raw[i + 1] == 0xD8 && raw[i + 2] == 0xFF)
+                {
+                    var imageData = new byte[raw.Length - i];
+                    Array.Copy(raw, i, imageData, 0, imageData.Length);
+                    return Convert.ToBase64String(imageData);
+                }
+            }
+
+            // No recognizable image found, return as-is with warning
+            result.Warnings.Add(new MappingWarning("Icon",
+                $"Activity {activityId}: Could not find image data in OLE wrapper."));
+            return base64Data;
+        }
+        catch (FormatException)
+        {
+            result.Warnings.Add(new MappingWarning("Icon",
+                $"Activity {activityId}: Invalid base64 data in icon field."));
+            return null;
+        }
     }
 
     private static string? Truncate(string? value, int maxLength)
