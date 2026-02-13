@@ -1,5 +1,7 @@
+using Kcow.Api.CliCommands;
 using Kcow.Api.Middleware;
 using Kcow.Application;
+using Kcow.Application.Import;
 using Kcow.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -9,6 +11,31 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
 using System.Text.Json;
+
+// Handle CLI commands before starting the web host
+if (ImportParseCommand.IsImportParseCommand(args))
+{
+    Log.Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .CreateBootstrapLogger();
+
+    var parser = new LegacyParser();
+    var exitCode = await ImportParseCommand.ExecuteAsync(args, parser, Console.Out);
+    Environment.Exit(exitCode);
+    return;
+}
+
+if (ImportRunCommand.IsImportRunCommand(args))
+{
+    Log.Logger = new LoggerConfiguration()
+        .WriteTo.Console()
+        .CreateBootstrapLogger();
+
+    var parser = new LegacyParser();
+    var exitCode = await ImportRunCommand.ExecuteAsync(args, parser, Console.Out);
+    Environment.Exit(exitCode);
+    return;
+}
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()

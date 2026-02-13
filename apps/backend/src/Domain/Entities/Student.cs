@@ -285,6 +285,8 @@ public class Student
     // Soft delete flag (not in XSD, application-level)
     public bool IsActive { get; set; } = true;
 
+    public string? LegacyId { get; set; }
+
     // Audit fields (not in XSD, application-level)
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

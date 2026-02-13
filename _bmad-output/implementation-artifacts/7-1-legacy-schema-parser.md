@@ -1,6 +1,6 @@
 # Story 7.1: Legacy Schema Parser
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,30 +22,30 @@ so that **I can extract data from the Access export format**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Analyze legacy schemas (AC: #1)
-  - [ ] Review docs/legacy/1_School/School.xsd
-  - [ ] Review docs/legacy/2_Class_Group/Class Group.xsd
-  - [ ] Review docs/legacy/3_Activity/Activity.xsd
-  - [ ] Review docs/legacy/4_Children/Children.xsd
-  - [ ] Document field mappings
-- [ ] Task 2: Create parser project/module (AC: #3)
-  - [ ] Create Import feature in Application layer
-  - [ ] Add CLI command support in Api
-- [ ] Task 3: Implement XML parsing (AC: #1)
-  - [ ] Parse School.xml
-  - [ ] Parse Class Group.xml
-  - [ ] Parse Activity.xml
-  - [ ] Parse Children.xml
-- [ ] Task 4: Implement XSD validation (AC: #1)
-  - [ ] Validate XML against XSD
-  - [ ] Handle validation errors gracefully
-- [ ] Task 5: Handle encoding issues (AC: #1)
-  - [ ] Detect encoding variations
-  - [ ] Handle special characters
-  - [ ] Normalize data formats
-- [ ] Task 6: Add error logging (AC: #2)
-  - [ ] Log parser errors with file and line info
-  - [ ] Create error report
+- [x] Task 1: Analyze legacy schemas (AC: #1)
+  - [x] Review docs/legacy/1_School/School.xsd
+  - [x] Review docs/legacy/2_Class_Group/Class Group.xsd
+  - [x] Review docs/legacy/3_Activity/Activity.xsd
+  - [x] Review docs/legacy/4_Children/Children.xsd
+  - [x] Document field mappings
+- [x] Task 2: Create parser project/module (AC: #3)
+  - [x] Create Import feature in Application layer
+  - [x] Add CLI command support in Api
+- [x] Task 3: Implement XML parsing (AC: #1)
+  - [x] Parse School.xml
+  - [x] Parse Class Group.xml
+  - [x] Parse Activity.xml
+  - [x] Parse Children.xml
+- [x] Task 4: Implement XSD validation (AC: #1)
+  - [x] Validate XML against XSD
+  - [x] Handle validation errors gracefully
+- [x] Task 5: Handle encoding issues (AC: #1)
+  - [x] Detect encoding variations
+  - [x] Handle special characters
+  - [x] Normalize data formats
+- [x] Task 6: Add error logging (AC: #2)
+  - [x] Log parser errors with file and line info
+  - [x] Create error report
 
 ## Dev Notes
 
@@ -126,11 +126,62 @@ The `Application/Import/` folder may already contain parsers and mappers from ea
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+GLM-5
 
 ### Debug Log References
 
+N/A
+
 ### Completion Notes List
+
+**Implementation Summary:**
+
+This story leveraged existing XML parsers (`LegacySchoolXmlParser`, `LegacyClassGroupXmlParser`, `LegacyActivityXmlParser`, `LegacyChildXmlParser`) that were already implemented in previous stories. The following new components were added to fulfill the remaining requirements:
+
+1. **Unified Parser Interface** (`ILegacyParser.cs`):
+   - Created `ILegacyParser` interface with methods for parsing all entity types
+   - Created generic `ParseResult<T>` class with Records, Errors, and HasErrors properties
+   - Created `ParseError` class with File, Line, and Message properties for error tracking
+
+2. **Unified Parser Implementation** (`LegacyParser.cs`):
+   - Implements `ILegacyParser` interface
+   - Wraps existing entity-specific parsers
+   - Converts validation errors to `ParseError` format with file/line information
+
+3. **CLI Command Support** (`ImportParseCommand.cs`):
+   - Added `import parse` command handler
+   - Supports `--input`/`-i` option for specifying legacy directory
+   - Supports `--output`/`-o` option for JSON report output
+   - Supports `--verbose`/`-v` for detailed output
+   - Generates summary report with record counts and errors
+
+4. **Program.cs Integration**:
+   - Added CLI command detection before web host startup
+   - Routes to `ImportParseCommand` when `import parse` arguments detected
+
+5. **Tests**:
+   - `LegacyParserTests.cs` - 9 unit tests for unified parser
+   - `ImportParseCommandTests.cs` - 11 integration tests for CLI handler
+
+**All ACs satisfied:**
+- AC#1: XML/XSD parsing with validation for all 4 entity types ✓
+- AC#2: Errors logged with file/line information via `ParseError` ✓
+- AC#3: CLI command `dotnet run import parse --input docs/legacy` ✓
 
 ### File List
 
+**New Files:**
+- apps/backend/src/Application/Import/ILegacyParser.cs
+- apps/backend/src/Application/Import/LegacyParser.cs
+- apps/backend/src/Api/CliCommands/ImportParseCommand.cs
+- apps/backend/tests/Unit/Import/LegacyParserTests.cs
+- apps/backend/tests/Integration/Import/ImportParseCommandTests.cs
+
+**Modified Files:**
+- apps/backend/src/Api/Program.cs
+
+**Existing Files (Verified Working):**
+- apps/backend/src/Application/Import/LegacySchoolXmlParser.cs
+- apps/backend/src/Application/Import/LegacyClassGroupXmlParser.cs
+- apps/backend/src/Application/Import/LegacyActivityXmlParser.cs
+- apps/backend/src/Application/Import/LegacyChildXmlParser.cs

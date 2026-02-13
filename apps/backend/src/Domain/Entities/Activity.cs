@@ -30,6 +30,8 @@ public class Activity
     // Soft-delete support
     public bool IsActive { get; set; } = true;
 
+    public string? LegacyId { get; set; }
+
     // Audit timestamps
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

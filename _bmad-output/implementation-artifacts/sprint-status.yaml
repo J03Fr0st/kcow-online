@@ -132,14 +132,14 @@ development_status:
   # ========================
   # Epic 7: Legacy Data Migration
   # ========================
-  epic-7: backlog
-  7-1-legacy-schema-parser: ready-for-dev
-  7-2-data-mapping-service: ready-for-dev
-  7-3-import-preview-mode: ready-for-dev
-  7-4-import-execution-with-exception-handling: ready-for-dev
-  7-5-import-audit-log: ready-for-dev
-  7-6-import-re-run-capability: ready-for-dev
-  7-7-integration-tests-legacy-data-import-pipeline: ready-for-dev
+  epic-7: in-progress
+  7-1-legacy-schema-parser: review
+  7-2-data-mapping-service: review
+  7-3-import-preview-mode: review
+  7-4-import-execution-with-exception-handling: review
+  7-5-import-audit-log: review
+  7-6-import-re-run-capability: review
+  7-7-integration-tests-legacy-data-import-pipeline: review
   epic-7-retrospective: optional
 
   # ========================

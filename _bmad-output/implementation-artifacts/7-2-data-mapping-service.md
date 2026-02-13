@@ -1,6 +1,6 @@
 # Story 7.2: Data Mapping Service
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -26,28 +26,28 @@ so that **parsed data can be loaded into the new database**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create mapping interfaces (AC: #1)
-  - [ ] Define IDataMapper interface
-  - [ ] Create mapper for each entity type
-- [ ] Task 2: Implement School mapper (AC: #1, #2)
-  - [ ] Map LegacySchool -> School
-  - [ ] Handle optional fields
-- [ ] Task 3: Implement ClassGroup mapper (AC: #1, #2)
-  - [ ] Map LegacyClassGroup -> ClassGroup
-  - [ ] Convert day/time formats
-- [ ] Task 4: Implement Activity mapper (AC: #1, #2)
-  - [ ] Map LegacyActivity -> Activity
-- [ ] Task 5: Implement Student mapper (AC: #1, #2)
-  - [ ] Map LegacyChild -> Student
-  - [ ] Convert date formats
-  - [ ] Handle family relationships
-- [ ] Task 6: Add validation and flagging (AC: #3)
-  - [ ] Validate required fields
-  - [ ] Flag missing or invalid values
-  - [ ] Return mapping result with warnings
-- [ ] Task 7: Document mapping rules (AC: #4)
-  - [ ] Add XML comments to mappers
-  - [ ] Create mapping documentation
+- [x] Task 1: Create mapping interfaces (AC: #1)
+  - [x] Define IDataMapper interface
+  - [x] Create mapper for each entity type
+- [x] Task 2: Implement School mapper (AC: #1, #2)
+  - [x] Map LegacySchool -> School
+  - [x] Handle optional fields
+- [x] Task 3: Implement ClassGroup mapper (AC: #1, #2)
+  - [x] Map LegacyClassGroup -> ClassGroup
+  - [x] Convert day/time formats
+- [x] Task 4: Implement Activity mapper (AC: #1, #2)
+  - [x] Map LegacyActivity -> Activity
+- [x] Task 5: Implement Student mapper (AC: #1, #2)
+  - [x] Map LegacyChild -> Student
+  - [x] Convert date formats
+  - [x] Handle family relationships
+- [x] Task 6: Add validation and flagging (AC: #3)
+  - [x] Validate required fields
+  - [x] Flag missing or invalid values
+  - [x] Return mapping result with warnings
+- [x] Task 7: Document mapping rules (AC: #4)
+  - [x] Add XML comments to mappers
+  - [x] Create mapping documentation
 
 ## Dev Notes
 
@@ -122,11 +122,37 @@ The `Application/Import/` folder may already contain parsers and mappers from ea
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- ✅ Task 1: Created `IDataMapper<TSource, TTarget>` generic interface with `Map` and `MapMany` methods. Created `MappingResult<T>`, `MappingWarning`, and `MappingError` types with factory methods (`Ok`, `Fail`, `Skipped`). 8 unit tests.
+- ✅ Task 2: Implemented `SchoolDataMapper` mapping `LegacySchoolRecord` → `School`. Handles whitespace trimming, TruckId FK validation, Price double→decimal conversion. 7 unit tests.
+- ✅ Task 3: Implemented `ClassGroupDataMapper` mapping `LegacyClassGroupRecord` → `ClassGroup`. Handles DayId→DayOfWeek conversion, time parsing, Import flag skip, SchoolId/TruckId validation. 12 unit tests.
+- ✅ Task 4: Implemented `ActivityDataMapper` mapping `LegacyActivityRecord` → `Activity`. Handles field truncation (255 char limit), large icon warnings, OLE wrapper detection. 6 unit tests.
+- ✅ Task 5: Implemented `StudentDataMapper` mapping `LegacyChildRecord` → `StudentMappingData` (Student + FamilyInfo). Handles date parsing (4 formats + fallback), school/classgroup ID lookup, decimal charge parsing, family info extraction. 11 unit tests.
+- ✅ Task 6: All mappers validate required fields and flag missing/invalid values via `MappingWarning` (non-fatal) and `MappingError` (fatal). Warnings include original values for review. 8 dedicated validation tests.
+- ✅ Task 7: All mapper classes have XML summary documentation describing mapping rules, field transformations, and special handling. `MappingResult`, `MappingWarning`, `MappingError` classes documented.
+- Note: Existing mappers in `Application/Import/` (from earlier epics) are preserved and unchanged. New mappers in `Application/Import/Mappers/` implement the unified `IDataMapper` interface.
+- Pre-existing test failures: 13 tests in `FamilyServiceTests` fail due to Dapper async mock issues (unrelated to this story).
+
 ### File List
 
+- apps/backend/src/Application/Import/Mappers/IDataMapper.cs (new)
+- apps/backend/src/Application/Import/Mappers/MappingResult.cs (new)
+- apps/backend/src/Application/Import/Mappers/SchoolDataMapper.cs (new)
+- apps/backend/src/Application/Import/Mappers/ClassGroupDataMapper.cs (new)
+- apps/backend/src/Application/Import/Mappers/ActivityDataMapper.cs (new)
+- apps/backend/src/Application/Import/Mappers/StudentDataMapper.cs (new)
+- apps/backend/tests/Unit/Import/DataMapperInterfaceTests.cs (new)
+- apps/backend/tests/Unit/Import/SchoolDataMapperTests.cs (new)
+- apps/backend/tests/Unit/Import/ClassGroupDataMapperTests.cs (new)
+- apps/backend/tests/Unit/Import/ActivityDataMapperTests.cs (new)
+- apps/backend/tests/Unit/Import/StudentDataMapperTests.cs (new)
+- apps/backend/tests/Unit/Import/MappingValidationTests.cs (new)
+
+### Change Log
+
+- 2026-02-13: Story 7.2 implemented - Created unified IDataMapper interface and 4 entity mappers with 52 unit tests covering all ACs.

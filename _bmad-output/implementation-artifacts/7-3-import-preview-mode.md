@@ -1,6 +1,6 @@
 # Story 7.3: Import Preview Mode
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,21 +24,21 @@ so that **I can verify the data before it goes live (FR12)**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add --preview flag to CLI (AC: #1)
-  - [ ] Parse --preview command line argument
-  - [ ] Branch logic based on flag
-- [ ] Task 2: Implement preview logic (AC: #1, #2)
-  - [ ] Run parser and mapper
-  - [ ] Collect statistics
-  - [ ] Skip database writes when preview=true
-- [ ] Task 3: Generate preview report (AC: #1)
-  - [ ] Count total records per entity type
-  - [ ] Show sample of first 5 records per type
-  - [ ] List all warnings and errors
-  - [ ] List records to be skipped with reasons
-- [ ] Task 4: Output preview to console/file (AC: #3)
-  - [ ] Pretty-print preview to console
-  - [ ] Optionally save to JSON file
+- [x] Task 1: Add --preview flag to CLI (AC: #1)
+  - [x] Parse --preview command line argument
+  - [x] Branch logic based on flag
+- [x] Task 2: Implement preview logic (AC: #1, #2)
+  - [x] Run parser and mapper
+  - [x] Collect statistics
+  - [x] Skip database writes when preview=true
+- [x] Task 3: Generate preview report (AC: #1)
+  - [x] Count total records per entity type
+  - [x] Show sample of first 5 records per type
+  - [x] List all warnings and errors
+  - [x] List records to be skipped with reasons
+- [x] Task 4: Output preview to console/file (AC: #3)
+  - [x] Pretty-print preview to console
+  - [x] Optionally save to JSON file
 
 ## Dev Notes
 
@@ -102,11 +102,24 @@ Run without --preview to import data.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- ✅ Task 1: Created `ImportRunCommand` with `--preview` flag, `--input`, `--output`, `--help` options. Wired into `Program.cs` alongside existing `ImportParseCommand`.
+- ✅ Task 2: Preview mode runs full parse→map pipeline using `ILegacyParser` and all 4 `IDataMapper` implementations. No database interaction at any point. `ParsedEntityResults` holds intermediate parse results.
+- ✅ Task 3: `ImportPreviewReport` collects per-entity counts (parsed/mapped/skipped), sample records (first 5), all warnings and errors. Console output matches story format.
+- ✅ Task 4: Pretty-printed console output with `=== IMPORT PREVIEW ===` header, record counts, sample records, warnings/errors (capped at 20 with "and X more"), summary. JSON file output via `--output` flag using `System.Text.Json`.
+- Note: Full import mode (`import run` without `--preview`) shows record counts but defers DB writes to Story 7.4.
+
 ### File List
 
+- apps/backend/src/Api/CliCommands/ImportRunCommand.cs (new)
+- apps/backend/src/Api/Program.cs (modified - added ImportRunCommand handler)
+- apps/backend/tests/Integration/Import/ImportPreviewCommandTests.cs (new)
+
+### Change Log
+
+- 2026-02-13: Story 7.3 implemented - ImportRunCommand with preview mode, 11 tests all passing.

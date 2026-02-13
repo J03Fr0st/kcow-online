@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<IEvaluationRepository, EvaluationRepository>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IImportAuditLogRepository, ImportAuditLogRepository>();
 
         // Register authentication services
         services.AddScoped<IAuthService, AuthService>();

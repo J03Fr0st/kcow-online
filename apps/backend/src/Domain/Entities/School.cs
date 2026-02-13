@@ -37,6 +37,7 @@ public class School
     public string? WebPage { get; set; }
     public string? Omsendbriewe { get; set; }
     public string? KcowWebPageLink { get; set; }
+    public string? LegacyId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
