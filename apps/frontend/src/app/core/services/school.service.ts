@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, finalize, throwError, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ProblemDetails } from '../../models/problem-details.model';
 
 export interface School {
     id: number;
@@ -106,15 +107,6 @@ export interface UpdateSchoolRequest {
     safeNotes?: string;
     webPage?: string;
     kcowWebPageLink?: string;
-}
-
-export interface ProblemDetails {
-    type?: string;
-    title?: string;
-    status?: number;
-    detail?: string;
-    instance?: string;
-    [key: string]: unknown;
 }
 
 @Injectable({

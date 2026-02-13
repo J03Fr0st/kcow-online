@@ -17,6 +17,9 @@ public class UpdateSchoolRequest
     [MaxLength(50, ErrorMessage = "Short name cannot exceed 50 characters")]
     public string? ShortName { get; set; }
 
+    [MaxLength(50, ErrorMessage = "School description cannot exceed 50 characters")]
+    public string? SchoolDescription { get; set; }
+
     public int? TruckId { get; set; }
 
     public decimal? Price { get; set; }
@@ -94,6 +97,8 @@ public class UpdateSchoolRequest
 
     [MaxLength(500, ErrorMessage = "Web page cannot exceed 500 characters")]
     public string? WebPage { get; set; }
+
+    public string? Omsendbriewe { get; set; }
 
     [MaxLength(500, ErrorMessage = "KCOW web page link cannot exceed 500 characters")]
     public string? KcowWebPageLink { get; set; }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ModalService } from '@core/services/modal.service';
 import { ModalComponent } from '../modal/modal.component';
 
@@ -17,15 +17,16 @@ import { ModalComponent } from '../modal/modal.component';
     }
   `,
   styles: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalContainerComponent {
   constructor(public modalService: ModalService) {}
 
-  onClose(id: string, result: any): void {
+  onClose(id: string, result: unknown): void {
     this.modalService.close(id, result);
   }
 
-  onDismiss(id: string, reason: any): void {
+  onDismiss(id: string, reason: unknown): void {
     this.modalService.dismiss(id, reason);
   }
 }

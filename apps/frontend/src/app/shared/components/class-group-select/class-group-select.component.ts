@@ -1,4 +1,4 @@
-import { Component, inject, model, forwardRef, OnInit, effect, input, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, model, forwardRef, OnInit, effect, input, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { ClassGroupService, type ClassGroup } from '@core/services/class-group.service';
@@ -17,6 +17,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             multi: true,
         },
     ],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClassGroupSelectComponent implements ControlValueAccessor, OnInit {
     protected classGroupService = inject(ClassGroupService);

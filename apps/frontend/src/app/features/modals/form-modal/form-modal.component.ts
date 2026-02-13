@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -174,10 +174,11 @@ import { FormsModule } from '@angular/forms';
     }
   `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FormModalComponent {
-  @Output() closeModal = new EventEmitter<any>();
-  @Output() dismissModal = new EventEmitter<any>();
+  @Output() closeModal = new EventEmitter<unknown>();
+  @Output() dismissModal = new EventEmitter<unknown>();
 
   formData = {
     name: '',

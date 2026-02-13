@@ -1,6 +1,7 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   type ComponentRef,
   EventEmitter,
@@ -38,16 +39,17 @@ import type { Modal } from '@models/modal.model';
       ]),
     ]),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalComponent implements OnInit {
   @Input() modal!: Modal;
-  @Output() close = new EventEmitter<any>();
-  @Output() dismiss = new EventEmitter<any>();
+  @Output() close = new EventEmitter<unknown>();
+  @Output() dismiss = new EventEmitter<unknown>();
 
   @ViewChild('dynamicContent', { read: ViewContainerRef })
   dynamicContent!: ViewContainerRef;
 
-  private componentRef?: ComponentRef<any>;
+  private componentRef?: ComponentRef<Record<string, unknown>>;
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: KeyboardEvent): void {
@@ -77,7 +79,7 @@ export class ModalComponent implements OnInit {
     }
   }
 
-  private loadComponent(component: Type<any>): void {
+  private loadComponent(component: Type<Record<string, unknown>>): void {
     if (!this.dynamicContent) return;
 
     this.dynamicContent.clear();
@@ -85,18 +87,23 @@ export class ModalComponent implements OnInit {
 
     // Pass data to component if it has a data property
     if (this.modal.config.data && this.componentRef.instance) {
-      Object.assign(this.componentRef.instance, this.modal.config.data);
+      const data = this.modal.config.data;
+      if (typeof data === 'object' && data !== null) {
+        Object.assign(this.componentRef.instance, data);
+      }
     }
 
     // Subscribe to component outputs if they exist
     const instance = this.componentRef.instance;
-    if (instance.closeModal) {
-      instance.closeModal.subscribe((result: any) => {
+    const closeModal = instance['closeModal'];
+    if (closeModal && typeof (closeModal as { subscribe?: unknown })['subscribe'] === 'function') {
+      (closeModal as { subscribe: (fn: (result: unknown) => void) => void }).subscribe((result: unknown) => {
         this.onClose(result);
       });
     }
-    if (instance.dismissModal) {
-      instance.dismissModal.subscribe((reason: any) => {
+    const dismissModal = instance['dismissModal'];
+    if (dismissModal && typeof (dismissModal as { subscribe?: unknown })['subscribe'] === 'function') {
+      (dismissModal as { subscribe: (fn: (reason: unknown) => void) => void }).subscribe((reason: unknown) => {
         this.onDismiss(reason);
       });
     }
@@ -111,20 +118,22 @@ export class ModalComponent implements OnInit {
     }
   }
 
-  onClose(result?: any): void {
+  onClose(result?: unknown): void {
     this.close.emit(result);
   }
 
-  onDismiss(reason?: any): void {
+  onDismiss(reason?: unknown): void {
     this.dismiss.emit(reason);
   }
 
   isConfirmationDialog(): boolean {
-    return this.modal.config.data?.type === 'confirmation';
+    const data = this.modal.config.data;
+    return data != null && typeof data === 'object' && (data as Record<string, unknown>)['type'] === 'confirmation';
   }
 
   isAlertDialog(): boolean {
-    return this.modal.config.data?.type === 'alert';
+    const data = this.modal.config.data;
+    return data != null && typeof data === 'object' && (data as Record<string, unknown>)['type'] === 'alert';
   }
 
   onConfirm(): void {

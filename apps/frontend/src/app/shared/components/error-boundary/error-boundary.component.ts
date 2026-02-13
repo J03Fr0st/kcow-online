@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, inject, type OnDestroy, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject, type OnDestroy, type OnInit } from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { ErrorLoggingService } from '../../../core/services/error-logging.service';
 import type { AppError } from '../../../models/error.model';
@@ -132,6 +132,7 @@ import type { AppError } from '../../../models/error.model';
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorBoundaryComponent implements OnInit, OnDestroy {
   private errorLogger = inject(ErrorLoggingService);

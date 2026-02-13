@@ -31,10 +31,10 @@ public class StudentService : IStudentService
     /// <summary>
     /// Gets a paginated list of students with optional filtering.
     /// </summary>
-    public async Task<PagedResponse<StudentListDto>> GetPagedAsync(int page, int pageSize, int? schoolId = null, int? classGroupId = null, string? search = null)
+    public async Task<PagedResponse<StudentListDto>> GetPagedAsync(int page, int pageSize, int? schoolId = null, int? classGroupId = null, string? search = null, CancellationToken cancellationToken = default)
     {
         // Get base query
-        var students = await _studentRepository.GetActiveAsync();
+        var students = await _studentRepository.GetActiveAsync(cancellationToken);
         var query = students.ToList();
 
         // Apply filters
@@ -71,7 +71,7 @@ public class StudentService : IStudentService
             SchoolDto? schoolDto = null;
             if (s.SchoolId.HasValue)
             {
-                var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value);
+                var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value, cancellationToken);
                 if (school != null)
                 {
                     schoolDto = new SchoolDto { Id = school.Id, Name = school.Name };
@@ -81,7 +81,7 @@ public class StudentService : IStudentService
             ClassGroupDto? classGroupDto = null;
             if (s.ClassGroupId.HasValue)
             {
-                var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value);
+                var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value, cancellationToken);
                 if (classGroup != null)
                 {
                     classGroupDto = new ClassGroupDto { Id = classGroup.Id, Name = classGroup.Name };
@@ -110,9 +110,9 @@ public class StudentService : IStudentService
     /// <summary>
     /// Gets a student by ID with school and class group details.
     /// </summary>
-    public async Task<StudentDto?> GetByIdAsync(int id)
+    public async Task<StudentDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await _studentRepository.GetByIdAsync(id, cancellationToken);
 
         if (student == null)
         {
@@ -121,16 +121,16 @@ public class StudentService : IStudentService
         }
 
         _logger.LogInformation("Retrieved student with ID {StudentId}", id);
-        return await MapToDtoAsync(student);
+        return await MapToDtoAsync(student, cancellationToken);
     }
 
     /// <summary>
     /// Creates a new student.
     /// </summary>
-    public async Task<StudentDto> CreateAsync(CreateStudentRequest request)
+    public async Task<StudentDto> CreateAsync(CreateStudentRequest request, CancellationToken cancellationToken = default)
     {
         // Optimistic duplicate check for user feedback (still vulnerable to race condition)
-        var exists = await _studentRepository.ExistsByReferenceAsync(request.Reference);
+        var exists = await _studentRepository.ExistsByReferenceAsync(request.Reference, cancellationToken);
         if (exists)
         {
             throw new InvalidOperationException($"Student with reference '{request.Reference}' already exists");
@@ -219,20 +219,20 @@ public class StudentService : IStudentService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _studentRepository.CreateAsync(student);
+        var id = await _studentRepository.CreateAsync(student, cancellationToken);
         student.Id = id;
 
         _logger.LogInformation("Created student with ID {StudentId} and reference {Reference}", student.Id, student.Reference);
 
-        return await GetByIdAsync(student.Id) ?? await MapToDtoAsync(student);
+        return await GetByIdAsync(student.Id, cancellationToken) ?? await MapToDtoAsync(student, cancellationToken);
     }
 
     /// <summary>
     /// Updates an existing student.
     /// </summary>
-    public async Task<StudentDto?> UpdateAsync(int id, UpdateStudentRequest request)
+    public async Task<StudentDto?> UpdateAsync(int id, UpdateStudentRequest request, CancellationToken cancellationToken = default)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await _studentRepository.GetByIdAsync(id, cancellationToken);
 
         if (student == null)
         {
@@ -241,7 +241,7 @@ public class StudentService : IStudentService
         }
 
         // Check for duplicate reference (excluding current student)
-        var existingByRef = await _studentRepository.GetByReferenceAsync(request.Reference);
+        var existingByRef = await _studentRepository.GetByReferenceAsync(request.Reference, cancellationToken);
         if (existingByRef != null && existingByRef.Id != id)
         {
             throw new InvalidOperationException($"Student with reference '{request.Reference}' already exists");
@@ -327,19 +327,19 @@ public class StudentService : IStudentService
         student.IsActive = request.IsActive;
         student.UpdatedAt = DateTime.UtcNow;
 
-        await _studentRepository.UpdateAsync(student);
+        await _studentRepository.UpdateAsync(student, cancellationToken);
 
         _logger.LogInformation("Updated student with ID {StudentId}", id);
 
-        return await GetByIdAsync(id);
+        return await GetByIdAsync(id, cancellationToken);
     }
 
     /// <summary>
     /// Archives (soft-deletes) a student.
     /// </summary>
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var student = await _studentRepository.GetByIdAsync(id);
+        var student = await _studentRepository.GetByIdAsync(id, cancellationToken);
 
         if (student == null || !student.IsActive)
         {
@@ -350,7 +350,7 @@ public class StudentService : IStudentService
         student.IsActive = false;
         student.UpdatedAt = DateTime.UtcNow;
 
-        await _studentRepository.UpdateAsync(student);
+        await _studentRepository.UpdateAsync(student, cancellationToken);
 
         _logger.LogInformation("Archived student with ID {StudentId}", id);
         return true;
@@ -359,14 +359,14 @@ public class StudentService : IStudentService
     /// <summary>
     /// Searches for students by name (case-insensitive contains search).
     /// </summary>
-    public async Task<List<StudentSearchResultDto>> SearchAsync(string query, int limit = 10)
+    public async Task<List<StudentSearchResultDto>> SearchAsync(string query, int limit = 10, CancellationToken cancellationToken = default)
     {
         // Enforce reasonable limit to prevent DoS
         const int maxLimit = 50;
         if (limit < 1) limit = 10;
         if (limit > maxLimit) limit = maxLimit;
 
-        var students = await _studentRepository.SearchByNameAsync(query);
+        var students = await _studentRepository.SearchByNameAsync(query, cancellationToken);
         var results = students
             .OrderBy(s => s.LastName)
             .ThenBy(s => s.FirstName)
@@ -380,7 +380,7 @@ public class StudentService : IStudentService
             string schoolName = "No School";
             if (s.SchoolId.HasValue)
             {
-                var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value);
+                var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value, cancellationToken);
                 if (school != null)
                 {
                     schoolName = school.Name;
@@ -390,7 +390,7 @@ public class StudentService : IStudentService
             string className = "No Class";
             if (s.ClassGroupId.HasValue)
             {
-                var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value);
+                var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value, cancellationToken);
                 if (classGroup != null)
                 {
                     className = classGroup.Name;
@@ -412,12 +412,12 @@ public class StudentService : IStudentService
         return output;
     }
 
-    private async Task<StudentDto> MapToDtoAsync(Student s)
+    private async Task<StudentDto> MapToDtoAsync(Student s, CancellationToken cancellationToken = default)
     {
         SchoolDto? schoolDto = null;
         if (s.SchoolId.HasValue)
         {
-            var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value);
+            var school = await _schoolRepository.GetByIdAsync(s.SchoolId.Value, cancellationToken);
             if (school != null)
             {
                 schoolDto = new SchoolDto { Id = school.Id, Name = school.Name };
@@ -427,7 +427,7 @@ public class StudentService : IStudentService
         ClassGroupDto? classGroupDto = null;
         if (s.ClassGroupId.HasValue)
         {
-            var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value);
+            var classGroup = await _classGroupRepository.GetByIdAsync(s.ClassGroupId.Value, cancellationToken);
             if (classGroup != null)
             {
                 classGroupDto = new ClassGroupDto { Id = classGroup.Id, Name = classGroup.Name };

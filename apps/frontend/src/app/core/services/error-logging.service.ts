@@ -79,7 +79,7 @@ export class ErrorLoggingService {
   /**
    * Log an error with optional configuration
    */
-  logError(error: any, options: ErrorHandlerOptions = {}): AppError {
+  logError(error: unknown, options: ErrorHandlerOptions = {}): AppError {
     const appError = this.createAppError(error, options);
     const logEntry = this.createLogEntry(appError);
 
@@ -108,12 +108,13 @@ export class ErrorLoggingService {
    * Log HTTP error
    */
   logHttpError(
-    error: any,
+    error: unknown,
     url: string,
     method: string,
     options: ErrorHandlerOptions = {},
   ): AppError {
-    const statusCode = error.status || 0;
+    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const statusCode = (typeof errorObj?.['status'] === 'number' ? errorObj['status'] : 0);
     const errorType = this.getHttpErrorType(statusCode);
     const severity = this.getHttpErrorSeverity(statusCode);
     const _userMessage = this.getHttpErrorUserMessage(statusCode);
@@ -134,7 +135,7 @@ export class ErrorLoggingService {
   /**
    * Log validation error
    */
-  logValidationError(message: string, context?: Record<string, any>): AppError {
+  logValidationError(message: string, context?: Record<string, unknown>): AppError {
     return this.logError(new Error(message), {
       severity: ErrorSeverity.WARNING,
       context: { ...context, type: ErrorType.VALIDATION },
@@ -184,15 +185,16 @@ export class ErrorLoggingService {
   /**
    * Create structured AppError from any error
    */
-  private createAppError(error: any, options: ErrorHandlerOptions): AppError {
+  private createAppError(error: unknown, options: ErrorHandlerOptions): AppError {
     const timestamp = new Date();
     const id = this.generateErrorId(timestamp);
 
     // Extract error details
     const message = this.extractErrorMessage(error);
-    const stack = error?.stack;
-    const statusCode = error?.status;
-    const url = error?.url;
+    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const stack = error instanceof Error ? error.stack : undefined;
+    const statusCode = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
+    const url = typeof errorObj?.['url'] === 'string' ? errorObj['url'] : undefined;
 
     // Determine error type
     const type = this.determineErrorType(error, options.context);
@@ -324,21 +326,30 @@ export class ErrorLoggingService {
   /**
    * Extract error message from various error types
    */
-  private extractErrorMessage(error: any): string {
+  private extractErrorMessage(error: unknown): string {
     if (typeof error === 'string') {
       return error;
     }
 
-    if (error?.error?.message) {
-      return error.error.message;
-    }
+    if (error != null && typeof error === 'object') {
+      const errorObj = error as Record<string, unknown>;
 
-    if (error?.message) {
-      return error.message;
-    }
+      // Check nested error.error.message
+      const innerError = errorObj['error'];
+      if (innerError != null && typeof innerError === 'object') {
+        const innerMsg = (innerError as Record<string, unknown>)['message'];
+        if (typeof innerMsg === 'string') {
+          return innerMsg;
+        }
+      }
 
-    if (error?.statusText) {
-      return error.statusText;
+      if (typeof errorObj['message'] === 'string') {
+        return errorObj['message'];
+      }
+
+      if (typeof errorObj['statusText'] === 'string') {
+        return errorObj['statusText'];
+      }
     }
 
     return 'An unknown error occurred';
@@ -347,16 +358,17 @@ export class ErrorLoggingService {
   /**
    * Determine error type
    */
-  private determineErrorType(error: any, context?: Record<string, any>): ErrorType {
+  private determineErrorType(error: unknown, context?: Record<string, unknown>): ErrorType {
     // Check context first
     if (context?.['type']) {
-      return context['type'];
+      return context['type'] as ErrorType;
     }
 
     // Check HTTP status
-    if (error?.status) {
-      const status = error.status;
+    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const status = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
 
+    if (status !== undefined) {
       if (status === 401) return ErrorType.AUTHENTICATION;
       if (status === 403) return ErrorType.AUTHORIZATION;
       if (status === 404) return ErrorType.NOT_FOUND;
@@ -366,7 +378,7 @@ export class ErrorLoggingService {
     }
 
     // Check error name/type
-    if (error?.name === 'ValidationError') {
+    if (error instanceof Error && error.name === 'ValidationError') {
       return ErrorType.VALIDATION;
     }
 
@@ -380,16 +392,19 @@ export class ErrorLoggingService {
   /**
    * Determine error severity
    */
-  private determineSeverity(error: any): ErrorSeverity {
-    if (error?.status >= 500) {
+  private determineSeverity(error: unknown): ErrorSeverity {
+    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const status = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
+
+    if (status !== undefined && status >= 500) {
       return ErrorSeverity.CRITICAL;
     }
 
-    if (error?.status === 401 || error?.status === 403) {
+    if (status === 401 || status === 403) {
       return ErrorSeverity.ERROR;
     }
 
-    if (error?.status >= 400) {
+    if (status !== undefined && status >= 400) {
       return ErrorSeverity.WARNING;
     }
 
@@ -403,7 +418,7 @@ export class ErrorLoggingService {
   /**
    * Create user-friendly error message
    */
-  private createUserMessage(_error: any, type: ErrorType, statusCode?: number): string {
+  private createUserMessage(_error: unknown, type: ErrorType, statusCode?: number): string {
     if (statusCode) {
       return this.getHttpErrorUserMessage(statusCode);
     }
@@ -488,8 +503,9 @@ export class ErrorLoggingService {
   /**
    * Check if error is retryable
    */
-  private isRetryable(error: any): boolean {
-    const status = error?.status;
+  private isRetryable(error: unknown): boolean {
+    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const status = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
 
     // Network errors are retryable
     if (status === 0) return true;
@@ -498,7 +514,7 @@ export class ErrorLoggingService {
     if (status === 503 || status === 504) return true;
 
     // Timeout errors are retryable
-    if (error?.name === 'TimeoutError') return true;
+    if (error instanceof Error && error.name === 'TimeoutError') return true;
 
     return false;
   }

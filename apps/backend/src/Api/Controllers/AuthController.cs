@@ -32,14 +32,14 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var response = await _authService.LoginAsync(request.Email, request.Password);
+        var response = await _authService.LoginAsync(request.Email, request.Password, cancellationToken);
 
         if (response == null)
         {
@@ -99,9 +99,14 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid token" });
         }
 
+        if (!int.TryParse(userId, out var parsedUserId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+
         return Ok(new UserDto
         {
-            Id = int.Parse(userId),
+            Id = parsedUserId,
             Email = email,
             Name = name,
             Role = role

@@ -1,4 +1,4 @@
-import { Component, inject, input, output, EventEmitter, OnInit, OnDestroy, signal, WritableSignal, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, EventEmitter, OnInit, OnDestroy, signal, WritableSignal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { StudentService, type Student, type UpdateStudentRequest, type ProblemDetails } from '@core/services/student.service';
@@ -21,6 +21,7 @@ interface StudentForm {
     imports: [CommonModule, ReactiveFormsModule, FormsModule],
     templateUrl: './child-info-tab.component.html',
     styleUrls: ['./child-info-tab.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChildInfoTabComponent implements OnInit, OnDestroy {
     private readonly formBuilder = inject(FormBuilder);

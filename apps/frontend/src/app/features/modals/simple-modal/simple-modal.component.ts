@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { ModalService } from '@core/services/modal.service';
 
 @Component({
@@ -92,14 +92,15 @@ import { ModalService } from '@core/services/modal.service';
     }
   `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SimpleModalComponent {
   private modalService = inject(ModalService);
 
   @Input() message: string = 'This is a simple modal';
   @Input() nested: boolean = false;
-  @Output() closeModal = new EventEmitter<any>();
-  @Output() dismissModal = new EventEmitter<any>();
+  @Output() closeModal = new EventEmitter<unknown>();
+  @Output() dismissModal = new EventEmitter<unknown>();
 
   onClose(): void {
     this.closeModal.emit(null);

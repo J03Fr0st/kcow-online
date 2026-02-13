@@ -9,21 +9,21 @@ public interface IActivityService
     /// Gets all active activities.
     /// </summary>
     /// <returns>List of active activities</returns>
-    Task<List<ActivityDto>> GetAllAsync();
+    Task<List<ActivityDto>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets an activity by ID.
     /// </summary>
     /// <param name="id">Activity ID</param>
     /// <returns>Activity DTO or null if not found</returns>
-    Task<ActivityDto?> GetByIdAsync(int id);
+    Task<ActivityDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new activity.
     /// </summary>
     /// <param name="request">Create activity request</param>
     /// <returns>Created activity DTO</returns>
-    Task<ActivityDto> CreateAsync(CreateActivityRequest request);
+    Task<ActivityDto> CreateAsync(CreateActivityRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing activity.
@@ -31,12 +31,12 @@ public interface IActivityService
     /// <param name="id">Activity ID</param>
     /// <param name="request">Update activity request</param>
     /// <returns>Updated activity DTO or null if not found</returns>
-    Task<ActivityDto?> UpdateAsync(int id, UpdateActivityRequest request);
+    Task<ActivityDto?> UpdateAsync(int id, UpdateActivityRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Archives (soft-deletes) an activity by setting IsActive to false.
     /// </summary>
     /// <param name="id">Activity ID</param>
     /// <returns>True if activity was archived, false if not found</returns>
-    Task<bool> ArchiveAsync(int id);
+    Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default);
 }

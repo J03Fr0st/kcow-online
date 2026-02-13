@@ -1,4 +1,4 @@
-import { Component, inject, input, output, EventEmitter, OnInit, signal, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, EventEmitter, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     imports: [CommonModule, ReactiveFormsModule],
     templateUrl: './family-section.component.html',
     styleUrls: ['./family-section.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FamilySectionComponent implements OnInit {
     private readonly formBuilder = inject(FormBuilder);

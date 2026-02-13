@@ -35,12 +35,12 @@ public class AuthService : IAuthService
     /// Authenticates a user with email and password.
     /// Uses constant-time comparison to prevent timing attacks.
     /// </summary>
-    public async Task<LoginResponse?> LoginAsync(string email, string password)
+    public async Task<LoginResponse?> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         try
         {
             // Find user by email
-            var user = await _userRepository.GetByEmailAsync(email);
+            var user = await _userRepository.GetByEmailAsync(email, cancellationToken);
 
             // Timing attack prevention: Always verify password hash, even for non-existent users
             // Use a dummy hash for non-existent users to maintain consistent timing
@@ -57,7 +57,7 @@ public class AuthService : IAuthService
             }
 
             // Load role for the user
-            var role = await _roleRepository.GetByIdAsync(user.RoleId);
+            var role = await _roleRepository.GetByIdAsync(user.RoleId, cancellationToken);
             var roleName = role?.Name ?? Constants.Roles.User;
 
             // Generate JWT token

@@ -32,11 +32,12 @@ public static class GlobalExceptionHandler
 
                 context.Response.ContentType = "application/problem+json";
 
+                var isServerError = context.Response.StatusCode >= 500;
                 var problemDetails = new ProblemDetails
                 {
                     Type = $"https://httpstatuses.com/{context.Response.StatusCode}",
-                    Title = exception.GetType().Name,
-                    Detail = exception.Message,
+                    Title = isServerError ? "Internal Server Error" : exception.GetType().Name,
+                    Detail = isServerError ? "An unexpected error occurred." : exception.Message,
                     Status = context.Response.StatusCode,
                     Instance = context.Request.Path
                 };

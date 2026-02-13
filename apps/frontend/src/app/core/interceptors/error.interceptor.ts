@@ -1,21 +1,9 @@
-import { HttpErrorResponse, type HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders, type HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, retry, throwError, timer } from 'rxjs';
 import { ErrorLoggingService } from '../services/error-logging.service';
-
-/**
- * ProblemDetails interface matching backend error format
- * From: Microsoft.AspNetCore.Mvc.ProblemDetails
- */
-interface ProblemDetails {
-  type?: string;           // URI reference to error type
-  title?: string;          // Human-readable title
-  status?: number;         // HTTP status code
-  detail?: string;         // Human-readable detail
-  instance?: string;       // URI reference to specific occurrence
-  [key: string]: any;      // Additional properties
-}
+import { ProblemDetails } from '../../models/problem-details.model';
 
 /**
  * Global HTTP error interceptor
@@ -223,7 +211,7 @@ function shouldShowNotification(error: HttpErrorResponse): boolean {
 /**
  * Extract relevant headers for logging
  */
-function extractHeaders(headers: any): Record<string, string> {
+function extractHeaders(headers: HttpHeaders): Record<string, string> {
   const relevantHeaders: Record<string, string> = {};
 
   // Only extract non-sensitive headers

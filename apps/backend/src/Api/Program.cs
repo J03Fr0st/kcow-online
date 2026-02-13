@@ -73,7 +73,16 @@ try
 
     // Configure JWT Authentication
     var jwtKey = builder.Configuration["Jwt:Key"]
-        ?? throw new InvalidOperationException("JWT Key not configured");
+        ?? throw new InvalidOperationException("JWT Key not configured. Set via environment variable Jwt__Key or dotnet user-secrets.");
+
+    // Reject known placeholder keys in non-development environments
+    if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing") && !builder.Environment.IsEnvironment("E2E"))
+    {
+        if (jwtKey.Contains("development-only") || jwtKey.Contains("minimum-32-char"))
+        {
+            throw new InvalidOperationException("Production JWT key not configured. Do not use development placeholder keys in production.");
+        }
+    }
     var jwtIssuer = builder.Configuration["Jwt:Issuer"]
         ?? throw new InvalidOperationException("JWT Issuer not configured");
     var jwtAudience = builder.Configuration["Jwt:Audience"]
@@ -171,11 +180,14 @@ try
     });
 
     // Configure CORS
+    var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? new[] { "http://localhost:4200" };
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("FrontendOrigin", policy =>
         {
-            policy.WithOrigins("http://localhost:4200")
+            policy.WithOrigins(corsOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();

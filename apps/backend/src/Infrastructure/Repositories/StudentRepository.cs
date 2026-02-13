@@ -41,56 +41,56 @@ public class StudentRepository : IStudentRepository
 
     public async Task<IEnumerable<Student>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students";
-        return await connection.QueryAsync<Student>(sql);
+        return await connection.QueryAsync<Student>(new CommandDefinition(sql, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<Student>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students WHERE is_active = 1";
-        return await connection.QueryAsync<Student>(sql);
+        return await connection.QueryAsync<Student>(new CommandDefinition(sql, cancellationToken: cancellationToken));
     }
 
     public async Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students WHERE id = @Id";
-        return await connection.QueryFirstOrDefaultAsync<Student>(sql, new { Id = id });
+        return await connection.QueryFirstOrDefaultAsync<Student>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<Student?> GetByReferenceAsync(string reference, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students WHERE reference = @Reference";
-        return await connection.QueryFirstOrDefaultAsync<Student>(sql, new { Reference = reference });
+        return await connection.QueryFirstOrDefaultAsync<Student>(new CommandDefinition(sql, new { Reference = reference }, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<Student>> GetBySchoolIdAsync(int schoolId, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students WHERE school_id = @SchoolId";
-        return await connection.QueryAsync<Student>(sql, new { SchoolId = schoolId });
+        return await connection.QueryAsync<Student>(new CommandDefinition(sql, new { SchoolId = schoolId }, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<Student>> GetByClassGroupIdAsync(int classGroupId, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students WHERE class_group_id = @ClassGroupId";
-        return await connection.QueryAsync<Student>(sql, new { ClassGroupId = classGroupId });
+        return await connection.QueryAsync<Student>(new CommandDefinition(sql, new { ClassGroupId = classGroupId }, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<Student>> SearchByNameAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         var sql = $"SELECT {SelectColumns} FROM students WHERE first_name LIKE @SearchTerm OR last_name LIKE @SearchTerm";
-        return await connection.QueryAsync<Student>(sql, new { SearchTerm = $"%{searchTerm}%" });
+        return await connection.QueryAsync<Student>(new CommandDefinition(sql, new { SearchTerm = $"%{searchTerm}%" }, cancellationToken: cancellationToken));
     }
 
     public async Task<int> CreateAsync(Student student, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             INSERT INTO students (
                 reference, first_name, last_name, date_of_birth, gender, language,
@@ -132,12 +132,12 @@ public class StudentRepository : IStudentRepository
                 @IsActive, @CreatedAt, @UpdatedAt
             )
             RETURNING id";
-        return await connection.QuerySingleAsync<int>(sql, student);
+        return await connection.QuerySingleAsync<int>(new CommandDefinition(sql, student, cancellationToken: cancellationToken));
     }
 
     public async Task<bool> UpdateAsync(Student student, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             UPDATE students SET
                 reference = @Reference, first_name = @FirstName, last_name = @LastName,
@@ -175,31 +175,31 @@ public class StudentRepository : IStudentRepository
                 photo_url = @PhotoUrl, photo_updated = @PhotoUpdated,
                 is_active = @IsActive, updated_at = @UpdatedAt
             WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, student);
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, student, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "DELETE FROM students WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "SELECT COUNT(1) FROM students WHERE id = @Id";
-        var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return count > 0;
     }
 
     public async Task<bool> ExistsByReferenceAsync(string reference, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "SELECT COUNT(1) FROM students WHERE reference = @Reference";
-        var count = await connection.QuerySingleAsync<int>(sql, new { Reference = reference });
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(sql, new { Reference = reference }, cancellationToken: cancellationToken));
         return count > 0;
     }
 }

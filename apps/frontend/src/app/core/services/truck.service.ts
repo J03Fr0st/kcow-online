@@ -19,7 +19,7 @@ export class TruckService {
    * Validate truck status
    */
   private validateStatus(status: string): void {
-    if (!TRUCK_STATUS_OPTIONS.includes(status as any)) {
+    if (!(TRUCK_STATUS_OPTIONS as readonly string[]).includes(status)) {
       throw new Error(`Invalid truck status: "${status}". Must be one of: ${TRUCK_STATUS_OPTIONS.join(', ')}`);
     }
   }

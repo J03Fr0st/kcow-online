@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, type OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, type OnInit, signal } from '@angular/core';
 import { MockDataService } from '@core/services/mock-data.service';
 import type { RecentActivity } from '@models/recent-activity.model';
 import type { StatCard } from '@models/stats.model';
@@ -12,6 +12,7 @@ import { StatCardComponent } from '@shared/components/stat-card/stat-card.compon
   imports: [CommonModule, StatCardComponent, LoadingSpinnerComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
   private mockDataService = inject(MockDataService);

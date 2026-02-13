@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NotificationService } from '@core/services/notification.service';
 
 @Component({
@@ -20,6 +20,7 @@ import { NotificationService } from '@core/services/notification.service';
       ]),
     ]),
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationContainerComponent {
   private readonly notificationService = inject(NotificationService);

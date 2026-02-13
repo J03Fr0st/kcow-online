@@ -1,4 +1,4 @@
-import { Component, inject, input, output, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
     FormBuilder,
@@ -23,6 +23,7 @@ export interface GuardianFormData {
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule],
     templateUrl: './guardian-form.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GuardianFormComponent implements OnInit {
     private fb = inject(FormBuilder);

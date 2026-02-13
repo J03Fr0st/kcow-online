@@ -29,11 +29,11 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(typeof(List<ActivityDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         try
         {
-            var activities = await _activityService.GetAllAsync();
+            var activities = await _activityService.GetAllAsync(cancellationToken);
             return Ok(activities);
         }
         catch (Exception ex)
@@ -54,11 +54,11 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var activity = await _activityService.GetByIdAsync(id);
+            var activity = await _activityService.GetByIdAsync(id, cancellationToken);
 
             if (activity == null)
             {
@@ -90,7 +90,7 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Create([FromBody] CreateActivityRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateActivityRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -105,7 +105,7 @@ public class ActivitiesController : ControllerBase
 
         try
         {
-            var activity = await _activityService.CreateAsync(request);
+            var activity = await _activityService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = activity.Id }, activity);
         }
         catch (InvalidOperationException ex)
@@ -137,7 +137,7 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateActivityRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateActivityRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -152,7 +152,7 @@ public class ActivitiesController : ControllerBase
 
         try
         {
-            var activity = await _activityService.UpdateAsync(id, request);
+            var activity = await _activityService.UpdateAsync(id, request, cancellationToken);
 
             if (activity == null)
             {
@@ -193,11 +193,11 @@ public class ActivitiesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Archive(int id)
+    public async Task<IActionResult> Archive(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var archived = await _activityService.ArchiveAsync(id);
+            var archived = await _activityService.ArchiveAsync(id, cancellationToken);
 
             if (!archived)
             {

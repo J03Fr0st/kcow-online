@@ -19,22 +19,22 @@ public class AuditLogRepository : IAuditLogRepository
 
     public async Task<int> CreateAsync(AuditLog entry, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             INSERT INTO audit_log (entity_type, entity_id, field, old_value, new_value, changed_by, changed_at)
             VALUES (@EntityType, @EntityId, @Field, @OldValue, @NewValue, @ChangedBy, @ChangedAt)
             RETURNING id";
-        return await connection.QuerySingleAsync<int>(sql, entry);
+        return await connection.QuerySingleAsync<int>(new CommandDefinition(sql, entry, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, int entityId, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT id, entity_type, entity_id, field, old_value, new_value, changed_by, changed_at
             FROM audit_log
             WHERE entity_type = @EntityType AND entity_id = @EntityId
             ORDER BY changed_at DESC";
-        return await connection.QueryAsync<AuditLog>(sql, new { EntityType = entityType, EntityId = entityId });
+        return await connection.QueryAsync<AuditLog>(new CommandDefinition(sql, new { EntityType = entityType, EntityId = entityId }, cancellationToken: cancellationToken));
     }
 }

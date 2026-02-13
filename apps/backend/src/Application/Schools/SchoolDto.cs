@@ -11,6 +11,7 @@ public class SchoolDto
     public int Id { get; set; }
     public required string Name { get; set; }
     public string? ShortName { get; set; }
+    public string? SchoolDescription { get; set; }
     public int? TruckId { get; set; }
     public decimal? Price { get; set; }
     public string? FeeDescription { get; set; }
@@ -40,7 +41,9 @@ public class SchoolDto
     public string? MoneyMessage { get; set; }
     public string? SafeNotes { get; set; }
     public string? WebPage { get; set; }
+    public string? Omsendbriewe { get; set; }
     public string? KcowWebPageLink { get; set; }
+    public string? LegacyId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

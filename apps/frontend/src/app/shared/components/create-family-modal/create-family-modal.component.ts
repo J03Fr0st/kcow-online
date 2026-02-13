@@ -1,4 +1,4 @@
-import { Component, inject, output, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FamilyService, type CreateFamilyRequest, type Family } from '@core/services/family.service';
@@ -12,6 +12,7 @@ import { EventEmitter } from '@angular/core';
     imports: [CommonModule, ReactiveFormsModule, GuardianFormComponent],
     templateUrl: './create-family-modal.component.html',
     styleUrls: ['./create-family-modal.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateFamilyModalComponent implements OnInit {
     private fb = inject(FormBuilder);

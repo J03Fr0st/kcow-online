@@ -20,7 +20,7 @@ public class SchoolRepository : ISchoolRepository
 
     public async Task<IEnumerable<School>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT id, name, short_name, school_description, truck_id, price, fee_description, formula,
                    visit_day, visit_sequence, contact_person, contact_cell, phone, telephone, fax, email,
@@ -29,12 +29,12 @@ public class SchoolRepository : ISchoolRepository
                    afterschool2_contact, scheduling_notes, money_message, safe_notes, web_page, omsendbriewe,
                    kcow_web_page_link, created_at, updated_at
             FROM schools";
-        return await connection.QueryAsync<School>(sql);
+        return await connection.QueryAsync<School>(new CommandDefinition(sql, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<School>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT id, name, short_name, school_description, truck_id, price, fee_description, formula,
                    visit_day, visit_sequence, contact_person, contact_cell, phone, telephone, fax, email,
@@ -44,12 +44,12 @@ public class SchoolRepository : ISchoolRepository
                    kcow_web_page_link, created_at, updated_at
             FROM schools
             WHERE is_active = 1";
-        return await connection.QueryAsync<School>(sql);
+        return await connection.QueryAsync<School>(new CommandDefinition(sql, cancellationToken: cancellationToken));
     }
 
     public async Task<School?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT id, name, short_name, school_description, truck_id, price, fee_description, formula,
                    visit_day, visit_sequence, contact_person, contact_cell, phone, telephone, fax, email,
@@ -59,12 +59,12 @@ public class SchoolRepository : ISchoolRepository
                    kcow_web_page_link, created_at, updated_at
             FROM schools
             WHERE id = @Id";
-        return await connection.QueryFirstOrDefaultAsync<School>(sql, new { Id = id });
+        return await connection.QueryFirstOrDefaultAsync<School>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<int> CreateAsync(School school, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             INSERT INTO schools (name, short_name, school_description, truck_id, price, fee_description, formula,
                    visit_day, visit_sequence, contact_person, contact_cell, phone, telephone, fax, email,
@@ -79,12 +79,12 @@ public class SchoolRepository : ISchoolRepository
                    @Afterschool2Contact, @SchedulingNotes, @MoneyMessage, @SafeNotes, @WebPage, @Omsendbriewe,
                    @KcowWebPageLink, @CreatedAt, @UpdatedAt)
             RETURNING id";
-        return await connection.QuerySingleAsync<int>(sql, school);
+        return await connection.QuerySingleAsync<int>(new CommandDefinition(sql, school, cancellationToken: cancellationToken));
     }
 
     public async Task<bool> UpdateAsync(School school, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             UPDATE schools
             SET name = @Name,
@@ -123,23 +123,23 @@ public class SchoolRepository : ISchoolRepository
                 kcow_web_page_link = @KcowWebPageLink,
                 updated_at = @UpdatedAt
             WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, school);
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, school, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "DELETE FROM schools WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "SELECT COUNT(1) FROM schools WHERE id = @Id";
-        var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return count > 0;
     }
 }

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, type OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ErrorLoggingService } from '@core/services/error-logging.service';
 import { ErrorSeverity, ErrorType } from '@models/error.model';
@@ -33,6 +33,7 @@ interface ErrorStats {
   imports: [CommonModule, ErrorBoundaryComponent],
   templateUrl: './error-handling-demo.component.html',
   styleUrls: ['./error-handling-demo.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorHandlingDemoComponent implements OnInit {
   private errorLogger = inject(ErrorLoggingService);
@@ -94,7 +95,7 @@ export class ErrorHandlingDemoComponent implements OnInit {
   simulateTypeError(): void {
     try {
       // Simulate type error
-      const obj: any = null;
+      const obj = null as unknown as { property: { nested: { value: string } } };
       obj.property.nested.value = 'test'; // This will throw TypeError
     } catch (error) {
       this.errorLogger.logError(error, {

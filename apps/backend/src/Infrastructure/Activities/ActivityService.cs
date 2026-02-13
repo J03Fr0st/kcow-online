@@ -22,9 +22,9 @@ public class ActivityService : IActivityService
     /// <summary>
     /// Gets all active activities.
     /// </summary>
-    public async Task<List<ActivityDto>> GetAllAsync()
+    public async Task<List<ActivityDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var activities = (await _activityRepository.GetActiveAsync())
+        var activities = (await _activityRepository.GetActiveAsync(cancellationToken))
             .Select(a => new ActivityDto
             {
                 Id = a.Id,
@@ -49,9 +49,9 @@ public class ActivityService : IActivityService
     /// <summary>
     /// Gets an activity by ID.
     /// </summary>
-    public async Task<ActivityDto?> GetByIdAsync(int id)
+    public async Task<ActivityDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var activity = await _activityRepository.GetByIdAsync(id);
+        var activity = await _activityRepository.GetByIdAsync(id, cancellationToken);
 
         if (activity == null || !activity.IsActive)
         {
@@ -79,12 +79,12 @@ public class ActivityService : IActivityService
     /// <summary>
     /// Creates a new activity.
     /// </summary>
-    public async Task<ActivityDto> CreateAsync(CreateActivityRequest request)
+    public async Task<ActivityDto> CreateAsync(CreateActivityRequest request, CancellationToken cancellationToken = default)
     {
         // Check for duplicate Code (if provided)
         if (!string.IsNullOrWhiteSpace(request.Code))
         {
-            var exists = await _activityRepository.ExistsByCodeAsync(request.Code);
+            var exists = await _activityRepository.ExistsByCodeAsync(request.Code, cancellationToken);
             if (exists)
             {
                 throw new InvalidOperationException($"Activity with code '{request.Code}' already exists");
@@ -94,7 +94,7 @@ public class ActivityService : IActivityService
         // Check for duplicate ID (if provided for legacy import)
         if (request.Id.HasValue)
         {
-            var idExists = await _activityRepository.ExistsAsync(request.Id.Value);
+            var idExists = await _activityRepository.ExistsAsync(request.Id.Value, cancellationToken);
             if (idExists)
             {
                 throw new InvalidOperationException($"Activity with ID '{request.Id.Value}' already exists");
@@ -102,7 +102,7 @@ public class ActivityService : IActivityService
         }
 
         // Generate new ID if not provided (since entity uses ValueGeneratedNever)
-        var activityId = request.Id ?? await GetNextIdAsync();
+        var activityId = request.Id ?? await GetNextIdAsync(cancellationToken);
 
         var activity = new Activity
         {
@@ -117,7 +117,7 @@ public class ActivityService : IActivityService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _activityRepository.CreateAsync(activity);
+        var id = await _activityRepository.CreateAsync(activity, cancellationToken);
         activity.Id = id; // Set the ID returned by repository
 
         _logger.LogInformation("Created activity with ID {ActivityId} and code {Code}",
@@ -141,9 +141,9 @@ public class ActivityService : IActivityService
     /// <summary>
     /// Updates an existing activity.
     /// </summary>
-    public async Task<ActivityDto?> UpdateAsync(int id, UpdateActivityRequest request)
+    public async Task<ActivityDto?> UpdateAsync(int id, UpdateActivityRequest request, CancellationToken cancellationToken = default)
     {
-        var activity = await _activityRepository.GetByIdAsync(id);
+        var activity = await _activityRepository.GetByIdAsync(id, cancellationToken);
 
         if (activity == null || !activity.IsActive)
         {
@@ -154,7 +154,7 @@ public class ActivityService : IActivityService
         // Check for duplicate Code (if provided and changed)
         if (!string.IsNullOrWhiteSpace(request.Code) && request.Code != activity.Code)
         {
-            var duplicateExists = await _activityRepository.ExistsByCodeAsync(request.Code);
+            var duplicateExists = await _activityRepository.ExistsByCodeAsync(request.Code, cancellationToken);
             if (duplicateExists)
             {
                 throw new InvalidOperationException($"Activity with code '{request.Code}' already exists");
@@ -169,7 +169,7 @@ public class ActivityService : IActivityService
         activity.Icon = request.Icon;
         activity.UpdatedAt = DateTime.UtcNow;
 
-        await _activityRepository.UpdateAsync(activity);
+        await _activityRepository.UpdateAsync(activity, cancellationToken);
 
         _logger.LogInformation("Updated activity with ID {ActivityId}", id);
 
@@ -191,9 +191,9 @@ public class ActivityService : IActivityService
     /// <summary>
     /// Archives (soft-deletes) an activity.
     /// </summary>
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var activity = await _activityRepository.GetByIdAsync(id);
+        var activity = await _activityRepository.GetByIdAsync(id, cancellationToken);
 
         if (activity == null || !activity.IsActive)
         {
@@ -204,7 +204,7 @@ public class ActivityService : IActivityService
         activity.IsActive = false;
         activity.UpdatedAt = DateTime.UtcNow;
 
-        await _activityRepository.UpdateAsync(activity);
+        await _activityRepository.UpdateAsync(activity, cancellationToken);
 
         _logger.LogInformation("Archived activity with ID {ActivityId}", id);
         return true;
@@ -214,9 +214,9 @@ public class ActivityService : IActivityService
     /// Gets the next available ID for a new activity.
     /// Required because Activity entity uses ValueGeneratedNever().
     /// </summary>
-    private async Task<int> GetNextIdAsync()
+    private async Task<int> GetNextIdAsync(CancellationToken cancellationToken = default)
     {
-        var allActivities = await _activityRepository.GetAllAsync();
+        var allActivities = await _activityRepository.GetAllAsync(cancellationToken);
         var maxId = allActivities.Any() ? allActivities.Max(a => a.Id) : 0;
         return maxId + 1;
     }

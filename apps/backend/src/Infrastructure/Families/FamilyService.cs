@@ -27,9 +27,9 @@ public class FamilyService : IFamilyService
         _logger = logger;
     }
 
-    public async Task<List<FamilyDto>> GetAllAsync()
+    public async Task<List<FamilyDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var families = (await _familyRepository.GetActiveAsync())
+        var families = (await _familyRepository.GetActiveAsync(cancellationToken))
             .OrderBy(f => f.FamilyName)
             .ToList();
 
@@ -43,9 +43,9 @@ public class FamilyService : IFamilyService
         return result;
     }
 
-    public async Task<FamilyDto?> GetByIdAsync(int id)
+    public async Task<FamilyDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var family = await _familyRepository.GetByIdAsync(id);
+        var family = await _familyRepository.GetByIdAsync(id, cancellationToken);
         if (family == null || !family.IsActive)
         {
             return null;
@@ -55,7 +55,7 @@ public class FamilyService : IFamilyService
         return MapToDto(family, students);
     }
 
-    public async Task<FamilyDto> CreateAsync(CreateFamilyRequest request)
+    public async Task<FamilyDto> CreateAsync(CreateFamilyRequest request, CancellationToken cancellationToken = default)
     {
         var family = new Family
         {
@@ -69,16 +69,16 @@ public class FamilyService : IFamilyService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _familyRepository.CreateAsync(family);
+        var id = await _familyRepository.CreateAsync(family, cancellationToken);
         family.Id = id;
 
         _logger.LogInformation("Created family with ID {FamilyId}", family.Id);
         return MapToDto(family, new List<StudentFamilyDto>());
     }
 
-    public async Task<FamilyDto?> UpdateAsync(int id, UpdateFamilyRequest request)
+    public async Task<FamilyDto?> UpdateAsync(int id, UpdateFamilyRequest request, CancellationToken cancellationToken = default)
     {
-        var family = await _familyRepository.GetByIdAsync(id);
+        var family = await _familyRepository.GetByIdAsync(id, cancellationToken);
         if (family == null)
         {
             return null;
@@ -93,15 +93,15 @@ public class FamilyService : IFamilyService
         family.IsActive = request.IsActive;
         family.UpdatedAt = DateTime.UtcNow;
 
-        await _familyRepository.UpdateAsync(family);
+        await _familyRepository.UpdateAsync(family, cancellationToken);
 
         _logger.LogInformation("Updated family with ID {FamilyId}", id);
-        return await GetByIdAsync(id);
+        return await GetByIdAsync(id, cancellationToken);
     }
 
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var family = await _familyRepository.GetByIdAsync(id);
+        var family = await _familyRepository.GetByIdAsync(id, cancellationToken);
         if (family == null || !family.IsActive)
         {
             return false;
@@ -110,13 +110,13 @@ public class FamilyService : IFamilyService
         family.IsActive = false;
         family.UpdatedAt = DateTime.UtcNow;
 
-        await _familyRepository.UpdateAsync(family);
+        await _familyRepository.UpdateAsync(family, cancellationToken);
 
         _logger.LogInformation("Archived family with ID {FamilyId}", id);
         return true;
     }
 
-    public async Task<List<FamilyDto>> GetByStudentIdAsync(int studentId)
+    public async Task<List<FamilyDto>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default)
     {
         const string sql = @"
             SELECT f.id, f.family_name, f.primary_contact_name, f.phone, f.email,
@@ -151,12 +151,12 @@ public class FamilyService : IFamilyService
         return result;
     }
 
-    public async Task<bool> LinkToStudentAsync(int studentId, LinkFamilyRequest request)
+    public async Task<bool> LinkToStudentAsync(int studentId, LinkFamilyRequest request, CancellationToken cancellationToken = default)
     {
-        var studentExists = await _studentRepository.ExistsAsync(studentId);
+        var studentExists = await _studentRepository.ExistsAsync(studentId, cancellationToken);
         if (!studentExists) return false;
 
-        var familyExists = await _familyRepository.ExistsAsync(request.FamilyId);
+        var familyExists = await _familyRepository.ExistsAsync(request.FamilyId, cancellationToken);
         if (!familyExists) return false;
 
         // Check if already linked
@@ -186,7 +186,7 @@ public class FamilyService : IFamilyService
         return true;
     }
 
-    public async Task<bool> UnlinkFromStudentAsync(int studentId, int familyId)
+    public async Task<bool> UnlinkFromStudentAsync(int studentId, int familyId, CancellationToken cancellationToken = default)
     {
         const string sql = @"
             DELETE FROM student_families

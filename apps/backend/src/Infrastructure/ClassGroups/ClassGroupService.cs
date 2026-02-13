@@ -30,9 +30,9 @@ public class ClassGroupService : IClassGroupService
     /// <summary>
     /// Gets all active class groups with optional filtering.
     /// </summary>
-    public async Task<List<ClassGroupDto>> GetAllAsync(int? schoolId = null, int? truckId = null)
+    public async Task<List<ClassGroupDto>> GetAllAsync(int? schoolId = null, int? truckId = null, CancellationToken cancellationToken = default)
     {
-        var classGroups = await _classGroupRepository.GetActiveAsync();
+        var classGroups = await _classGroupRepository.GetActiveAsync(cancellationToken);
         var entities = classGroups.ToList();
 
         // Apply filters
@@ -56,7 +56,7 @@ public class ClassGroupService : IClassGroupService
         var result = new List<ClassGroupDto>();
         foreach (var cg in entities)
         {
-            result.Add(await MapToDtoAsync(cg));
+            result.Add(await MapToDtoAsync(cg, cancellationToken));
         }
 
         _logger.LogInformation("Retrieved {Count} active class groups (SchoolId: {SchoolId}, TruckId: {TruckId})",
@@ -67,9 +67,9 @@ public class ClassGroupService : IClassGroupService
     /// <summary>
     /// Gets a class group by ID with school and truck details.
     /// </summary>
-    public async Task<ClassGroupDto?> GetByIdAsync(int id)
+    public async Task<ClassGroupDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var entity = await _classGroupRepository.GetByIdAsync(id);
+        var entity = await _classGroupRepository.GetByIdAsync(id, cancellationToken);
 
         if (entity == null || !entity.IsActive)
         {
@@ -78,16 +78,16 @@ public class ClassGroupService : IClassGroupService
         }
 
         _logger.LogInformation("Retrieved class group with ID {ClassGroupId}", id);
-        return await MapToDtoAsync(entity);
+        return await MapToDtoAsync(entity, cancellationToken);
     }
 
     /// <summary>
     /// Creates a new class group.
     /// </summary>
-    public async Task<ClassGroupDto> CreateAsync(CreateClassGroupRequest request)
+    public async Task<ClassGroupDto> CreateAsync(CreateClassGroupRequest request, CancellationToken cancellationToken = default)
     {
         // Validate that the school exists
-        var schoolExists = await _schoolRepository.ExistsAsync(request.SchoolId);
+        var schoolExists = await _schoolRepository.ExistsAsync(request.SchoolId, cancellationToken);
         if (!schoolExists)
         {
             throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist");
@@ -96,7 +96,7 @@ public class ClassGroupService : IClassGroupService
         // Validate that the truck exists (if provided)
         if (request.TruckId.HasValue)
         {
-            var truckExists = await _truckRepository.ExistsAsync(request.TruckId.Value);
+            var truckExists = await _truckRepository.ExistsAsync(request.TruckId.Value, cancellationToken);
             if (!truckExists)
             {
                 throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist");
@@ -131,23 +131,23 @@ public class ClassGroupService : IClassGroupService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _classGroupRepository.CreateAsync(classGroup);
+        var id = await _classGroupRepository.CreateAsync(classGroup, cancellationToken);
         classGroup.Id = id;
 
         _logger.LogInformation("Created class group with ID {ClassGroupId}: {Name} at School {SchoolId}",
             classGroup.Id, classGroup.Name, classGroup.SchoolId);
 
         // Reload with navigation properties
-        var created = await GetByIdAsync(classGroup.Id);
+        var created = await GetByIdAsync(classGroup.Id, cancellationToken);
         return created!;
     }
 
     /// <summary>
     /// Updates an existing class group.
     /// </summary>
-    public async Task<ClassGroupDto?> UpdateAsync(int id, UpdateClassGroupRequest request)
+    public async Task<ClassGroupDto?> UpdateAsync(int id, UpdateClassGroupRequest request, CancellationToken cancellationToken = default)
     {
-        var classGroup = await _classGroupRepository.GetByIdAsync(id);
+        var classGroup = await _classGroupRepository.GetByIdAsync(id, cancellationToken);
 
         if (classGroup == null || !classGroup.IsActive)
         {
@@ -156,7 +156,7 @@ public class ClassGroupService : IClassGroupService
         }
 
         // Validate that the school exists
-        var schoolExists = await _schoolRepository.ExistsAsync(request.SchoolId);
+        var schoolExists = await _schoolRepository.ExistsAsync(request.SchoolId, cancellationToken);
         if (!schoolExists)
         {
             throw new InvalidOperationException($"School with ID {request.SchoolId} does not exist");
@@ -165,7 +165,7 @@ public class ClassGroupService : IClassGroupService
         // Validate that the truck exists (if provided)
         if (request.TruckId.HasValue)
         {
-            var truckExists = await _truckRepository.ExistsAsync(request.TruckId.Value);
+            var truckExists = await _truckRepository.ExistsAsync(request.TruckId.Value, cancellationToken);
             if (!truckExists)
             {
                 throw new InvalidOperationException($"Truck with ID {request.TruckId.Value} does not exist");
@@ -197,21 +197,21 @@ public class ClassGroupService : IClassGroupService
         classGroup.IsActive = request.IsActive;
         classGroup.UpdatedAt = DateTime.UtcNow;
 
-        await _classGroupRepository.UpdateAsync(classGroup);
+        await _classGroupRepository.UpdateAsync(classGroup, cancellationToken);
 
         _logger.LogInformation("Updated class group with ID {ClassGroupId}", id);
 
         // Reload with navigation properties
-        var updated = await GetByIdAsync(id);
+        var updated = await GetByIdAsync(id, cancellationToken);
         return updated;
     }
 
     /// <summary>
     /// Archives (soft-deletes) a class group.
     /// </summary>
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var classGroup = await _classGroupRepository.GetByIdAsync(id);
+        var classGroup = await _classGroupRepository.GetByIdAsync(id, cancellationToken);
 
         if (classGroup == null || !classGroup.IsActive)
         {
@@ -222,7 +222,7 @@ public class ClassGroupService : IClassGroupService
         classGroup.IsActive = false;
         classGroup.UpdatedAt = DateTime.UtcNow;
 
-        await _classGroupRepository.UpdateAsync(classGroup);
+        await _classGroupRepository.UpdateAsync(classGroup, cancellationToken);
 
         _logger.LogInformation("Archived class group with ID {ClassGroupId}", id);
         return true;
@@ -231,14 +231,14 @@ public class ClassGroupService : IClassGroupService
     /// <summary>
     /// Checks for scheduling conflicts with existing class groups.
     /// </summary>
-    public async Task<CheckConflictsResponse> CheckConflictsAsync(CheckConflictsRequest request)
+    public async Task<CheckConflictsResponse> CheckConflictsAsync(CheckConflictsRequest request, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
             "Checking conflicts for TruckId: {TruckId}, DayOfWeek: {DayOfWeek}, StartTime: {StartTime}, EndTime: {EndTime}, ExcludeId: {ExcludeId}",
             request.TruckId, request.DayOfWeek, request.StartTime, request.EndTime, request.ExcludeId);
 
         // Get all active class groups
-        var allClassGroups = (await _classGroupRepository.GetActiveAsync()).ToList();
+        var allClassGroups = (await _classGroupRepository.GetActiveAsync(cancellationToken)).ToList();
 
         // Filter by truck
         var matchingClassGroups = allClassGroups
@@ -266,7 +266,7 @@ public class ClassGroupService : IClassGroupService
             if (cg.StartTime < request.EndTime && request.StartTime < cg.EndTime)
             {
                 // Load school name for conflict display
-                var school = await _schoolRepository.GetByIdAsync(cg.SchoolId);
+                var school = await _schoolRepository.GetByIdAsync(cg.SchoolId, cancellationToken);
                 conflicts.Add(new ScheduleConflictDto
                 {
                     Id = cg.Id,
@@ -398,12 +398,12 @@ public class ClassGroupService : IClassGroupService
     /// <summary>
     /// Maps a ClassGroup entity to a ClassGroupDto, loading related entities.
     /// </summary>
-    private async Task<ClassGroupDto> MapToDtoAsync(ClassGroup cg)
+    private async Task<ClassGroupDto> MapToDtoAsync(ClassGroup cg, CancellationToken cancellationToken = default)
     {
         SchoolDto? schoolDto = null;
         if (cg.SchoolId > 0)
         {
-            var school = await _schoolRepository.GetByIdAsync(cg.SchoolId);
+            var school = await _schoolRepository.GetByIdAsync(cg.SchoolId, cancellationToken);
             if (school != null)
             {
                 schoolDto = new SchoolDto
@@ -418,7 +418,7 @@ public class ClassGroupService : IClassGroupService
         TruckDto? truckDto = null;
         if (cg.TruckId.HasValue)
         {
-            var truck = await _truckRepository.GetByIdAsync(cg.TruckId.Value);
+            var truck = await _truckRepository.GetByIdAsync(cg.TruckId.Value, cancellationToken);
             if (truck != null)
             {
                 truckDto = new TruckDto

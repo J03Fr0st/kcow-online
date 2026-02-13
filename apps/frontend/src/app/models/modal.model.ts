@@ -8,7 +8,7 @@ export interface ModalConfig {
   dismissible?: boolean;
   backdropDismiss?: boolean;
   showCloseButton?: boolean;
-  data?: any;
+  data?: unknown;
 }
 
 export interface ModalButton {
@@ -29,8 +29,8 @@ export interface ConfirmationConfig {
 
 export interface Modal {
   id: string;
-  component?: Type<any>;
+  component?: Type<unknown>;
   config: ModalConfig;
-  resolve: (result?: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (result?: unknown) => void;
+  reject: (reason?: unknown) => void;
 }

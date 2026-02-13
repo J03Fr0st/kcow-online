@@ -23,7 +23,7 @@ import { ErrorLoggingService } from './error-logging.service';
 export class GlobalErrorHandler implements ErrorHandler {
   private errorLogger = inject(ErrorLoggingService);
 
-  handleError(error: any): void {
+  handleError(error: unknown): void {
     // Prevent infinite error loops
     if (this.isErrorHandlingError(error)) {
       console.error('Error in error handler:', error);
@@ -37,6 +37,9 @@ export class GlobalErrorHandler implements ErrorHandler {
     const errorType = this.determineErrorType(actualError);
     const severity = this.determineSeverity(actualError, errorType);
 
+    // Extract Angular-specific zone/task info if available
+    const errorRecord = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+
     // Log the error
     this.errorLogger.logError(actualError, {
       logToConsole: true,
@@ -45,8 +48,8 @@ export class GlobalErrorHandler implements ErrorHandler {
       severity,
       context: {
         type: errorType,
-        zone: (error as any)?.zone,
-        task: (error as any)?.task,
+        zone: errorRecord?.['zone'],
+        task: errorRecord?.['task'],
       },
     });
 
@@ -57,14 +60,18 @@ export class GlobalErrorHandler implements ErrorHandler {
   /**
    * Extract the actual error from Angular's error wrapper
    */
-  private extractError(error: any): Error {
-    // Angular wraps errors in a custom object
-    if (error?.rejection) {
-      return error.rejection;
-    }
+  private extractError(error: unknown): Error {
+    // Angular wraps errors in a custom object with rejection or error properties
+    if (error != null && typeof error === 'object') {
+      const errorObj = error as Record<string, unknown>;
 
-    if (error?.error) {
-      return error.error;
+      if (errorObj['rejection'] instanceof Error) {
+        return errorObj['rejection'];
+      }
+
+      if (errorObj['error'] instanceof Error) {
+        return errorObj['error'];
+      }
     }
 
     if (error instanceof Error) {
@@ -124,9 +131,9 @@ export class GlobalErrorHandler implements ErrorHandler {
   /**
    * Check if this is an error that occurred during error handling
    */
-  private isErrorHandlingError(error: any): boolean {
+  private isErrorHandlingError(error: unknown): boolean {
     // Check if error originated from error handling code
-    const stack = error?.stack || '';
+    const stack = error instanceof Error ? (error.stack ?? '') : '';
     return stack.includes('error-logging.service') || stack.includes('global-error-handler');
   }
 }

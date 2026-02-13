@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, type OnDestroy, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, type OnDestroy, type OnInit } from '@angular/core';
 import {
   FormBuilder,
   type FormGroup,
@@ -23,6 +23,7 @@ import { ThemeService } from '@core/services/theme.service';
   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterLink],
   templateUrl: './workspace-settings.component.html',
   styleUrls: ['./workspace-settings.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WorkspaceSettingsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);

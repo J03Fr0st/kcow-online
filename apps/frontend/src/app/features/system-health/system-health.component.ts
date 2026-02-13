@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, type OnDestroy, type OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, type OnDestroy, type OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { HealthMetric } from '@core/services/system-health.service';
@@ -12,6 +12,7 @@ import { interval, type Subscription } from 'rxjs';
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './system-health.component.html',
   styleUrls: ['./system-health.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SystemHealthComponent implements OnInit, OnDestroy {
   private healthService = inject(SystemHealthService);
@@ -204,7 +205,7 @@ export class SystemHealthComponent implements OnInit, OnDestroy {
   /**
    * Get overall health summary
    */
-  public getHealthSummary(): any {
+  public getHealthSummary(): { status: string; issues: number; uptime: number } {
     return this.healthService.getHealthSummary();
   }
 

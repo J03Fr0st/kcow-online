@@ -25,7 +25,7 @@ public class AttendanceRepository : IAttendanceRepository
         int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
 
         var sql = @"
             SELECT a.id, a.student_id, s.first_name AS student_first_name, s.last_name AS student_last_name,
@@ -71,12 +71,12 @@ public class AttendanceRepository : IAttendanceRepository
             sql += $" LIMIT {pageSize} OFFSET {offset}";
         }
 
-        return await connection.QueryAsync<AttendanceWithNames>(sql, parameters);
+        return await connection.QueryAsync<AttendanceWithNames>(new CommandDefinition(sql, parameters, cancellationToken: cancellationToken));
     }
 
     public async Task<AttendanceWithNames?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT a.id, a.student_id, s.first_name AS student_first_name, s.last_name AS student_last_name,
                    a.class_group_id, cg.name AS class_group_name,
@@ -85,12 +85,12 @@ public class AttendanceRepository : IAttendanceRepository
             INNER JOIN students s ON a.student_id = s.id
             INNER JOIN class_groups cg ON a.class_group_id = cg.id
             WHERE a.id = @Id";
-        return await connection.QueryFirstOrDefaultAsync<AttendanceWithNames>(sql, new { Id = id });
+        return await connection.QueryFirstOrDefaultAsync<AttendanceWithNames>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<AttendanceWithNames>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT a.id, a.student_id, s.first_name AS student_first_name, s.last_name AS student_last_name,
                    a.class_group_id, cg.name AS class_group_name,
@@ -100,47 +100,47 @@ public class AttendanceRepository : IAttendanceRepository
             INNER JOIN class_groups cg ON a.class_group_id = cg.id
             WHERE a.student_id = @StudentId
             ORDER BY a.session_date DESC";
-        return await connection.QueryAsync<AttendanceWithNames>(sql, new { StudentId = studentId });
+        return await connection.QueryAsync<AttendanceWithNames>(new CommandDefinition(sql, new { StudentId = studentId }, cancellationToken: cancellationToken));
     }
 
     public async Task<int> CreateAsync(Kcow.Domain.Entities.Attendance attendance, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             INSERT INTO attendance (student_id, class_group_id, session_date, status, notes, created_at, modified_at)
             VALUES (@StudentId, @ClassGroupId, @SessionDate, @Status, @Notes, @CreatedAt, @ModifiedAt)
             RETURNING id";
-        return await connection.QuerySingleAsync<int>(sql, attendance);
+        return await connection.QuerySingleAsync<int>(new CommandDefinition(sql, attendance, cancellationToken: cancellationToken));
     }
 
     public async Task<bool> UpdateAsync(Kcow.Domain.Entities.Attendance attendance, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             UPDATE attendance
             SET status = @Status,
                 notes = @Notes,
                 modified_at = @ModifiedAt
             WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, attendance);
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, attendance, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "SELECT COUNT(1) FROM attendance WHERE id = @Id";
-        var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return count > 0;
     }
 
     public async Task<bool> ExistsByStudentClassGroupDateAsync(int studentId, int classGroupId, string sessionDate, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT COUNT(1) FROM attendance
             WHERE student_id = @StudentId AND class_group_id = @ClassGroupId AND session_date = @SessionDate";
-        var count = await connection.QuerySingleAsync<int>(sql, new { StudentId = studentId, ClassGroupId = classGroupId, SessionDate = sessionDate });
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(sql, new { StudentId = studentId, ClassGroupId = classGroupId, SessionDate = sessionDate }, cancellationToken: cancellationToken));
         return count > 0;
     }
 
@@ -148,7 +148,7 @@ public class AttendanceRepository : IAttendanceRepository
         List<Kcow.Domain.Entities.Attendance> attendanceRecords,
         CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         connection.Open();
 
         using var transaction = connection.BeginTransaction();

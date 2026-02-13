@@ -53,7 +53,7 @@ export interface AppError {
   url?: string;
   method?: string;
   stack?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   handled: boolean;
   retryable?: boolean;
 }
@@ -89,5 +89,5 @@ export interface ErrorHandlerOptions {
   logToServer?: boolean;
   showUserNotification?: boolean;
   severity?: ErrorSeverity;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }

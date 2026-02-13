@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '@core/services/notification.service';
 import { CardComponent } from '@shared/components/card/card.component';
@@ -10,6 +10,7 @@ import { CardComponent } from '@shared/components/card/card.component';
   imports: [CommonModule, FormsModule, CardComponent],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationsComponent {
   private readonly notificationService = inject(NotificationService);

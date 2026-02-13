@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ModalService } from '@core/services/modal.service';
 import { NotificationService } from '@core/services/notification.service';
 import { CardComponent } from '@shared/components/card/card.component';
@@ -12,6 +12,7 @@ import { SimpleModalComponent } from './simple-modal/simple-modal.component';
   imports: [CommonModule, CardComponent],
   templateUrl: './modals.component.html',
   styleUrls: ['./modals.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalsComponent {
   private modalService = inject(ModalService);

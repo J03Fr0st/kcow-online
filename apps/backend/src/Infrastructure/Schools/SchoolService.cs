@@ -22,32 +22,17 @@ public class SchoolService : ISchoolService
     /// <summary>
     /// Gets all active schools.
     /// </summary>
-    public async Task<List<SchoolDto>> GetAllAsync()
+    public async Task<List<SchoolDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var schools = (await _schoolRepository.GetActiveAsync())
+            var schools = (await _schoolRepository.GetActiveAsync(cancellationToken))
                 .OrderBy(s => s.Name)
                 .ToList();
 
             _logger.LogInformation("Retrieved {Count} active schools", schools.Count);
 
-            // Map to DTOs with error handling for individual schools
-            var dtos = new List<SchoolDto>();
-            foreach (var school in schools)
-            {
-                try
-                {
-                    dtos.Add(MapToDto(school));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error mapping school {SchoolId} to DTO. Skipping this school.", school.Id);
-                    // Continue with other schools even if one fails
-                }
-            }
-
-            return dtos;
+            return schools.Select(MapToDto).ToList();
         }
         catch (Exception ex)
         {
@@ -59,9 +44,9 @@ public class SchoolService : ISchoolService
     /// <summary>
     /// Gets a school by ID.
     /// </summary>
-    public async Task<SchoolDto?> GetByIdAsync(int id)
+    public async Task<SchoolDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var school = await _schoolRepository.GetByIdAsync(id);
+        var school = await _schoolRepository.GetByIdAsync(id, cancellationToken);
 
         if (school == null || !school.IsActive)
         {
@@ -76,12 +61,13 @@ public class SchoolService : ISchoolService
     /// <summary>
     /// Creates a new school.
     /// </summary>
-    public async Task<SchoolDto> CreateAsync(CreateSchoolRequest request)
+    public async Task<SchoolDto> CreateAsync(CreateSchoolRequest request, CancellationToken cancellationToken = default)
     {
         var school = new School
         {
             Name = request.Name,
             ShortName = request.ShortName,
+            SchoolDescription = request.SchoolDescription,
             TruckId = request.TruckId,
             Price = request.Price,
             FeeDescription = request.FeeDescription,
@@ -111,11 +97,12 @@ public class SchoolService : ISchoolService
             MoneyMessage = request.MoneyMessage,
             SafeNotes = request.SafeNotes,
             WebPage = request.WebPage,
+            Omsendbriewe = request.Omsendbriewe,
             KcowWebPageLink = request.KcowWebPageLink,
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _schoolRepository.CreateAsync(school);
+        var id = await _schoolRepository.CreateAsync(school, cancellationToken);
         school.Id = id; // Set the ID returned by repository
 
         _logger.LogInformation("Created school with ID {SchoolId} and name '{SchoolName}'",
@@ -127,9 +114,9 @@ public class SchoolService : ISchoolService
     /// <summary>
     /// Updates an existing school.
     /// </summary>
-    public async Task<SchoolDto?> UpdateAsync(int id, UpdateSchoolRequest request)
+    public async Task<SchoolDto?> UpdateAsync(int id, UpdateSchoolRequest request, CancellationToken cancellationToken = default)
     {
-        var school = await _schoolRepository.GetByIdAsync(id);
+        var school = await _schoolRepository.GetByIdAsync(id, cancellationToken);
 
         if (school == null || !school.IsActive)
         {
@@ -139,6 +126,7 @@ public class SchoolService : ISchoolService
 
         school.Name = request.Name;
         school.ShortName = request.ShortName;
+        school.SchoolDescription = request.SchoolDescription;
         school.TruckId = request.TruckId;
         school.Price = request.Price;
         school.FeeDescription = request.FeeDescription;
@@ -167,10 +155,11 @@ public class SchoolService : ISchoolService
         school.MoneyMessage = request.MoneyMessage;
         school.SafeNotes = request.SafeNotes;
         school.WebPage = request.WebPage;
+        school.Omsendbriewe = request.Omsendbriewe;
         school.KcowWebPageLink = request.KcowWebPageLink;
         school.UpdatedAt = DateTime.UtcNow;
 
-        await _schoolRepository.UpdateAsync(school);
+        await _schoolRepository.UpdateAsync(school, cancellationToken);
 
         _logger.LogInformation("Updated school with ID {SchoolId}", id);
 
@@ -180,9 +169,9 @@ public class SchoolService : ISchoolService
     /// <summary>
     /// Archives (soft-deletes) a school.
     /// </summary>
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var school = await _schoolRepository.GetByIdAsync(id);
+        var school = await _schoolRepository.GetByIdAsync(id, cancellationToken);
 
         if (school == null || !school.IsActive)
         {
@@ -193,7 +182,7 @@ public class SchoolService : ISchoolService
         school.IsActive = false;
         school.UpdatedAt = DateTime.UtcNow;
 
-        await _schoolRepository.UpdateAsync(school);
+        await _schoolRepository.UpdateAsync(school, cancellationToken);
 
         _logger.LogInformation("Archived school with ID {SchoolId}", id);
         return true;
@@ -209,6 +198,7 @@ public class SchoolService : ISchoolService
             Id = school.Id,
             Name = school.Name,
             ShortName = school.ShortName,
+            SchoolDescription = school.SchoolDescription,
             TruckId = school.TruckId,
             Price = school.Price,
             FeeDescription = school.FeeDescription,
@@ -238,7 +228,9 @@ public class SchoolService : ISchoolService
             MoneyMessage = school.MoneyMessage,
             SafeNotes = school.SafeNotes,
             WebPage = school.WebPage,
+            Omsendbriewe = school.Omsendbriewe,
             KcowWebPageLink = school.KcowWebPageLink,
+            LegacyId = school.LegacyId,
             CreatedAt = school.CreatedAt,
             UpdatedAt = school.UpdatedAt
         };

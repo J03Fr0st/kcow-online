@@ -16,21 +16,21 @@ public interface IStudentService
     /// <param name="classGroupId">Optional class group ID filter</param>
     /// <param name="search">Optional search term for name or reference</param>
     /// <returns>Paged response of student list DTOs</returns>
-    Task<PagedResponse<StudentListDto>> GetPagedAsync(int page, int pageSize, int? schoolId = null, int? classGroupId = null, string? search = null);
+    Task<PagedResponse<StudentListDto>> GetPagedAsync(int page, int pageSize, int? schoolId = null, int? classGroupId = null, string? search = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a student by ID with school, class group, and family details.
     /// </summary>
     /// <param name="id">Student ID</param>
     /// <returns>Student DTO or null if not found</returns>
-    Task<StudentDto?> GetByIdAsync(int id);
+    Task<StudentDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new student.
     /// </summary>
     /// <param name="request">Create student request</param>
     /// <returns>Created student DTO</returns>
-    Task<StudentDto> CreateAsync(CreateStudentRequest request);
+    Task<StudentDto> CreateAsync(CreateStudentRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates an existing student.
@@ -38,14 +38,14 @@ public interface IStudentService
     /// <param name="id">Student ID</param>
     /// <param name="request">Update student request</param>
     /// <returns>Updated student DTO or null if not found</returns>
-    Task<StudentDto?> UpdateAsync(int id, UpdateStudentRequest request);
+    Task<StudentDto?> UpdateAsync(int id, UpdateStudentRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Archives (soft-deletes) a student by setting IsActive to false.
     /// </summary>
     /// <param name="id">Student ID</param>
     /// <returns>True if student was archived, false if not found</returns>
-    Task<bool> ArchiveAsync(int id);
+    Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Searches for students by name (case-insensitive contains search).
@@ -53,5 +53,5 @@ public interface IStudentService
     /// <param name="query">Search term to match against first name or last name</param>
     /// <param name="limit">Maximum number of results to return</param>
     /// <returns>List of student search result DTOs</returns>
-    Task<List<StudentSearchResultDto>> SearchAsync(string query, int limit = 10);
+    Task<List<StudentSearchResultDto>> SearchAsync(string query, int limit = 10, CancellationToken cancellationToken = default);
 }

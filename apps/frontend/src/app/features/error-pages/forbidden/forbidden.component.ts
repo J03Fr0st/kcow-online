@@ -1,5 +1,5 @@
 import { CommonModule, type Location } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type Router, RouterLink } from '@angular/router';
 
 /**
@@ -131,6 +131,7 @@ import { type Router, RouterLink } from '@angular/router';
       }
     `,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForbiddenComponent {
   constructor(

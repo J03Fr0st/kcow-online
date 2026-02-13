@@ -1,4 +1,4 @@
-import { Component, inject, model, forwardRef, OnInit, effect, output, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, model, forwardRef, OnInit, effect, output, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { FamilyService, type Family } from '@core/services/family.service';
@@ -19,6 +19,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             multi: true,
         },
     ],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FamilySelectComponent implements ControlValueAccessor, OnInit {
     protected familyService = inject(FamilyService);

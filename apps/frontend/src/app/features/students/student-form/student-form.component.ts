@@ -694,7 +694,7 @@ export class StudentFormComponent implements OnInit {
         const formValue = { ...this.form.value };
         
         // Clean up empty strings for nullable backend fields
-        const cleanupNullable = (val: any) => {
+        const cleanupNullable = (val: unknown): unknown => {
             if (val === null || val === undefined) return null;
             if (typeof val === 'string' && (val.trim() === '' || val.trim() === 'null')) return null;
             return val;

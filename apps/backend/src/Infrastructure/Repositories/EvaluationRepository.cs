@@ -18,7 +18,7 @@ public class EvaluationRepository : IEvaluationRepository
 
     public async Task<IEnumerable<EvaluationWithNames>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT e.id, e.student_id, s.first_name AS student_first_name, s.last_name AS student_last_name,
                    e.activity_id, a.name AS activity_name,
@@ -28,12 +28,12 @@ public class EvaluationRepository : IEvaluationRepository
             INNER JOIN students s ON e.student_id = s.id
             INNER JOIN activities a ON e.activity_id = a.id
             ORDER BY e.evaluation_date DESC, s.last_name, s.first_name";
-        return await connection.QueryAsync<EvaluationWithNames>(sql);
+        return await connection.QueryAsync<EvaluationWithNames>(new CommandDefinition(sql, cancellationToken: cancellationToken));
     }
 
     public async Task<EvaluationWithNames?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT e.id, e.student_id, s.first_name AS student_first_name, s.last_name AS student_last_name,
                    e.activity_id, a.name AS activity_name,
@@ -43,12 +43,12 @@ public class EvaluationRepository : IEvaluationRepository
             INNER JOIN students s ON e.student_id = s.id
             INNER JOIN activities a ON e.activity_id = a.id
             WHERE e.id = @Id";
-        return await connection.QueryFirstOrDefaultAsync<EvaluationWithNames>(sql, new { Id = id });
+        return await connection.QueryFirstOrDefaultAsync<EvaluationWithNames>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
     }
 
     public async Task<IEnumerable<EvaluationWithNames>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             SELECT e.id, e.student_id, s.first_name AS student_first_name, s.last_name AS student_last_name,
                    e.activity_id, a.name AS activity_name,
@@ -59,22 +59,22 @@ public class EvaluationRepository : IEvaluationRepository
             INNER JOIN activities a ON e.activity_id = a.id
             WHERE e.student_id = @StudentId
             ORDER BY e.evaluation_date DESC";
-        return await connection.QueryAsync<EvaluationWithNames>(sql, new { StudentId = studentId });
+        return await connection.QueryAsync<EvaluationWithNames>(new CommandDefinition(sql, new { StudentId = studentId }, cancellationToken: cancellationToken));
     }
 
     public async Task<int> CreateAsync(Kcow.Domain.Entities.Evaluation evaluation, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             INSERT INTO evaluations (student_id, activity_id, evaluation_date, score, speed_metric, accuracy_metric, notes, created_at, modified_at)
             VALUES (@StudentId, @ActivityId, @EvaluationDate, @Score, @SpeedMetric, @AccuracyMetric, @Notes, @CreatedAt, @ModifiedAt)
             RETURNING id";
-        return await connection.QuerySingleAsync<int>(sql, evaluation);
+        return await connection.QuerySingleAsync<int>(new CommandDefinition(sql, evaluation, cancellationToken: cancellationToken));
     }
 
     public async Task<bool> UpdateAsync(Kcow.Domain.Entities.Evaluation evaluation, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
             UPDATE evaluations
             SET evaluation_date = @EvaluationDate,
@@ -84,23 +84,23 @@ public class EvaluationRepository : IEvaluationRepository
                 notes = @Notes,
                 modified_at = @ModifiedAt
             WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, evaluation);
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, evaluation, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "DELETE FROM evaluations WHERE id = @Id";
-        var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return rowsAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = "SELECT COUNT(1) FROM evaluations WHERE id = @Id";
-        var count = await connection.QuerySingleAsync<int>(sql, new { Id = id });
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         return count > 0;
     }
 
@@ -108,7 +108,7 @@ public class EvaluationRepository : IEvaluationRepository
         List<Kcow.Domain.Entities.Evaluation> evaluations,
         CancellationToken cancellationToken = default)
     {
-        using var connection = _connectionFactory.Create();
+        using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         connection.Open();
 
         using var transaction = connection.BeginTransaction();

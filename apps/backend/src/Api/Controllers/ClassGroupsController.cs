@@ -37,11 +37,11 @@ public class ClassGroupsController : ControllerBase
     [ProducesResponseType(typeof(List<ClassGroupDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll([FromQuery] int? schoolId, [FromQuery] int? truckId)
+    public async Task<IActionResult> GetAll([FromQuery] int? schoolId, [FromQuery] int? truckId, CancellationToken cancellationToken)
     {
         try
         {
-            var classGroups = await _classGroupService.GetAllAsync(schoolId, truckId);
+            var classGroups = await _classGroupService.GetAllAsync(schoolId, truckId, cancellationToken);
             return Ok(classGroups);
         }
         catch (Exception ex)
@@ -62,11 +62,11 @@ public class ClassGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var classGroup = await _classGroupService.GetByIdAsync(id);
+            var classGroup = await _classGroupService.GetByIdAsync(id, cancellationToken);
 
             if (classGroup == null)
             {
@@ -98,7 +98,7 @@ public class ClassGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Create([FromBody] CreateClassGroupRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateClassGroupRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -113,7 +113,7 @@ public class ClassGroupsController : ControllerBase
 
         try
         {
-            var classGroup = await _classGroupService.CreateAsync(request);
+            var classGroup = await _classGroupService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = classGroup.Id }, classGroup);
         }
         catch (InvalidOperationException ex)
@@ -145,7 +145,7 @@ public class ClassGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateClassGroupRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateClassGroupRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -160,7 +160,7 @@ public class ClassGroupsController : ControllerBase
 
         try
         {
-            var classGroup = await _classGroupService.UpdateAsync(id, request);
+            var classGroup = await _classGroupService.UpdateAsync(id, request, cancellationToken);
 
             if (classGroup == null)
             {
@@ -201,11 +201,11 @@ public class ClassGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Archive(int id)
+    public async Task<IActionResult> Archive(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var archived = await _classGroupService.ArchiveAsync(id);
+            var archived = await _classGroupService.ArchiveAsync(id, cancellationToken);
 
             if (!archived)
             {
@@ -237,7 +237,7 @@ public class ClassGroupsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CheckConflicts([FromBody] CheckConflictsRequest request)
+    public async Task<IActionResult> CheckConflicts([FromBody] CheckConflictsRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -252,7 +252,7 @@ public class ClassGroupsController : ControllerBase
 
         try
         {
-            var result = await _classGroupService.CheckConflictsAsync(request);
+            var result = await _classGroupService.CheckConflictsAsync(request, cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)

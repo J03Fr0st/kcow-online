@@ -29,11 +29,11 @@ public class TrucksController : ControllerBase
     [ProducesResponseType(typeof(List<TruckDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         try
         {
-            var trucks = await _truckService.GetAllAsync();
+            var trucks = await _truckService.GetAllAsync(cancellationToken);
             return Ok(trucks);
         }
         catch (Exception ex)
@@ -54,11 +54,11 @@ public class TrucksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var truck = await _truckService.GetByIdAsync(id);
+            var truck = await _truckService.GetByIdAsync(id, cancellationToken);
 
             if (truck == null)
             {
@@ -90,7 +90,7 @@ public class TrucksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Create([FromBody] CreateTruckRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateTruckRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -105,7 +105,7 @@ public class TrucksController : ControllerBase
 
         try
         {
-            var truck = await _truckService.CreateAsync(request);
+            var truck = await _truckService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = truck.Id }, truck);
         }
         catch (InvalidOperationException ex)
@@ -137,7 +137,7 @@ public class TrucksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateTruckRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateTruckRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -152,7 +152,7 @@ public class TrucksController : ControllerBase
 
         try
         {
-            var truck = await _truckService.UpdateAsync(id, request);
+            var truck = await _truckService.UpdateAsync(id, request, cancellationToken);
 
             if (truck == null)
             {
@@ -193,11 +193,11 @@ public class TrucksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Archive(int id)
+    public async Task<IActionResult> Archive(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var archived = await _truckService.ArchiveAsync(id);
+            var archived = await _truckService.ArchiveAsync(id, cancellationToken);
 
             if (!archived)
             {

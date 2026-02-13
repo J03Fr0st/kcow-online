@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { StudentFormComponent } from '../student-form/student-form.component';
@@ -9,6 +9,7 @@ import { type Student } from '@core/services/student.service';
     standalone: true,
     imports: [CommonModule, StudentFormComponent],
     templateUrl: './create-student.page.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateStudentPage {
     private router = inject(Router);

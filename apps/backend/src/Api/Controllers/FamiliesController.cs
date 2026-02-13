@@ -20,11 +20,11 @@ public class FamiliesController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(List<FamilyDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         try
         {
-            var families = await _familyService.GetAllAsync();
+            var families = await _familyService.GetAllAsync(cancellationToken);
             return Ok(families);
         }
         catch (Exception ex)
@@ -38,11 +38,11 @@ public class FamiliesController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(FamilyDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var family = await _familyService.GetByIdAsync(id);
+            var family = await _familyService.GetByIdAsync(id, cancellationToken);
             if (family == null)
             {
                 return NotFound(new ProblemDetails
@@ -67,13 +67,13 @@ public class FamiliesController : ControllerBase
     [ProducesResponseType(typeof(FamilyDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Create([FromBody] CreateFamilyRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateFamilyRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         try
         {
-            var family = await _familyService.CreateAsync(request);
+            var family = await _familyService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = family.Id }, family);
         }
         catch (Exception ex)
@@ -89,13 +89,13 @@ public class FamiliesController : ControllerBase
     [ProducesResponseType(typeof(FamilyDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateFamilyRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateFamilyRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         try
         {
-            var family = await _familyService.UpdateAsync(id, request);
+            var family = await _familyService.UpdateAsync(id, request, cancellationToken);
             if (family == null)
             {
                 return NotFound(new ProblemDetails
@@ -120,11 +120,11 @@ public class FamiliesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> Archive(int id)
+    public async Task<IActionResult> Archive(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var archived = await _familyService.ArchiveAsync(id);
+            var archived = await _familyService.ArchiveAsync(id, cancellationToken);
             if (!archived)
             {
                 return NotFound(new ProblemDetails

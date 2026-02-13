@@ -40,7 +40,8 @@ public class StudentsController : ControllerBase
         [FromQuery] int pageSize = 20,
         [FromQuery] int? schoolId = null,
         [FromQuery] int? classGroupId = null,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -50,7 +51,7 @@ public class StudentsController : ControllerBase
             if (pageSize < 1) pageSize = 20;
             if (pageSize > maxPageSize) pageSize = maxPageSize;
 
-            var result = await _studentService.GetPagedAsync(page, pageSize, schoolId, classGroupId, search);
+            var result = await _studentService.GetPagedAsync(page, pageSize, schoolId, classGroupId, search, cancellationToken);
             return Ok(result);
         }
         catch (Exception ex)
@@ -69,11 +70,11 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var student = await _studentService.GetByIdAsync(id);
+            var student = await _studentService.GetByIdAsync(id, cancellationToken);
 
             if (student == null)
             {
@@ -105,7 +106,7 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Create([FromBody] CreateStudentRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateStudentRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -120,7 +121,7 @@ public class StudentsController : ControllerBase
 
         try
         {
-            var student = await _studentService.CreateAsync(request);
+            var student = await _studentService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = student.Id }, student);
         }
         catch (InvalidOperationException ex)
@@ -151,7 +152,7 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentRequest request)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateStudentRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -166,7 +167,7 @@ public class StudentsController : ControllerBase
 
         try
         {
-            var student = await _studentService.UpdateAsync(id, request);
+            var student = await _studentService.UpdateAsync(id, request, cancellationToken);
 
             if (student == null)
             {
@@ -207,11 +208,11 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Archive(int id)
+    public async Task<IActionResult> Archive(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var archived = await _studentService.ArchiveAsync(id);
+            var archived = await _studentService.ArchiveAsync(id, cancellationToken);
 
             if (!archived)
             {
@@ -235,11 +236,11 @@ public class StudentsController : ControllerBase
 
     [HttpGet("{id}/families")]
     [ProducesResponseType(typeof(List<FamilyDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetFamilies(int id)
+    public async Task<IActionResult> GetFamilies(int id, CancellationToken cancellationToken)
     {
         try
         {
-            var families = await _familyService.GetByStudentIdAsync(id);
+            var families = await _familyService.GetByStudentIdAsync(id, cancellationToken);
             return Ok(families);
         }
         catch (Exception ex)
@@ -255,13 +256,13 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> LinkFamily(int id, [FromBody] LinkFamilyRequest request)
+    public async Task<IActionResult> LinkFamily(int id, [FromBody] LinkFamilyRequest request, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         try
         {
-            var linked = await _familyService.LinkToStudentAsync(id, request);
+            var linked = await _familyService.LinkToStudentAsync(id, request, cancellationToken);
             if (!linked)
             {
                 return BadRequest(new ProblemDetails
@@ -286,11 +287,11 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UnlinkFamily(int id, int familyId)
+    public async Task<IActionResult> UnlinkFamily(int id, int familyId, CancellationToken cancellationToken)
     {
         try
         {
-            var unlinked = await _familyService.UnlinkFromStudentAsync(id, familyId);
+            var unlinked = await _familyService.UnlinkFromStudentAsync(id, familyId, cancellationToken);
             if (!unlinked)
             {
                 return NotFound(new ProblemDetails
@@ -320,7 +321,8 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Search(
         [FromQuery] string q,
-        [FromQuery] int limit = 10)
+        [FromQuery] int limit = 10,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(q))
         {
@@ -334,7 +336,7 @@ public class StudentsController : ControllerBase
 
         try
         {
-            var results = await _studentService.SearchAsync(q, limit);
+            var results = await _studentService.SearchAsync(q, limit, cancellationToken);
             return Ok(results);
         }
         catch (Exception ex)

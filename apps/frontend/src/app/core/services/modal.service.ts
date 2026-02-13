@@ -13,7 +13,7 @@ export class ModalService {
   /**
    * Open a modal with a component
    */
-  open<T = any>(component: Type<any>, config: ModalConfig = {}): Promise<T> {
+  open<T = unknown>(component: Type<unknown>, config: ModalConfig = {}): Promise<T> {
     return new Promise((resolve, reject) => {
       const id = this.generateId();
       const modal: Modal = {
@@ -95,7 +95,7 @@ export class ModalService {
   /**
    * Close a specific modal by ID
    */
-  close(id: string, result?: any): void {
+  close(id: string, result?: unknown): void {
     const modal = this.modals().find((m) => m.id === id);
     if (modal) {
       modal.resolve(result);
@@ -106,7 +106,7 @@ export class ModalService {
   /**
    * Dismiss a modal (reject the promise)
    */
-  dismiss(id: string, reason?: any): void {
+  dismiss(id: string, reason?: unknown): void {
     const modal = this.modals().find((m) => m.id === id);
     if (modal) {
       modal.reject(reason);

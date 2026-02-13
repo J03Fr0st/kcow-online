@@ -22,9 +22,9 @@ public class TruckService : ITruckService
     /// <summary>
     /// Gets all active trucks.
     /// </summary>
-    public async Task<List<TruckDto>> GetAllAsync()
+    public async Task<List<TruckDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var trucks = (await _truckRepository.GetActiveAsync())
+        var trucks = (await _truckRepository.GetActiveAsync(cancellationToken))
             .Select(t => new TruckDto
             {
                 Id = t.Id,
@@ -46,9 +46,9 @@ public class TruckService : ITruckService
     /// <summary>
     /// Gets a truck by ID.
     /// </summary>
-    public async Task<TruckDto?> GetByIdAsync(int id)
+    public async Task<TruckDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var truck = await _truckRepository.GetByIdAsync(id);
+        var truck = await _truckRepository.GetByIdAsync(id, cancellationToken);
 
         if (truck == null || !truck.IsActive)
         {
@@ -74,10 +74,10 @@ public class TruckService : ITruckService
     /// <summary>
     /// Creates a new truck.
     /// </summary>
-    public async Task<TruckDto> CreateAsync(CreateTruckRequest request)
+    public async Task<TruckDto> CreateAsync(CreateTruckRequest request, CancellationToken cancellationToken = default)
     {
         // Check for duplicate registration number
-        var exists = await _truckRepository.ExistsByRegistrationNumberAsync(request.RegistrationNumber);
+        var exists = await _truckRepository.ExistsByRegistrationNumberAsync(request.RegistrationNumber, cancellationToken);
 
         if (exists)
         {
@@ -94,7 +94,7 @@ public class TruckService : ITruckService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await _truckRepository.CreateAsync(truck);
+        var id = await _truckRepository.CreateAsync(truck, cancellationToken);
         truck.Id = id; // Set the ID returned by repository
 
         _logger.LogInformation("Created truck with ID {TruckId} and registration {RegistrationNumber}",
@@ -116,9 +116,9 @@ public class TruckService : ITruckService
     /// <summary>
     /// Updates an existing truck.
     /// </summary>
-    public async Task<TruckDto?> UpdateAsync(int id, UpdateTruckRequest request)
+    public async Task<TruckDto?> UpdateAsync(int id, UpdateTruckRequest request, CancellationToken cancellationToken = default)
     {
-        var truck = await _truckRepository.GetByIdAsync(id);
+        var truck = await _truckRepository.GetByIdAsync(id, cancellationToken);
 
         if (truck == null || !truck.IsActive)
         {
@@ -127,7 +127,7 @@ public class TruckService : ITruckService
         }
 
         // Check for duplicate registration number (excluding current truck)
-        var existingTruck = await _truckRepository.GetByRegistrationNumberAsync(request.RegistrationNumber);
+        var existingTruck = await _truckRepository.GetByRegistrationNumberAsync(request.RegistrationNumber, cancellationToken);
         if (existingTruck != null && existingTruck.Id != id)
         {
             throw new InvalidOperationException($"Truck with registration number '{request.RegistrationNumber}' already exists");
@@ -139,7 +139,7 @@ public class TruckService : ITruckService
         truck.Notes = request.Notes;
         truck.UpdatedAt = DateTime.UtcNow;
 
-        await _truckRepository.UpdateAsync(truck);
+        await _truckRepository.UpdateAsync(truck, cancellationToken);
 
         _logger.LogInformation("Updated truck with ID {TruckId}", id);
 
@@ -159,9 +159,9 @@ public class TruckService : ITruckService
     /// <summary>
     /// Archives (soft-deletes) a truck.
     /// </summary>
-    public async Task<bool> ArchiveAsync(int id)
+    public async Task<bool> ArchiveAsync(int id, CancellationToken cancellationToken = default)
     {
-        var truck = await _truckRepository.GetByIdAsync(id);
+        var truck = await _truckRepository.GetByIdAsync(id, cancellationToken);
 
         if (truck == null || !truck.IsActive)
         {
@@ -172,7 +172,7 @@ public class TruckService : ITruckService
         truck.IsActive = false;
         truck.UpdatedAt = DateTime.UtcNow;
 
-        await _truckRepository.UpdateAsync(truck);
+        await _truckRepository.UpdateAsync(truck, cancellationToken);
 
         _logger.LogInformation("Archived truck with ID {TruckId}", id);
         return true;
