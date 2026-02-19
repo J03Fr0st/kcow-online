@@ -11,106 +11,118 @@ import { test, expect } from '@playwright/test';
  *
  * Route: /students/:id/edit  (uses student-form.component.ts)
  * Spinner selector: .loading.loading-spinner.loading-lg
- * Form selector: form[formGroup] / form
- * First-name input: [formcontrolname="firstName"] / input[placeholder="First Name"]
+ * Form selector: form (first instance)
+ * First-name input: [formcontrolname="firstName"]
  * Save button: button[type="submit"] (text "Save Changes", disabled when form.invalid || isSaving)
  */
 
-test.describe('Student Edit Form - OnPush CD regression', () => {
-  test.beforeEach(async ({ page }) => {
-    const testEmail = process.env.TEST_EMAIL || 'admin@kcow.local';
-    const testPassword = process.env.TEST_PASSWORD || 'Admin123!';
+const LOGIN_EMAIL = process.env.TEST_EMAIL || 'admin@kcow.local';
+const LOGIN_PASSWORD = process.env.TEST_PASSWORD || 'Admin123!';
 
+test.describe('Student Edit Form Regression — OnPush CD fix (5218fcf)', () => {
+  let studentEditUrl: string | null = null;
+
+  test.beforeEach(async ({ page }) => {
+    // Login
     await page.goto('/login');
-    await page.locator('#email').fill(testEmail);
-    await page.locator('#password').fill(testPassword);
+    await page.locator('#email').fill(LOGIN_EMAIL);
+    await page.locator('#password').fill(LOGIN_PASSWORD);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(500);
-
     await Promise.all([
       page.waitForURL(/\/dashboard/, { timeout: 15000 }),
       page.locator('button[type="submit"]').click(),
     ]);
-
     await page.waitForTimeout(1000);
+
+    // Resolve a real student edit URL dynamically
+    await page.goto('/students');
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('table tbody')).toBeVisible({ timeout: 10000 });
+
+    const firstRow = page.locator('table tbody tr').first();
+    const rowCount = await page.locator('table tbody tr').count();
+    if (rowCount === 0) {
+      studentEditUrl = null;
+      return;
+    }
+
+    // Try to find edit link in the row, otherwise extract ID from profile link
+    const editLink = firstRow.locator('a[href*="/edit"]').first();
+    if (await editLink.count() > 0) {
+      studentEditUrl = await editLink.getAttribute('href');
+    } else {
+      const profileLink = firstRow.locator('a[href*="/students/"]').first();
+      if (await profileLink.count() > 0) {
+        const href = await profileLink.getAttribute('href');
+        const match = href?.match(/\/students\/(\d+)/);
+        if (match) {
+          studentEditUrl = `/students/${match[1]}/edit`;
+        }
+      }
+    }
+
+    // Fallback: click first row, get URL, derive edit URL
+    if (!studentEditUrl) {
+      await firstRow.click();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+      const url = page.url();
+      const match = url.match(/\/students\/(\d+)/);
+      if (match) {
+        studentEditUrl = `/students/${match[1]}/edit`;
+      }
+    }
   });
 
   test('edit form renders without getting stuck on loading spinner', async ({ page }) => {
-    // Guard: skip if no students exist in the database
-    await page.goto('/students');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    if (!studentEditUrl) { test.skip(); return; }
 
-    const rows = page.locator('table tbody tr');
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      test.skip();
-      return;
-    }
-
-    // Navigate directly to the edit form for student 1
-    await page.goto('/students/1/edit');
+    await page.goto(studentEditUrl);
     await page.waitForLoadState('networkidle');
 
-    // The spinner MUST NOT be visible once the API call resolves.
-    // This is the primary regression assertion: before the fix the spinner
-    // would stay on screen indefinitely due to OnPush + missing markForCheck().
-    const spinner = page.locator('.loading.loading-spinner.loading-lg');
-    await expect(spinner).not.toBeVisible({ timeout: 5000 });
+    // THE CRITICAL ASSERTION: spinner must disappear within 5s.
+    // Before the fix the spinner would stay on screen indefinitely due to
+    // OnPush + missing markForCheck().
+    await expect(page.locator('.loading.loading-spinner.loading-lg')).not.toBeVisible({ timeout: 5000 });
 
-    // The form must have rendered in place of the spinner
-    const form = page.locator('form');
-    await expect(form).toBeVisible({ timeout: 3000 });
+    // Form must be visible (not blank page or stuck spinner)
+    await expect(page.locator('form').first()).toBeVisible({ timeout: 3000 });
 
-    // The firstName input must be present (rendered by the @else branch)
-    const firstNameInput = page.locator('[formcontrolname="firstName"], input[placeholder="First Name"]');
-    await expect(firstNameInput.first()).toBeVisible();
+    // First name input must be present (rendered by the @else branch)
+    await expect(page.locator('[formcontrolname="firstName"]')).toBeVisible({ timeout: 3000 });
   });
 
   test('edit form populates fields with student data', async ({ page }) => {
-    // Guard: skip if no students exist in the database
-    await page.goto('/students');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    if (!studentEditUrl) { test.skip(); return; }
 
-    const rows = page.locator('table tbody tr');
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      test.skip();
-      return;
-    }
-
-    await page.goto('/students/1/edit');
+    await page.goto(studentEditUrl);
     await page.waitForLoadState('networkidle');
 
     // Wait for spinner to disappear before inspecting field values
-    const spinner = page.locator('.loading.loading-spinner.loading-lg');
-    await expect(spinner).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.loading.loading-spinner.loading-lg')).not.toBeVisible({ timeout: 5000 });
 
     // firstName must be populated with a non-empty value from the API response.
     // If markForCheck() were missing, the form itself would not render and this
     // locator would not exist at all.
-    const firstNameInput = page.locator('[formcontrolname="firstName"]').first();
+    const firstNameInput = page.locator('[formcontrolname="firstName"]');
     await expect(firstNameInput).toBeVisible({ timeout: 3000 });
 
-    const value = await firstNameInput.inputValue();
-    expect(value.length).toBeGreaterThan(0);
+    const firstNameValue = await firstNameInput.inputValue();
+    expect(firstNameValue.length).toBeGreaterThan(0);
   });
 
   test('save button is enabled after form loads with valid data', async ({ page }) => {
-    // Navigate directly - no student-count guard needed here, but we still
-    // check that the form actually loaded (not the spinner) before asserting
-    // button state.
-    await page.goto('/students/1/edit');
+    if (!studentEditUrl) { test.skip(); return; }
+
+    await page.goto(studentEditUrl);
     await page.waitForLoadState('networkidle');
 
     // Wait for the loading spinner to clear
-    const spinner = page.locator('.loading.loading-spinner.loading-lg');
-    await expect(spinner).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.loading.loading-spinner.loading-lg')).not.toBeVisible({ timeout: 5000 });
 
     // The form must be visible
-    const form = page.locator('form');
-    await expect(form).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('form').first()).toBeVisible({ timeout: 3000 });
 
     // The submit button ("Save Changes") must be present.
     // When the form is loaded with valid seeded data (firstName, lastName,
@@ -119,7 +131,7 @@ test.describe('Student Edit Form - OnPush CD regression', () => {
     const saveButton = page.locator('button[type="submit"]');
     await expect(saveButton).toBeVisible({ timeout: 3000 });
 
-    // Verify the button is not disabled - i.e., the form loaded valid data
+    // Verify the button is not disabled — i.e., the form loaded valid data
     // and Angular's CD correctly reflected the state into the DOM.
     await expect(saveButton).not.toBeDisabled();
   });
