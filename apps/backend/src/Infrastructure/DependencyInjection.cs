@@ -192,7 +192,8 @@ public static class DependencyInjection
         var seedTestData = Environment.GetEnvironmentVariable("DOTNET_SEED_TEST_DATA");
         if (seedTestData == "true" || seedTestData == "1")
         {
-            await TestDataSeeder.SeedAsync(truckRepository, logger);
+            var studentRepository = scope.ServiceProvider.GetRequiredService<IStudentRepository>();
+            await TestDataSeeder.SeedAsync(truckRepository, studentRepository, logger);
         }
     }
 }

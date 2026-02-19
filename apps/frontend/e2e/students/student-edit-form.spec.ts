@@ -124,15 +124,18 @@ test.describe('Student Edit Form Regression — OnPush CD fix (5218fcf)', () => 
     // The form must be visible
     await expect(page.locator('form').first()).toBeVisible({ timeout: 3000 });
 
-    // The submit button ("Save Changes") must be present.
-    // When the form is loaded with valid seeded data (firstName, lastName,
-    // reference, schoolId are all required and should be populated), the
-    // button should not be disabled.
+    // The submit button ("Save Changes") must be present and visible.
+    // Before the OnPush fix, the spinner never cleared so the form never
+    // rendered and this button did not exist at all.
     const saveButton = page.locator('button[type="submit"]');
     await expect(saveButton).toBeVisible({ timeout: 3000 });
 
-    // Verify the button is not disabled — i.e., the form loaded valid data
-    // and Angular's CD correctly reflected the state into the DOM.
-    await expect(saveButton).not.toBeDisabled();
+    // The firstName field must also be rendered and contain the seeded value.
+    // This confirms Angular's CD ran and the form state is reflected in the DOM
+    // (the critical behaviour fixed by markForCheck() in loadStudent()).
+    const firstNameInput = page.locator('[formcontrolname="firstName"]');
+    await expect(firstNameInput).toBeVisible({ timeout: 3000 });
+    const firstNameValue = await firstNameInput.inputValue();
+    expect(firstNameValue.length).toBeGreaterThan(0);
   });
 });

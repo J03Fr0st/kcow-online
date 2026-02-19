@@ -103,8 +103,9 @@ test.describe('Student Form Tab Switching Regression — tab fix (3609804)', () 
     await expect(page.locator('[role="tablist"]')).toBeVisible();
 
     for (const tabName of TAB_NAMES) {
+      // Use exact text match to avoid "Class Groups" matching "Class Groups Attendance"
       await expect(
-        page.locator(`[role="tab"]:has-text("${tabName}")`)
+        page.getByRole('tab', { name: tabName, exact: true })
       ).toBeVisible();
     }
   });
