@@ -1,5 +1,5 @@
-import { Injectable, signal, inject, PLATFORM_ID, DestroyRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { DestroyRef, Injectable, inject, PLATFORM_ID, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';

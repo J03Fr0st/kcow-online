@@ -1,11 +1,11 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { computed, Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, of, map, throwError } from 'rxjs';
+import { catchError, type Observable, of, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { LoginRequest } from '../../features/auth/models/login-request.model';
-import { LoginResponse } from '../../features/auth/models/login-response.model';
-import { User } from '../../features/auth/models/user.model';
+import type { LoginRequest } from '../../features/auth/models/login-request.model';
+import type { LoginResponse } from '../../features/auth/models/login-response.model';
+import type { User } from '../../features/auth/models/user.model';
 
 /**
  * Authentication Service
@@ -46,34 +46,32 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<LoginResponse> {
     this.isLoadingSignal.set(true);
 
-    return this.http
-      .post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials)
-      .pipe(
-        tap((response) => {
-          // Validate token exists and is not empty
-          if (!response.token || response.token.trim() === '') {
-            throw new Error('Invalid token received from server');
-          }
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
+      tap((response) => {
+        // Validate token exists and is not empty
+        if (!response.token || response.token.trim() === '') {
+          throw new Error('Invalid token received from server');
+        }
 
-          // Basic JWT format validation (xxx.yyy.zzz)
-          const tokenParts = response.token.split('.');
-          if (tokenParts.length !== 3) {
-            throw new Error('Malformed JWT token received');
-          }
+        // Basic JWT format validation (xxx.yyy.zzz)
+        const tokenParts = response.token.split('.');
+        if (tokenParts.length !== 3) {
+          throw new Error('Malformed JWT token received');
+        }
 
-          // Store auth token
-          localStorage.setItem(this.tokenKey, response.token);
+        // Store auth token
+        localStorage.setItem(this.tokenKey, response.token);
 
-          // Update user state
-          this.userSignal.set(response.user);
+        // Update user state
+        this.userSignal.set(response.user);
 
-          this.isLoadingSignal.set(false);
-        }),
-        catchError((error) => {
-          this.isLoadingSignal.set(false);
-          throw error;
-        })
-      );
+        this.isLoadingSignal.set(false);
+      }),
+      catchError((error) => {
+        this.isLoadingSignal.set(false);
+        throw error;
+      }),
+    );
   }
 
   /**
@@ -94,7 +92,7 @@ export class AuthService {
         this.clearSession();
         this.isLoadingSignal.set(false);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -130,7 +128,7 @@ export class AuthService {
           this.clearSession();
         }
         return of(null);
-      })
+      }),
     );
   }
 

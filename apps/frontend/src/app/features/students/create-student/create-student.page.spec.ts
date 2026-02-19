@@ -1,107 +1,106 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CreateStudentPage } from './create-student.page';
-import { Router, ActivatedRoute } from '@angular/router';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { StudentService, type Student } from '@core/services/student.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { type Student, StudentService } from '@core/services/student.service';
 import { of } from 'rxjs';
-import { signal } from '@angular/core';
+import { CreateStudentPage } from './create-student.page';
 
 describe('CreateStudentPage', () => {
-    let component: CreateStudentPage;
-    let fixture: ComponentFixture<CreateStudentPage>;
-    let mockRouter: jest.Mocked<Partial<Router>>;
-    let mockStudentService: Partial<StudentService>;
+  let component: CreateStudentPage;
+  let fixture: ComponentFixture<CreateStudentPage>;
+  let mockRouter: jest.Mocked<Partial<Router>>;
+  let mockStudentService: Partial<StudentService>;
 
-    const mockStudent: Student = {
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        schoolId: 1,
-        isActive: true,
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-        schoolName: 'Test School',
+  const mockStudent: Student = {
+    id: 1,
+    firstName: 'John',
+    lastName: 'Doe',
+    schoolId: 1,
+    isActive: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+    schoolName: 'Test School',
+  };
+
+  beforeEach(async () => {
+    mockRouter = {
+      navigate: jest.fn().mockResolvedValue(true),
     };
 
-    beforeEach(async () => {
-        mockRouter = {
-            navigate: jest.fn().mockResolvedValue(true),
-        };
+    mockStudentService = {
+      createStudent: jest.fn().mockReturnValue(of(mockStudent)),
+      getStudentById: jest.fn().mockReturnValue(of(mockStudent)),
+    };
 
-        mockStudentService = {
-            createStudent: jest.fn().mockReturnValue(of(mockStudent)),
-            getStudentById: jest.fn().mockReturnValue(of(mockStudent)),
-        };
+    await TestBed.configureTestingModule({
+      imports: [CreateStudentPage],
+      providers: [
+        { provide: Router, useValue: mockRouter },
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
+        { provide: StudentService, useValue: mockStudentService },
+      ],
+    }).compileComponents();
 
-        await TestBed.configureTestingModule({
-            imports: [CreateStudentPage],
-            providers: [
-                { provide: Router, useValue: mockRouter },
-                { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
-                { provide: StudentService, useValue: mockStudentService },
-            ],
-        }).compileComponents();
+    fixture = TestBed.createComponent(CreateStudentPage);
+    component = fixture.componentInstance;
+  });
 
-        fixture = TestBed.createComponent(CreateStudentPage);
-        component = fixture.componentInstance;
+  describe('Page Creation', () => {
+    it('should create', () => {
+      fixture.detectChanges();
+      expect(component).toBeTruthy();
     });
 
-    describe('Page Creation', () => {
-        it('should create', () => {
-            fixture.detectChanges();
-            expect(component).toBeTruthy();
-        });
-
-        it('should display page title "Add New Student"', () => {
-            fixture.detectChanges();
-            const title = fixture.debugElement.query(By.css('h1'));
-            expect(title.nativeElement.textContent).toContain('Add New Student');
-        });
-
-        it('should have back button to students list', () => {
-            fixture.detectChanges();
-            const backButton = fixture.debugElement.query(By.css('button[routerLink="/students"]'));
-            expect(backButton).toBeTruthy();
-        });
-
-        it('should render student form component', () => {
-            fixture.detectChanges();
-            const form = fixture.debugElement.query(By.css('app-student-form'));
-            expect(form).toBeTruthy();
-        });
+    it('should display page title "Add New Student"', () => {
+      fixture.detectChanges();
+      const title = fixture.debugElement.query(By.css('h1'));
+      expect(title.nativeElement.textContent).toContain('Add New Student');
     });
 
-    describe('Navigation', () => {
-        beforeEach(() => {
-            fixture.detectChanges();
-        });
-
-        it('should navigate to students list with created param on successful save', () => {
-            component['onStudentSaved'](mockStudent);
-
-            expect(mockRouter.navigate).toHaveBeenCalledWith(['/students'], {
-                queryParams: { created: 1 },
-            });
-        });
-
-        it('should navigate to students list on cancel', () => {
-            component['onCancel']();
-
-            expect(mockRouter.navigate).toHaveBeenCalledWith(['/students']);
-        });
+    it('should have back button to students list', () => {
+      fixture.detectChanges();
+      const backButton = fixture.debugElement.query(By.css('button[routerLink="/students"]'));
+      expect(backButton).toBeTruthy();
     });
 
-    describe('Form Integration', () => {
-        it('should pass saved event handler to student form', () => {
-            fixture.detectChanges();
-            const form = fixture.debugElement.query(By.css('app-student-form'));
-            expect(form.listeners.some(l => l.name === 'saved')).toBeTruthy();
-        });
-
-        it('should pass cancelled event handler to student form', () => {
-            fixture.detectChanges();
-            const form = fixture.debugElement.query(By.css('app-student-form'));
-            expect(form.listeners.some(l => l.name === 'cancelled')).toBeTruthy();
-        });
+    it('should render student form component', () => {
+      fixture.detectChanges();
+      const form = fixture.debugElement.query(By.css('app-student-form'));
+      expect(form).toBeTruthy();
     });
+  });
+
+  describe('Navigation', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+    });
+
+    it('should navigate to students list with created param on successful save', () => {
+      component.onStudentSaved(mockStudent);
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/students'], {
+        queryParams: { created: 1 },
+      });
+    });
+
+    it('should navigate to students list on cancel', () => {
+      component.onCancel();
+
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/students']);
+    });
+  });
+
+  describe('Form Integration', () => {
+    it('should pass saved event handler to student form', () => {
+      fixture.detectChanges();
+      const form = fixture.debugElement.query(By.css('app-student-form'));
+      expect(form.listeners.some((l) => l.name === 'saved')).toBeTruthy();
+    });
+
+    it('should pass cancelled event handler to student form', () => {
+      fixture.detectChanges();
+      const form = fixture.debugElement.query(By.css('app-student-form'));
+      expect(form.listeners.some((l) => l.name === 'cancelled')).toBeTruthy();
+    });
+  });
 });

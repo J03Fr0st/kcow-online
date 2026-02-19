@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
 import { BreadcrumbService } from '@core/services/breadcrumb.service';
 import { PageMetadataService } from '@core/services/page-metadata.service';
 import { SidebarService } from '@core/services/sidebar.service';
-import { AuthService } from '@core/services/auth.service';
 import { type Theme, ThemeService } from '@core/services/theme.service';
 import { GlobalSearchComponent } from './global-search/global-search.component';
 

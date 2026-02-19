@@ -1,12 +1,16 @@
+import { HttpClient, type HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, tap, catchError, finalize, throwError, shareReplay } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { Truck, CreateTruckRequest, UpdateTruckRequest } from '@features/trucks/models/truck.model';
+import type {
+  CreateTruckRequest,
+  Truck,
+  UpdateTruckRequest,
+} from '@features/trucks/models/truck.model';
 import { TRUCK_STATUS_OPTIONS } from '@features/trucks/models/truck.model';
+import { catchError, finalize, type Observable, shareReplay, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TruckService {
   private readonly http = inject(HttpClient);
@@ -20,7 +24,9 @@ export class TruckService {
    */
   private validateStatus(status: string): void {
     if (!(TRUCK_STATUS_OPTIONS as readonly string[]).includes(status)) {
-      throw new Error(`Invalid truck status: "${status}". Must be one of: ${TRUCK_STATUS_OPTIONS.join(', ')}`);
+      throw new Error(
+        `Invalid truck status: "${status}". Must be one of: ${TRUCK_STATUS_OPTIONS.join(', ')}`,
+      );
     }
   }
 
@@ -30,15 +36,18 @@ export class TruckService {
   loadTrucks(): void {
     this.loading.set(true);
 
-    this.http.get<Truck[]>(this.apiUrl).pipe(
-      tap((trucks) => this.trucks.set(trucks)),
-      catchError((error: HttpErrorResponse) => {
-        console.error('Error loading trucks:', error);
-        return throwError(() => error);
-      }),
-      finalize(() => this.loading.set(false)),
-      shareReplay({ bufferSize: 1, refCount: true })
-    ).subscribe();
+    this.http
+      .get<Truck[]>(this.apiUrl)
+      .pipe(
+        tap((trucks) => this.trucks.set(trucks)),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error loading trucks:', error);
+          return throwError(() => error);
+        }),
+        finalize(() => this.loading.set(false)),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      )
+      .subscribe();
   }
 
   /**
@@ -49,7 +58,7 @@ export class TruckService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error loading truck ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -69,7 +78,7 @@ export class TruckService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error creating truck:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -94,7 +103,7 @@ export class TruckService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error updating truck ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -111,7 +120,7 @@ export class TruckService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error deleting truck ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

@@ -51,5 +51,5 @@ export const MENU_ITEMS: MenuItem[] = [
     label: 'Billing',
     icon: 'billing',
     route: '/billing',
-  }
+  },
 ];

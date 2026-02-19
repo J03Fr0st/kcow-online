@@ -25,4 +25,8 @@ export interface UpdateTruckRequest {
 
 export type TruckStatus = 'Active' | 'Maintenance' | 'Retired';
 
-export const TRUCK_STATUS_OPTIONS: readonly TruckStatus[] = ['Active', 'Maintenance', 'Retired'] as const;
+export const TRUCK_STATUS_OPTIONS: readonly TruckStatus[] = [
+  'Active',
+  'Maintenance',
+  'Retired',
+] as const;

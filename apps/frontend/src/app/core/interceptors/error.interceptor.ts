@@ -1,9 +1,9 @@
-import { HttpErrorResponse, HttpHeaders, type HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, type HttpHeaders, type HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, retry, throwError, timer } from 'rxjs';
+import type { ProblemDetails } from '../../models/problem-details.model';
 import { ErrorLoggingService } from '../services/error-logging.service';
-import { ProblemDetails } from '../../models/problem-details.model';
 
 /**
  * Global HTTP error interceptor
@@ -60,7 +60,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         context: {
           requestBody: req.body,
           headers: extractHeaders(req.headers),
-          problemDetails: problemDetails,  // Include ProblemDetails for debugging
+          problemDetails: problemDetails, // Include ProblemDetails for debugging
         },
       });
 
@@ -111,7 +111,7 @@ function parseProblemDetails(error: HttpErrorResponse): ProblemDetails | null {
 function handleSpecificErrors(
   error: HttpErrorResponse,
   router: Router,
-  problemDetails: ProblemDetails | null
+  problemDetails: ProblemDetails | null,
 ): void {
   const status = error.status;
   const title = problemDetails?.title || getErrorMessage(status);

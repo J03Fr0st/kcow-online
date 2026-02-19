@@ -1,7 +1,7 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import type { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
 import { catchError, throwError } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Authentication Interceptor
@@ -15,7 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   if (token) {
     req = req.clone({
-      setHeaders: { Authorization: `Bearer ${token}` }
+      setHeaders: { Authorization: `Bearer ${token}` },
     });
   }
 
@@ -26,6 +26,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         authService.clearSessionAndRedirect();
       }
       return throwError(() => error);
-    })
+    }),
   );
 };

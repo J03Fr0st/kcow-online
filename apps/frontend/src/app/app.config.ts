@@ -1,8 +1,4 @@
-import {
-  provideHttpClient,
-  withInterceptors,
-  withXsrfConfiguration,
-} from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { type ApplicationConfig, ErrorHandler } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';

@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  inject,
+  Output,
+} from '@angular/core';
 import { ModalService } from '@core/services/modal.service';
 
 @Component({

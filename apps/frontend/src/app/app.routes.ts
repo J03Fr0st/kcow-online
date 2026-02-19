@@ -5,8 +5,7 @@ export const routes: Routes = [
   // Public route: Login page (no guard)
   {
     path: 'login',
-    loadComponent: () =>
-      import('@features/auth/login.component').then((m) => m.LoginComponent),
+    loadComponent: () => import('@features/auth/login.component').then((m) => m.LoginComponent),
     data: {
       title: 'Admin Login',
       description: 'Sign in to access the admin dashboard',
@@ -151,18 +150,18 @@ export const routes: Routes = [
       },
       {
         path: 'schools',
-        loadChildren: () =>
-          import('@features/schools/schools.routes').then((m) => m.routes),
+        loadChildren: () => import('@features/schools/schools.routes').then((m) => m.routes),
       },
       {
         path: 'students',
-        loadChildren: () =>
-          import('@features/students/students.routes').then((m) => m.routes),
+        loadChildren: () => import('@features/students/students.routes').then((m) => m.routes),
       },
       {
         path: 'trucks',
         loadComponent: () =>
-          import('@features/trucks/trucks-list/trucks-list.component').then((m) => m.TrucksListComponent),
+          import('@features/trucks/trucks-list/trucks-list.component').then(
+            (m) => m.TrucksListComponent,
+          ),
         data: {
           breadcrumb: 'Trucks',
           breadcrumbIcon: '🚚',
@@ -173,8 +172,7 @@ export const routes: Routes = [
       },
       {
         path: 'families',
-        loadChildren: () =>
-          import('@features/families/families.routes').then((m) => m.routes),
+        loadChildren: () => import('@features/families/families.routes').then((m) => m.routes),
       },
       {
         path: 'class-groups',
@@ -192,7 +190,9 @@ export const routes: Routes = [
       {
         path: 'activities',
         loadComponent: () =>
-          import('@features/activities/activities-list/activities-list.component').then((m) => m.ActivitiesListComponent),
+          import('@features/activities/activities-list/activities-list.component').then(
+            (m) => m.ActivitiesListComponent,
+          ),
         data: {
           breadcrumb: 'Activities',
           breadcrumbIcon: '🧩',
@@ -243,9 +243,7 @@ export const routes: Routes = [
       {
         path: 'import',
         loadComponent: () =>
-          import('@features/import/import-list.component').then(
-            (m) => m.ImportListComponent,
-          ),
+          import('@features/import/import-list.component').then((m) => m.ImportListComponent),
         data: {
           breadcrumb: 'Import',
           breadcrumbIcon: '📥',

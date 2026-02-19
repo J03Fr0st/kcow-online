@@ -1,10 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
-import { LoginComponent } from './login.component';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { of } from 'rxjs';
+import { LoginComponent } from './login.component';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -98,7 +98,7 @@ describe('LoginComponent', () => {
 
   describe('form submission', () => {
     it('should not submit invalid form', () => {
-      const loginSpy = jest.spyOn(component, 'onSubmit');
+      const _loginSpy = jest.spyOn(component, 'onSubmit');
       component.loginForm.setValue({ email: '', password: '' });
 
       component.onSubmit();

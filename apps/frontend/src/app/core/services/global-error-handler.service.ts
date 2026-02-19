@@ -38,7 +38,8 @@ export class GlobalErrorHandler implements ErrorHandler {
     const severity = this.determineSeverity(actualError, errorType);
 
     // Extract Angular-specific zone/task info if available
-    const errorRecord = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const errorRecord =
+      error != null && typeof error === 'object' ? (error as Record<string, unknown>) : null;
 
     // Log the error
     this.errorLogger.logError(actualError, {
@@ -48,8 +49,8 @@ export class GlobalErrorHandler implements ErrorHandler {
       severity,
       context: {
         type: errorType,
-        zone: errorRecord?.['zone'],
-        task: errorRecord?.['task'],
+        zone: errorRecord?.zone,
+        task: errorRecord?.task,
       },
     });
 
@@ -65,12 +66,12 @@ export class GlobalErrorHandler implements ErrorHandler {
     if (error != null && typeof error === 'object') {
       const errorObj = error as Record<string, unknown>;
 
-      if (errorObj['rejection'] instanceof Error) {
-        return errorObj['rejection'];
+      if (errorObj.rejection instanceof Error) {
+        return errorObj.rejection;
       }
 
-      if (errorObj['error'] instanceof Error) {
-        return errorObj['error'];
+      if (errorObj.error instanceof Error) {
+        return errorObj.error;
       }
     }
 

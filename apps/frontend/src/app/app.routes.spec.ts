@@ -1,36 +1,15 @@
-import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Component } from '@angular/core';
-import { provideRouter } from '@angular/router';
-import { routes } from './app.routes';
-import { runInInjectionContext, Injector } from '@angular/core';
+import { Injector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
-
-// Mock components for lazy-loaded routes
-@Component({ selector: 'app-login', template: '' })
-class MockLoginComponent {}
-
-@Component({ selector: 'app-admin-layout', template: '' })
-class MockAdminLayoutComponent {}
-
-@Component({ selector: 'app-dashboard', template: '' })
-class MockDashboardComponent {}
-
-@Component({ selector: 'app-not-found', template: '' })
-class MockNotFoundComponent {}
-
-@Component({ selector: 'app-forbidden', template: '' })
-class MockForbiddenComponent {}
-
-@Component({ selector: 'app-server-error', template: '' })
-class MockServerErrorComponent {}
+import { routes } from './app.routes';
 
 describe('AppRoutes', () => {
-  let router: Router;
-  let location: Location;
+  let _router: Router;
+  let _location: Location;
   let mockAuthService: jest.Mocked<AuthService>;
-  let injector: Injector;
+  let _injector: Injector;
 
   beforeEach(async () => {
     // Clear sessionStorage before each test
@@ -47,15 +26,12 @@ describe('AppRoutes', () => {
     } as any;
 
     await TestBed.configureTestingModule({
-      providers: [
-        provideRouter(routes),
-        { provide: AuthService, useValue: mockAuthService },
-      ],
+      providers: [provideRouter(routes), { provide: AuthService, useValue: mockAuthService }],
     }).compileComponents();
 
-    router = TestBed.inject(Router);
-    location = TestBed.inject(Location);
-    injector = TestBed.inject(Injector);
+    _router = TestBed.inject(Router);
+    _location = TestBed.inject(Location);
+    _injector = TestBed.inject(Injector);
   });
 
   afterEach(() => {

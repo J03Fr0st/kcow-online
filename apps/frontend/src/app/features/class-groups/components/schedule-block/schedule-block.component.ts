@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import type { ClassGroup } from '../../models/class-group.model';
 import './schedule-block.component.css';
 

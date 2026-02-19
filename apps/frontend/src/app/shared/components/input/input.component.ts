@@ -1,6 +1,12 @@
-import { Component, Input, forwardRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  forwardRef,
+  Input,
+} from '@angular/core';
+import { type ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
  * Accessible input component with built-in ARIA support (Story 1.5)

@@ -1,8 +1,8 @@
-import { TestBed } from '@angular/core/testing';
 import { Injector, runInInjectionContext } from '@angular/core';
-import { Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { authGuard } from './auth.guard';
+import { TestBed } from '@angular/core/testing';
+import { type ActivatedRouteSnapshot, Router, type RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { authGuard } from './auth.guard';
 
 describe('authGuard', () => {
   let injector: Injector;
@@ -48,7 +48,7 @@ describe('authGuard', () => {
       authServiceSpy.getToken.mockReturnValue('valid-token');
 
       const result = runInInjectionContext(injector, () =>
-        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot)
+        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot),
       );
 
       expect(result).toBe(true);
@@ -61,7 +61,7 @@ describe('authGuard', () => {
       authServiceSpy.getToken.mockReturnValue(null);
 
       const result = runInInjectionContext(injector, () =>
-        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot)
+        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot),
       );
 
       expect(result).toBe(false);
@@ -71,7 +71,7 @@ describe('authGuard', () => {
       authServiceSpy.getToken.mockReturnValue(null);
 
       runInInjectionContext(injector, () =>
-        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot)
+        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot),
       );
 
       expect(authServiceSpy.setReturnUrl).toHaveBeenCalledWith('/dashboard');
@@ -81,7 +81,7 @@ describe('authGuard', () => {
       authServiceSpy.getToken.mockReturnValue(null);
 
       runInInjectionContext(injector, () =>
-        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot)
+        authGuard(mockActivatedRouteSnapshot, mockRouterStateSnapshot),
       );
 
       expect(router.navigate).toHaveBeenCalledWith(['/login']);

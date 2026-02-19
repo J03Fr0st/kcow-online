@@ -3,7 +3,7 @@
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": false
   },
   "files": {
     "ignoreUnknown": false,
@@ -96,7 +96,7 @@
       "bracketSpacing": true,
       "bracketSameLine": false
     },
-    "globals": ["describe", "it", "expect", "beforeEach", "afterEach", "jest"]
+    "globals": ["describe", "it", "expect", "beforeEach", "afterEach", "beforeAll", "afterAll", "jest", "fail", "spyOn", "jasmine", "pending", "xdescribe", "xit"]
   },
   "json": {
     "formatter": {

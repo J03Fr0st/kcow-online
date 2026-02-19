@@ -1,7 +1,7 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { InputComponent } from './input.component';
 import { Component } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
+import { InputComponent } from './input.component';
 
 @Component({
   template: `
@@ -141,7 +141,9 @@ describe('InputComponent', () => {
 
   it('should handle disabled state', () => {
     fixture.detectChanges();
-    const inputComponent = fixture.debugElement.query((el) => el.componentInstance instanceof InputComponent).componentInstance as InputComponent;
+    const inputComponent = fixture.debugElement.query(
+      (el) => el.componentInstance instanceof InputComponent,
+    ).componentInstance as InputComponent;
 
     inputComponent.setDisabledState(true);
     fixture.detectChanges();

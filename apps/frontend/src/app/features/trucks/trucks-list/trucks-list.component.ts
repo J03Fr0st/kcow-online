@@ -1,8 +1,16 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TruckService, type Truck } from '@core/services/truck.service';
 import { NotificationService } from '@core/services/notification.service';
+import { type Truck, TruckService } from '@core/services/truck.service';
 import { TruckFormComponent } from '../truck-form/truck-form.component';
 
 @Component({
@@ -96,17 +104,18 @@ export class TrucksListComponent implements OnInit {
   protected confirmDelete(truck: Truck): void {
     this.deletingId.set(null);
 
-    this.truckService.deleteTruck(truck.id).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: () => {
-        this.notificationService.success('Truck archived successfully');
-      },
-      error: (err) => {
-        console.error('Delete error:', err);
-        this.notificationService.error('Failed to archive truck');
-      },
-    });
+    this.truckService
+      .deleteTruck(truck.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.notificationService.success('Truck archived successfully');
+        },
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.notificationService.error('Failed to archive truck');
+        },
+      });
   }
 
   /**

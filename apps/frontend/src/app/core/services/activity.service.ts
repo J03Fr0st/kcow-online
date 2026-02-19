@@ -1,11 +1,15 @@
+import { HttpClient, type HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, tap, catchError, finalize, throwError, shareReplay } from 'rxjs';
+import type {
+  Activity,
+  CreateActivityRequest,
+  UpdateActivityRequest,
+} from '@features/activities/models/activity.model';
+import { catchError, finalize, type Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { Activity, CreateActivityRequest, UpdateActivityRequest } from '@features/activities/models/activity.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ActivityService {
   private readonly http = inject(HttpClient);
@@ -20,14 +24,17 @@ export class ActivityService {
   loadActivities(): void {
     this.loading.set(true);
 
-    this.http.get<Activity[]>(this.apiUrl).pipe(
-      tap((activities) => this.activities.set(activities)),
-      catchError((error: HttpErrorResponse) => {
-        console.error('Error loading activities:', error);
-        return throwError(() => error);
-      }),
-      finalize(() => this.loading.set(false))
-    ).subscribe();
+    this.http
+      .get<Activity[]>(this.apiUrl)
+      .pipe(
+        tap((activities) => this.activities.set(activities)),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error loading activities:', error);
+          return throwError(() => error);
+        }),
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe();
   }
 
   /**
@@ -38,7 +45,7 @@ export class ActivityService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error loading activity ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -47,14 +54,14 @@ export class ActivityService {
    */
   createActivity(data: CreateActivityRequest): Observable<Activity> {
     return this.http.post<Activity>(this.apiUrl, data).pipe(
-      tap((newActivity) => {
+      tap((_newActivity) => {
         // Reload activities to ensure consistency with server
         this.loadActivities();
       }),
       catchError((error: HttpErrorResponse) => {
         console.error('Error creating activity:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -70,7 +77,7 @@ export class ActivityService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error updating activity ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -86,7 +93,7 @@ export class ActivityService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error deleting activity ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

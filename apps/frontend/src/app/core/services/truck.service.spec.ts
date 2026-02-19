@@ -1,7 +1,12 @@
-import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
-import { TruckService, type Truck, type CreateTruckRequest, type UpdateTruckRequest } from './truck.service';
+import {
+  type CreateTruckRequest,
+  type Truck,
+  TruckService,
+  type UpdateTruckRequest,
+} from './truck.service';
 
 describe('TruckService', () => {
   let service: TruckService;
@@ -186,7 +191,7 @@ describe('TruckService', () => {
       };
 
       expect(() => service.createTruck(newTruck).subscribe()).toThrow(
-        'Invalid truck status: "InvalidStatus". Must be one of: Active, Maintenance, Retired'
+        'Invalid truck status: "InvalidStatus". Must be one of: Active, Maintenance, Retired',
       );
     });
 
@@ -274,7 +279,7 @@ describe('TruckService', () => {
       };
 
       expect(() => service.updateTruck(1, updateData).subscribe()).toThrow(
-        'Invalid truck status: "InvalidStatus". Must be one of: Active, Maintenance, Retired'
+        'Invalid truck status: "InvalidStatus". Must be one of: Active, Maintenance, Retired',
       );
     });
 
@@ -347,29 +352,29 @@ describe('TruckService', () => {
   describe('validateStatus', () => {
     it('should accept valid status values', () => {
       expect(() => {
-        service['validateStatus']('Active');
+        service.validateStatus('Active');
       }).not.toThrow();
 
       expect(() => {
-        service['validateStatus']('Maintenance');
+        service.validateStatus('Maintenance');
       }).not.toThrow();
 
       expect(() => {
-        service['validateStatus']('Retired');
+        service.validateStatus('Retired');
       }).not.toThrow();
     });
 
     it('should reject invalid status values', () => {
       expect(() => {
-        service['validateStatus']('Invalid');
+        service.validateStatus('Invalid');
       }).toThrow('Invalid truck status: "Invalid". Must be one of: Active, Maintenance, Retired');
 
       expect(() => {
-        service['validateStatus']('');
+        service.validateStatus('');
       }).toThrow();
 
       expect(() => {
-        service['validateStatus']('ACTIVE');
+        service.validateStatus('ACTIVE');
       }).toThrow();
     });
   });

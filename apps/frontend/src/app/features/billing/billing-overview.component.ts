@@ -1,13 +1,13 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BillingService } from '@core/services/billing.service';
-import { StudentService, type StudentSearchResult } from '@core/services/student.service';
+import { type StudentSearchResult, StudentService } from '@core/services/student.service';
 import type {
   BillingSummary,
   Invoice,
-  Payment,
   InvoiceStatus,
+  Payment,
   PaymentMethod,
 } from '@features/billing/models/billing.model';
 import { InvoiceStatusValues, PaymentMethodValues } from '@features/billing/models/billing.model';

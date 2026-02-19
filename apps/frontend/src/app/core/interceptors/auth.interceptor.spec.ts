@@ -1,9 +1,8 @@
-import { TestBed } from '@angular/core/testing';
-import { HttpInterceptorFn, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { HttpClient } from '@angular/common/http';
-import { authInterceptor } from './auth.interceptor';
+import { TestBed } from '@angular/core/testing';
 import { AuthService } from '../services/auth.service';
+import { authInterceptor } from './auth.interceptor';
 
 describe('authInterceptor', () => {
   let httpMock: HttpTestingController;
@@ -57,7 +56,7 @@ describe('authInterceptor', () => {
     httpClient.get('/test').subscribe({
       error: () => {
         // Error expected
-      }
+      },
     });
 
     const req = httpMock.expectOne('/test');

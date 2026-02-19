@@ -1,5 +1,5 @@
+import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { HttpClient, HttpHandler } from '@angular/common/http';
 import { appConfig } from './app.config';
 
 describe('Application Config', () => {

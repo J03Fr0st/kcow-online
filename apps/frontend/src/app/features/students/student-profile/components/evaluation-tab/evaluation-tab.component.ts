@@ -1,11 +1,24 @@
-import { Component, inject, input, OnInit, signal, DestroyRef, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { EvaluationService } from '@core/services/evaluation.service';
 import { ActivityService } from '@core/services/activity.service';
+import { EvaluationService } from '@core/services/evaluation.service';
 import { NotificationService } from '@core/services/notification.service';
-import type { Evaluation, CreateEvaluationRequest, UpdateEvaluationRequest } from '@features/evaluations/models/evaluation.model';
 import type { Activity } from '@features/activities/models/activity.model';
+import type {
+  CreateEvaluationRequest,
+  Evaluation,
+  UpdateEvaluationRequest,
+} from '@features/evaluations/models/evaluation.model';
 
 interface EditingEvaluation {
   id: number;
@@ -85,19 +98,20 @@ export class EvaluationTabComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.evaluationService.getEvaluations(this.studentId()).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (records) => {
-        this.evaluationRecords.set(Array.isArray(records) ? records : []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to load evaluation records');
-        this.isLoading.set(false);
-        console.error('Error loading evaluations:', err);
-      },
-    });
+    this.evaluationService
+      .getEvaluations(this.studentId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (records) => {
+          this.evaluationRecords.set(Array.isArray(records) ? records : []);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.error.set('Failed to load evaluation records');
+          this.isLoading.set(false);
+          console.error('Error loading evaluations:', err);
+        },
+      });
   }
 
   /**
@@ -173,22 +187,23 @@ export class EvaluationTabComponent implements OnInit {
       notes: form.notes || null,
     };
 
-    this.evaluationService.updateEvaluation(form.id, updateData).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (updated) => {
-        this.updateRecordInList(updated);
-        this.editingId.set(null);
-        this.editingForm.set(null);
-        this.isSaving.set(false);
-        this.showSuccessMessage('Evaluation updated successfully');
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.showErrorMessage('Failed to update evaluation');
-        console.error('Error updating evaluation:', err);
-      },
-    });
+    this.evaluationService
+      .updateEvaluation(form.id, updateData)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.updateRecordInList(updated);
+          this.editingId.set(null);
+          this.editingForm.set(null);
+          this.isSaving.set(false);
+          this.showSuccessMessage('Evaluation updated successfully');
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.showErrorMessage('Failed to update evaluation');
+          console.error('Error updating evaluation:', err);
+        },
+      });
   }
 
   /**
@@ -214,21 +229,22 @@ export class EvaluationTabComponent implements OnInit {
       notes: form.notes || null,
     };
 
-    this.evaluationService.createEvaluation(request).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (created) => {
-        this.evaluationRecords.set([...this.evaluationRecords(), created]);
-        this.cancelAdd();
-        this.isSaving.set(false);
-        this.showSuccessMessage('Evaluation added successfully');
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.showErrorMessage('Failed to add evaluation');
-        console.error('Error adding evaluation:', err);
-      },
-    });
+    this.evaluationService
+      .createEvaluation(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (created) => {
+          this.evaluationRecords.set([...this.evaluationRecords(), created]);
+          this.cancelAdd();
+          this.isSaving.set(false);
+          this.showSuccessMessage('Evaluation added successfully');
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.showErrorMessage('Failed to add evaluation');
+          console.error('Error adding evaluation:', err);
+        },
+      });
   }
 
   /**
@@ -398,10 +414,7 @@ export class EvaluationTabComponent implements OnInit {
    */
   isNewFormValid(): boolean {
     const form = this.newEvaluationForm();
-    return (
-      form.evaluationDate !== '' &&
-      form.activityId > 0
-    );
+    return form.evaluationDate !== '' && form.activityId > 0;
   }
 
   /**

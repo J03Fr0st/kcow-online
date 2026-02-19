@@ -1,11 +1,11 @@
-import { Component, Input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input, signal } from '@angular/core';
 
 @Component({
-    selector: 'app-collapsible-section',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-collapsible-section',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="collapsible-section" [class.expanded]="isExpanded()">
       <button
         type="button"
@@ -46,7 +46,8 @@ import { CommonModule } from '@angular/common';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [
+    `
     .collapsible-section {
       border: 1px solid oklch(var(--b3));
       border-radius: 0.5rem;
@@ -116,33 +117,34 @@ import { CommonModule } from '@angular/common';
       padding: 1rem;
       border-top: 1px solid oklch(var(--b3));
     }
-  `],
-    changeDetection: ChangeDetectionStrategy.OnPush
+  `,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CollapsibleSectionComponent {
-    @Input() title = 'Section';
-    @Input() description?: string;
-    @Input() badge?: string;
-    @Input() initiallyExpanded = false;
+  @Input() title = 'Section';
+  @Input() description?: string;
+  @Input() badge?: string;
+  @Input() initiallyExpanded = false;
 
-    private static idCounter = 0;
-    readonly sectionId = `collapsible-section-${++CollapsibleSectionComponent.idCounter}`;
+  private static idCounter = 0;
+  readonly sectionId = `collapsible-section-${++CollapsibleSectionComponent.idCounter}`;
 
-    isExpanded = signal(false);
+  isExpanded = signal(false);
 
-    ngOnInit() {
-        this.isExpanded.set(this.initiallyExpanded);
-    }
+  ngOnInit() {
+    this.isExpanded.set(this.initiallyExpanded);
+  }
 
-    toggle() {
-        this.isExpanded.update(v => !v);
-    }
+  toggle() {
+    this.isExpanded.update((v) => !v);
+  }
 
-    expand() {
-        this.isExpanded.set(true);
-    }
+  expand() {
+    this.isExpanded.set(true);
+  }
 
-    collapse() {
-        this.isExpanded.set(false);
-    }
+  collapse() {
+    this.isExpanded.set(false);
+  }
 }

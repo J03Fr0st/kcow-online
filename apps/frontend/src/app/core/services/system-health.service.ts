@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import type { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { BehaviorSubject, interval, type Observable } from 'rxjs';
 

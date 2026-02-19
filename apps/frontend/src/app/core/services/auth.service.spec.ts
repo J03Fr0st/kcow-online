@@ -1,12 +1,12 @@
-import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
-import { LoginRequest } from '../../features/auth/models/login-request.model';
-import { LoginResponse } from '../../features/auth/models/login-response.model';
-import { User } from '../../features/auth/models/user.model';
+import type { LoginRequest } from '../../features/auth/models/login-request.model';
+import type { LoginResponse } from '../../features/auth/models/login-response.model';
+import type { User } from '../../features/auth/models/user.model';
+import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -72,7 +72,7 @@ describe('AuthService', () => {
           expect(response).toEqual(mockResponse);
           expect(httpClientSpy.post).toHaveBeenCalledWith(
             `${environment.apiUrl}/auth/login`,
-            credentials
+            credentials,
           );
           expect(localStorage.getItem('auth_token')).toBe('header.payload.signature');
           expect(service.isAuthenticated()).toBe(true);
@@ -115,7 +115,7 @@ describe('AuthService', () => {
           expect(routerSpy.navigate).not.toHaveBeenCalled(); // Logout doesn't navigate anymore
           done();
         },
-        error: done.fail
+        error: done.fail,
       });
     });
   });

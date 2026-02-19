@@ -1,8 +1,17 @@
-import { Component, inject, input, signal, DestroyRef, Output, EventEmitter, ChangeDetectionStrategy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  EventEmitter,
+  effect,
+  inject,
+  input,
+  Output,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuditLogService, AuditLog } from '@core/services/audit-log.service';
-import { NotificationService } from '@core/services/notification.service';
+import { type AuditLog, AuditLogService } from '@core/services/audit-log.service';
 
 @Component({
   selector: 'app-audit-trail-panel',
@@ -14,7 +23,6 @@ import { NotificationService } from '@core/services/notification.service';
 })
 export class AuditTrailPanelComponent {
   private readonly auditLogService = inject(AuditLogService);
-  private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   // Input signals
@@ -32,11 +40,14 @@ export class AuditTrailPanelComponent {
 
   constructor() {
     // Watch for changes to isOpen and entityId inputs
-    effect(() => {
-      if (this.isOpen()) {
-        this.loadAuditLogs();
-      }
-    }, { allowSignalWrites: true });
+    effect(
+      () => {
+        if (this.isOpen()) {
+          this.loadAuditLogs();
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   /**
@@ -46,19 +57,20 @@ export class AuditTrailPanelComponent {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.auditLogService.getAuditLogs(this.entityType(), this.entityId()).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (logs) => {
-        this.auditLogs.set(Array.isArray(logs) ? logs : []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to load audit history');
-        this.isLoading.set(false);
-        console.error('Error loading audit logs:', err);
-      },
-    });
+    this.auditLogService
+      .getAuditLogs(this.entityType(), this.entityId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (logs) => {
+          this.auditLogs.set(Array.isArray(logs) ? logs : []);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.error.set('Failed to load audit history');
+          this.isLoading.set(false);
+          console.error('Error loading audit logs:', err);
+        },
+      });
   }
 
   /**
@@ -78,19 +90,19 @@ export class AuditTrailPanelComponent {
    */
   getFieldLabel(field: string): string {
     const fieldLabels: Record<string, string> = {
-      'Status': 'Status',
-      'Notes': 'Notes',
-      'SessionDate': 'Session Date',
-      'ClassGroupId': 'Class Group',
-      'StudentId': 'Student',
-      'Amount': 'Amount',
-      'Description': 'Description',
-      'DueDate': 'Due Date',
-      'InvoiceDate': 'Invoice Date',
-      'PaymentDate': 'Payment Date',
-      'PaymentMethod': 'Payment Method',
-      'ReceiptNumber': 'Receipt Number',
-      'Created': 'Created',
+      Status: 'Status',
+      Notes: 'Notes',
+      SessionDate: 'Session Date',
+      ClassGroupId: 'Class Group',
+      StudentId: 'Student',
+      Amount: 'Amount',
+      Description: 'Description',
+      DueDate: 'Due Date',
+      InvoiceDate: 'Invoice Date',
+      PaymentDate: 'Payment Date',
+      PaymentMethod: 'Payment Method',
+      ReceiptNumber: 'Receipt Number',
+      Created: 'Created',
     };
     return fieldLabels[field] || field;
   }

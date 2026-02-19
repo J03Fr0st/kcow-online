@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SidebarComponent } from './sidebar.component';
-import { SidebarService } from '@core/services/sidebar.service';
-import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { SidebarService } from '@core/services/sidebar.service';
+import { SidebarComponent } from './sidebar.component';
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
@@ -14,15 +14,12 @@ describe('SidebarComponent', () => {
       isOpen: signal(true),
       isMobile: signal(false),
       close: jest.fn(),
-      toggle: jest.fn()
+      toggle: jest.fn(),
     };
 
     await TestBed.configureTestingModule({
       imports: [SidebarComponent],
-      providers: [
-        provideRouter([]),
-        { provide: SidebarService, useValue: sidebarServiceMock }
-      ]
+      providers: [provideRouter([]), { provide: SidebarService, useValue: sidebarServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SidebarComponent);
@@ -35,7 +32,7 @@ describe('SidebarComponent', () => {
   });
 
   it('should have menu items', () => {
-     expect(component.menuItems.length).toBeGreaterThan(0);
+    expect(component.menuItems.length).toBeGreaterThan(0);
   });
 
   // Accessibility Tests (Story 1.5 AC#2: Keyboard navigation)

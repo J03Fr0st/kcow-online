@@ -1,9 +1,19 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AttendanceService } from '@core/services/attendance.service';
 import { ClassGroupService } from '@core/services/class-group.service';
-import type { Attendance, AttendanceQueryParams } from '@features/attendance/models/attendance.model';
+import type {
+  Attendance,
+  AttendanceQueryParams,
+} from '@features/attendance/models/attendance.model';
 
 @Component({
   selector: 'app-attendance-list',
@@ -27,7 +37,7 @@ export class AttendanceListComponent implements OnInit {
 
   protected readonly sortedRecords = computed(() => {
     return [...this.records()].sort(
-      (a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime()
+      (a, b) => new Date(b.sessionDate).getTime() - new Date(a.sessionDate).getTime(),
     );
   });
 

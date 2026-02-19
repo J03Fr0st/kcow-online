@@ -1,12 +1,12 @@
+import { HttpClient, type HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '@environments/environment';
 import type {
-  Evaluation,
   CreateEvaluationRequest,
+  Evaluation,
   UpdateEvaluationRequest,
 } from '@features/evaluations/models/evaluation.model';
+import { catchError, type Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +24,7 @@ export class EvaluationService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error loading all evaluation records:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -38,7 +38,7 @@ export class EvaluationService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error loading evaluation records:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -52,7 +52,7 @@ export class EvaluationService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error loading evaluation record ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -66,7 +66,7 @@ export class EvaluationService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error creating evaluation record:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -81,7 +81,7 @@ export class EvaluationService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error updating evaluation record ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

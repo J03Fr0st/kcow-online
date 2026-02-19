@@ -1,9 +1,9 @@
 import { inject } from '@angular/core';
 import {
-  CanActivateFn,
+  type ActivatedRouteSnapshot,
+  type CanActivateFn,
   Router,
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
+  type RouterStateSnapshot,
 } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
@@ -14,8 +14,8 @@ import { AuthService } from '../services/auth.service';
  * If not authenticated, redirects to login page.
  */
 export const authGuard: CanActivateFn = (
-  route: ActivatedRouteSnapshot,
-  state: RouterStateSnapshot
+  _route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
 ) => {
   const router = inject(Router);
   const authService = inject(AuthService);

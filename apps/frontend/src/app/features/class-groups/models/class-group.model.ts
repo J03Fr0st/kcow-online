@@ -98,17 +98,17 @@ export const DAY_OF_WEEK_OPTIONS: readonly string[] = [
   'Friday',
 ] as const;
 
-export type DayOfWeekOption = typeof DAY_OF_WEEK_OPTIONS[number];
+export type DayOfWeekOption = (typeof DAY_OF_WEEK_OPTIONS)[number];
 
 // Map day names to .NET DayOfWeek enum values
 const DAY_OF_WEEK_MAP: Record<string, number> = {
-  'Sunday': 0,
-  'Monday': 1,
-  'Tuesday': 2,
-  'Wednesday': 3,
-  'Thursday': 4,
-  'Friday': 5,
-  'Saturday': 6,
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
 };
 
 const DAY_NUMBER_TO_NAME: Record<number, string> = {

@@ -1,13 +1,12 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
-import { AttendanceTabComponent } from './attendance-tab.component';
+import { DestroyRef } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { AttendanceService } from '@core/services/attendance.service';
 import { ClassGroupService } from '@core/services/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
-import { DestroyRef } from '@angular/core';
 import type { Attendance, AttendanceStatus } from '@features/attendance/models/attendance.model';
-import type { ClassGroup } from '@features/class-groups/models/class-group.model';
+import { of, throwError } from 'rxjs';
+import { AttendanceTabComponent } from './attendance-tab.component';
 
 describe('AttendanceTabComponent', () => {
   let component: AttendanceTabComponent;
@@ -240,7 +239,9 @@ describe('AttendanceTabComponent', () => {
       component.cancelAdd();
 
       expect(component.showAddForm()).toBe(false);
-      expect(component.newAttendanceForm().sessionDate).toBe(new Date().toISOString().split('T')[0]);
+      expect(component.newAttendanceForm().sessionDate).toBe(
+        new Date().toISOString().split('T')[0],
+      );
       expect(component.newAttendanceForm().classGroupId).toBe(0);
     });
 
@@ -312,13 +313,15 @@ describe('AttendanceTabComponent', () => {
       expect(notificationServiceSpy.error).toHaveBeenCalledWith(
         'An attendance record for this student, date, and class group already exists',
         undefined,
-        5000
+        5000,
       );
       expect(attendanceServiceSpy.createAttendance).not.toHaveBeenCalled();
     });
 
     it('should allow adding attendance for different date or class group', () => {
-      attendanceServiceSpy.createAttendance.mockReturnValue(of({ ...mockAttendanceRecords[0], id: 999 }));
+      attendanceServiceSpy.createAttendance.mockReturnValue(
+        of({ ...mockAttendanceRecords[0], id: 999 }),
+      );
 
       component.newAttendanceForm.set({
         sessionDate: '2026-02-01', // Different date
@@ -352,7 +355,10 @@ describe('AttendanceTabComponent', () => {
 
     it('should not save on blur when form is invalid', () => {
       component.startEdit(mockAttendanceRecords[0]);
-      component.editingForm.set({ ...component.editingForm()!, status: '' as AttendanceStatus });
+      const currentForm = component.editingForm();
+      if (currentForm) {
+        component.editingForm.set({ ...currentForm, status: '' as AttendanceStatus });
+      }
 
       // Trigger blur
       (component as any).onEditBlur();

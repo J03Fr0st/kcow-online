@@ -1,10 +1,23 @@
-import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  type OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, type FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivityService } from '@core/services/activity.service';
-import type { Activity, CreateActivityRequest, UpdateActivityRequest } from '@features/activities/models/activity.model';
 import { NotificationService } from '@core/services/notification.service';
+import type {
+  Activity,
+  CreateActivityRequest,
+  UpdateActivityRequest,
+} from '@features/activities/models/activity.model';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -38,8 +51,9 @@ export class ActivityFormComponent implements OnInit {
     this.initForm();
 
     // Load activity data if editing
-    if (this.activityId()) {
-      this.loadActivity(this.activityId()!);
+    const activityId = this.activityId();
+    if (activityId) {
+      this.loadActivity(activityId);
     }
   }
 
@@ -64,31 +78,34 @@ export class ActivityFormComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.activityService.getActivity(id).pipe(
-      finalize(() => this.isLoading.set(false)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (activity) => {
-        this.form.patchValue({
-          code: activity.code ?? '',
-          name: activity.name ?? '',
-          description: activity.description ?? '',
-          folder: activity.folder ?? '',
-          gradeLevel: activity.gradeLevel ?? '',
-          icon: activity.icon ?? '',
-        });
+    this.activityService
+      .getActivity(id)
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (activity) => {
+          this.form.patchValue({
+            code: activity.code ?? '',
+            name: activity.name ?? '',
+            description: activity.description ?? '',
+            folder: activity.folder ?? '',
+            gradeLevel: activity.gradeLevel ?? '',
+            icon: activity.icon ?? '',
+          });
 
-        // Set icon preview if icon exists
-        if (activity.icon) {
-          this.iconPreview.set(`data:image/png;base64,${activity.icon}`);
-        }
-      },
-      error: (err) => {
-        console.error('Error loading activity:', err);
-        this.error.set('Failed to load activity. Please try again.');
-        this.notificationService.error('Failed to load activity');
-      },
-    });
+          // Set icon preview if icon exists
+          if (activity.icon) {
+            this.iconPreview.set(`data:image/png;base64,${activity.icon}`);
+          }
+        },
+        error: (err) => {
+          console.error('Error loading activity:', err);
+          this.error.set('Failed to load activity. Please try again.');
+          this.notificationService.error('Failed to load activity');
+        },
+      });
   }
 
   /**
@@ -96,7 +113,7 @@ export class ActivityFormComponent implements OnInit {
    */
   protected onIconSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
+    if (input.files?.[0]) {
       const file = input.files[0];
 
       // Validate file type
@@ -163,19 +180,22 @@ export class ActivityFormComponent implements OnInit {
         icon: formValue.icon || undefined,
       };
 
-      this.activityService.updateActivity(this.activityId()!, updateRequest).pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: (activity) => {
-          this.submit.emit(new CustomEvent('submit', { detail: { mode: 'update', activity } }));
-        },
-        error: (err) => {
-          console.error('Update error:', err);
-          this.error.set(err.error?.detail || 'Failed to update activity');
-          this.notificationService.error('Failed to update activity');
-        },
-      });
+      this.activityService
+        .updateActivity(this.activityId() ?? '', updateRequest)
+        .pipe(
+          finalize(() => this.isSaving.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (activity) => {
+            this.submit.emit(new CustomEvent('submit', { detail: { mode: 'update', activity } }));
+          },
+          error: (err) => {
+            console.error('Update error:', err);
+            this.error.set(err.error?.detail || 'Failed to update activity');
+            this.notificationService.error('Failed to update activity');
+          },
+        });
     } else {
       // Create new activity
       const createRequest: CreateActivityRequest = {
@@ -187,19 +207,22 @@ export class ActivityFormComponent implements OnInit {
         icon: formValue.icon || undefined,
       };
 
-      this.activityService.createActivity(createRequest).pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: (activity) => {
-          this.submit.emit(new CustomEvent('submit', { detail: { mode: 'create', activity } }));
-        },
-        error: (err) => {
-          console.error('Create error:', err);
-          this.error.set(err.error?.detail || 'Failed to create activity');
-          this.notificationService.error('Failed to create activity');
-        },
-      });
+      this.activityService
+        .createActivity(createRequest)
+        .pipe(
+          finalize(() => this.isSaving.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (activity) => {
+            this.submit.emit(new CustomEvent('submit', { detail: { mode: 'create', activity } }));
+          },
+          error: (err) => {
+            console.error('Create error:', err);
+            this.error.set(err.error?.detail || 'Failed to create activity');
+            this.notificationService.error('Failed to create activity');
+          },
+        });
     }
   }
 
@@ -215,7 +238,7 @@ export class ActivityFormComponent implements OnInit {
    */
   protected hasError(fieldName: string): boolean {
     const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
+    return !!(field?.invalid && (field.dirty || field.touched));
   }
 
   /**
@@ -229,7 +252,7 @@ export class ActivityFormComponent implements OnInit {
       return 'This field is required';
     }
     if (field.hasError('maxlength')) {
-      const maxLength = field.errors?.['maxlength']?.requiredLength || 0;
+      const maxLength = field.errors?.maxlength?.requiredLength || 0;
       return `Maximum length is ${maxLength} characters`;
     }
 
@@ -257,6 +280,10 @@ export class ActivityFormComponent implements OnInit {
    * Get submit button text based on mode
    */
   protected get submitButtonText(): string {
-    return this.isSaving() ? 'Saving...' : this.activityId() ? 'Update Activity' : 'Create Activity';
+    return this.isSaving()
+      ? 'Saving...'
+      : this.activityId()
+        ? 'Update Activity'
+        : 'Create Activity';
   }
 }

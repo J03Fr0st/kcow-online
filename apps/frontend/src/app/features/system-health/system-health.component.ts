@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, type OnDestroy, type OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  type OnDestroy,
+  type OnInit,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { HealthMetric } from '@core/services/system-health.service';

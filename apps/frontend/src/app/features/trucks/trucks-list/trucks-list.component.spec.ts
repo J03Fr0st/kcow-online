@@ -1,11 +1,11 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { TruckService } from '@core/services/truck.service';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NotificationService } from '@core/services/notification.service';
-import { TrucksListComponent } from './trucks-list.component';
-import { TruckFormComponent } from '../truck-form/truck-form.component';
+import { TruckService } from '@core/services/truck.service';
 import { environment } from '../../../../../environments/environment';
+import { TruckFormComponent } from '../truck-form/truck-form.component';
+import { TrucksListComponent } from './trucks-list.component';
 
 describe('TrucksListComponent', () => {
   let component: TrucksListComponent;
@@ -158,7 +158,7 @@ describe('TrucksListComponent', () => {
     });
 
     it('should handle delete error', () => {
-      const deleteSpy = jest.spyOn(truckService, 'deleteTruck').mockReturnValue({
+      const _deleteSpy = jest.spyOn(truckService, 'deleteTruck').mockReturnValue({
         subscribe: (callbacks: any) => {
           callbacks.error?.({ message: 'Error' });
           return { unsubscribe: () => {} };
@@ -198,9 +198,7 @@ describe('TrucksListComponent', () => {
       const successSpy = jest.spyOn(notificationService, 'success');
       const closeSpy = jest.spyOn(component, 'closeForm');
 
-      component.onFormSubmit(
-        new CustomEvent('submit', { detail: { mode: 'create' } })
-      );
+      component.onFormSubmit(new CustomEvent('submit', { detail: { mode: 'create' } }));
 
       expect(successSpy).toHaveBeenCalledWith('Truck created successfully');
       expect(closeSpy).toHaveBeenCalled();
@@ -213,7 +211,7 @@ describe('TrucksListComponent', () => {
       component.onFormSubmit(
         new CustomEvent('submit', {
           detail: { mode: 'update', truck: mockTrucks[0] },
-        })
+        }),
       );
 
       expect(successSpy).toHaveBeenCalledWith('Truck updated successfully');

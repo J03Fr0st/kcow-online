@@ -1,22 +1,34 @@
-import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal, DestroyRef, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  type OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { Subject, of } from 'rxjs';
+import { FormBuilder, type FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClassGroupService } from '@core/services/class-group.service';
-import { SchoolService, type School } from '@core/services/school.service';
-import { TruckService, type Truck } from '@core/services/truck.service';
+import { NotificationService } from '@core/services/notification.service';
+import { type School, SchoolService } from '@core/services/school.service';
+import { TruckService } from '@core/services/truck.service';
 import type {
+  CheckConflictsRequest,
   ClassGroup,
   CreateClassGroupRequest,
-  UpdateClassGroupRequest,
   ScheduleConflict,
-  CheckConflictsRequest,
+  UpdateClassGroupRequest,
 } from '@features/class-groups/models/class-group.model';
-import { DAY_OF_WEEK_OPTIONS, getDayOfWeekNumber } from '@features/class-groups/models/class-group.model';
-import { NotificationService } from '@core/services/notification.service';
-import { finalize } from 'rxjs';
+import {
+  DAY_OF_WEEK_OPTIONS,
+  getDayOfWeekNumber,
+} from '@features/class-groups/models/class-group.model';
+import { finalize, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { ConflictBannerComponent } from '../conflict-banner/conflict-banner.component';
 
 @Component({
@@ -70,8 +82,9 @@ export class ClassGroupFormComponent implements OnInit {
     this.setupConflictChecking();
 
     // Load class group data if editing
-    if (this.classGroupId()) {
-      this.loadClassGroup(this.classGroupId()!);
+    const classGroupId = this.classGroupId();
+    if (classGroupId) {
+      this.loadClassGroup(classGroupId);
     }
   }
 
@@ -100,18 +113,21 @@ export class ClassGroupFormComponent implements OnInit {
     });
 
     // Watch for value changes to trigger conflict checks
-    this.form.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged((prev, curr) =>
-        prev.truckId === curr.truckId &&
-        prev.dayOfWeek === curr.dayOfWeek &&
-        prev.startTime === curr.startTime &&
-        prev.endTime === curr.endTime
-      ),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.triggerConflictCheck();
-    });
+    this.form.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(
+          (prev, curr) =>
+            prev.truckId === curr.truckId &&
+            prev.dayOfWeek === curr.dayOfWeek &&
+            prev.startTime === curr.startTime &&
+            prev.endTime === curr.endTime,
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(() => {
+        this.triggerConflictCheck();
+      });
   }
 
   /**
@@ -139,44 +155,46 @@ export class ClassGroupFormComponent implements OnInit {
    * Setup debounced conflict checking
    */
   private setupConflictChecking(): void {
-    this.conflictCheckTrigger.pipe(
-      debounceTime(300),
-      switchMap(() => {
-        const truckId = this.form.value.truckId;
-        const dayOfWeek = this.form.value.dayOfWeek;
-        const startTime = this.form.value.startTime;
-        const endTime = this.form.value.endTime;
+    this.conflictCheckTrigger
+      .pipe(
+        debounceTime(300),
+        switchMap(() => {
+          const truckId = this.form.value.truckId;
+          const dayOfWeek = this.form.value.dayOfWeek;
+          const startTime = this.form.value.startTime;
+          const endTime = this.form.value.endTime;
 
-        // Only check if we have all required fields and a truck is assigned
-        if (!truckId || !dayOfWeek || !startTime || !endTime) {
+          // Only check if we have all required fields and a truck is assigned
+          if (!truckId || !dayOfWeek || !startTime || !endTime) {
+            this.conflicts.set([]);
+            return of({ hasConflicts: false, conflicts: [] });
+          }
+
+          this.checkingConflicts.set(true);
+
+          const request: CheckConflictsRequest = {
+            truckId,
+            dayOfWeek,
+            startTime: `${startTime}:00`,
+            endTime: `${endTime}:00`,
+            excludeId: this.classGroupId() ?? undefined,
+          };
+
+          return this.classGroupService.checkConflicts(request);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (response) => {
+          this.conflicts.set(response.conflicts);
+          this.checkingConflicts.set(false);
+        },
+        error: (err) => {
+          console.error('Error checking conflicts:', err);
           this.conflicts.set([]);
-          return of({ hasConflicts: false, conflicts: [] });
-        }
-
-        this.checkingConflicts.set(true);
-
-        const request: CheckConflictsRequest = {
-          truckId,
-          dayOfWeek,
-          startTime: `${startTime}:00`,
-          endTime: `${endTime}:00`,
-          excludeId: this.classGroupId() ?? undefined,
-        };
-
-        return this.classGroupService.checkConflicts(request);
-      }),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (response) => {
-        this.conflicts.set(response.conflicts);
-        this.checkingConflicts.set(false);
-      },
-      error: (err) => {
-        console.error('Error checking conflicts:', err);
-        this.conflicts.set([]);
-        this.checkingConflicts.set(false);
-      },
-    });
+          this.checkingConflicts.set(false);
+        },
+      });
   }
 
   /**
@@ -193,39 +211,42 @@ export class ClassGroupFormComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.classGroupService.getClassGroup(id).pipe(
-      finalize(() => this.isLoading.set(false)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (classGroup) => {
-        this.form.patchValue({
-          name: classGroup.name,
-          dayTruck: classGroup.dayTruck || '',
-          description: classGroup.description || '',
-          schoolId: classGroup.schoolId,
-          truckId: classGroup.truckId || null,
-          dayOfWeek: classGroup.dayOfWeek,
-          startTime: classGroup.startTime.substring(0, 5), // "HH:mm:ss" -> "HH:mm"
-          endTime: classGroup.endTime.substring(0, 5),
-          sequence: classGroup.sequence,
-          evaluate: classGroup.evaluate ?? false,
-          notes: classGroup.notes || '',
-          importFlag: classGroup.importFlag ?? false,
-          groupMessage: classGroup.groupMessage || '',
-          sendCertificates: classGroup.sendCertificates || '',
-          moneyMessage: classGroup.moneyMessage || '',
-          ixl: classGroup.ixl || '',
-          isActive: classGroup.isActive ?? true,
-        });
-        // Trigger conflict check after loading
-        this.triggerConflictCheck();
-      },
-      error: (err) => {
-        console.error('Error loading class group:', err);
-        this.error.set('Failed to load class group. Please try again.');
-        this.notificationService.error('Failed to load class group');
-      },
-    });
+    this.classGroupService
+      .getClassGroup(id)
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (classGroup) => {
+          this.form.patchValue({
+            name: classGroup.name,
+            dayTruck: classGroup.dayTruck || '',
+            description: classGroup.description || '',
+            schoolId: classGroup.schoolId,
+            truckId: classGroup.truckId || null,
+            dayOfWeek: classGroup.dayOfWeek,
+            startTime: classGroup.startTime.substring(0, 5), // "HH:mm:ss" -> "HH:mm"
+            endTime: classGroup.endTime.substring(0, 5),
+            sequence: classGroup.sequence,
+            evaluate: classGroup.evaluate ?? false,
+            notes: classGroup.notes || '',
+            importFlag: classGroup.importFlag ?? false,
+            groupMessage: classGroup.groupMessage || '',
+            sendCertificates: classGroup.sendCertificates || '',
+            moneyMessage: classGroup.moneyMessage || '',
+            ixl: classGroup.ixl || '',
+            isActive: classGroup.isActive ?? true,
+          });
+          // Trigger conflict check after loading
+          this.triggerConflictCheck();
+        },
+        error: (err) => {
+          console.error('Error loading class group:', err);
+          this.error.set('Failed to load class group. Please try again.');
+          this.notificationService.error('Failed to load class group');
+        },
+      });
   }
 
   /**
@@ -278,19 +299,22 @@ export class ClassGroupFormComponent implements OnInit {
         isActive: formValue.isActive ?? true,
       };
 
-      this.classGroupService.updateClassGroup(this.classGroupId()!, updateRequest).pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: (classGroup) => {
-          this.submit.emit({ mode: 'update', classGroup });
-        },
-        error: (err) => {
-          console.error('Update error:', err);
-          this.error.set(err.error?.detail || 'Failed to update class group');
-          this.notificationService.error('Failed to update class group');
-        },
-      });
+      this.classGroupService
+        .updateClassGroup(this.classGroupId() ?? 0, updateRequest)
+        .pipe(
+          finalize(() => this.isSaving.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (classGroup) => {
+            this.submit.emit({ mode: 'update', classGroup });
+          },
+          error: (err) => {
+            console.error('Update error:', err);
+            this.error.set(err.error?.detail || 'Failed to update class group');
+            this.notificationService.error('Failed to update class group');
+          },
+        });
     } else {
       // Create new class group
       const createRequest: CreateClassGroupRequest = {
@@ -312,19 +336,22 @@ export class ClassGroupFormComponent implements OnInit {
         ixl: formValue.ixl || undefined,
       };
 
-      this.classGroupService.createClassGroup(createRequest).pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: (classGroup) => {
-          this.submit.emit({ mode: 'create', classGroup });
-        },
-        error: (err) => {
-          console.error('Create error:', err);
-          this.error.set(err.error?.detail || 'Failed to create class group');
-          this.notificationService.error('Failed to create class group');
-        },
-      });
+      this.classGroupService
+        .createClassGroup(createRequest)
+        .pipe(
+          finalize(() => this.isSaving.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (classGroup) => {
+            this.submit.emit({ mode: 'create', classGroup });
+          },
+          error: (err) => {
+            console.error('Create error:', err);
+            this.error.set(err.error?.detail || 'Failed to create class group');
+            this.notificationService.error('Failed to create class group');
+          },
+        });
     }
   }
 
@@ -340,7 +367,7 @@ export class ClassGroupFormComponent implements OnInit {
    */
   protected hasError(fieldName: string): boolean {
     const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
+    return !!(field?.invalid && (field.dirty || field.touched));
   }
 
   /**
@@ -354,14 +381,14 @@ export class ClassGroupFormComponent implements OnInit {
       return 'This field is required';
     }
     if (field.hasError('maxlength')) {
-      const maxLength = field.errors?.['maxlength']?.requiredLength || 0;
+      const maxLength = field.errors?.maxlength?.requiredLength || 0;
       return `Maximum length is ${maxLength} characters`;
     }
     if (field.hasError('min')) {
       return 'Value must be at least 1';
     }
     if (field.hasError('minlength')) {
-      const minLength = field.errors?.['minlength']?.requiredLength || 0;
+      const minLength = field.errors?.minlength?.requiredLength || 0;
       return `Minimum length is ${minLength} characters`;
     }
 
@@ -389,7 +416,11 @@ export class ClassGroupFormComponent implements OnInit {
    * Get submit button text based on mode
    */
   protected get submitButtonText(): string {
-    return this.isSaving() ? 'Saving...' : this.classGroupId() ? 'Update Class Group' : 'Create Class Group';
+    return this.isSaving()
+      ? 'Saving...'
+      : this.classGroupId()
+        ? 'Update Class Group'
+        : 'Create Class Group';
   }
 
   /**

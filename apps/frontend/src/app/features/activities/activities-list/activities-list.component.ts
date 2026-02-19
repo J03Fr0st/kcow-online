@@ -1,9 +1,17 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivityService } from '@core/services/activity.service';
-import type { Activity } from '@features/activities/models/activity.model';
 import { NotificationService } from '@core/services/notification.service';
+import type { Activity } from '@features/activities/models/activity.model';
 import { ActivityFormComponent } from '../activity-form/activity-form.component';
 
 @Component({
@@ -65,7 +73,9 @@ export class ActivitiesListComponent implements OnInit {
   /**
    * Handle form submission (create or update)
    */
-  protected onFormSubmit(event: CustomEvent<{ mode: 'create' | 'update'; activity?: Activity }>): void {
+  protected onFormSubmit(
+    event: CustomEvent<{ mode: 'create' | 'update'; activity?: Activity }>,
+  ): void {
     const { mode, activity } = event.detail;
 
     if (mode === 'create') {
@@ -97,17 +107,18 @@ export class ActivitiesListComponent implements OnInit {
   protected confirmDelete(activity: Activity): void {
     this.deletingId.set(null);
 
-    this.activityService.deleteActivity(activity.id).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: () => {
-        this.notificationService.success('Activity archived successfully');
-      },
-      error: (err) => {
-        console.error('Delete error:', err);
-        this.notificationService.error('Failed to archive activity');
-      },
-    });
+    this.activityService
+      .deleteActivity(activity.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.notificationService.success('Activity archived successfully');
+        },
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.notificationService.error('Failed to archive activity');
+        },
+      });
   }
 
   /**

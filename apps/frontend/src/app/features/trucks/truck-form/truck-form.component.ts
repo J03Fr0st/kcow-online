@@ -1,10 +1,23 @@
-import { Component, inject, OnInit, input, output, ChangeDetectionStrategy, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  type OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { TruckService, type Truck, type CreateTruckRequest, type UpdateTruckRequest } from '@core/services/truck.service';
-import { TRUCK_STATUS_OPTIONS } from '@features/trucks/models/truck.model';
+import { FormBuilder, type FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NotificationService } from '@core/services/notification.service';
+import {
+  type CreateTruckRequest,
+  TruckService,
+  type UpdateTruckRequest,
+} from '@core/services/truck.service';
+import { TRUCK_STATUS_OPTIONS } from '@features/trucks/models/truck.model';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -40,8 +53,9 @@ export class TruckFormComponent implements OnInit {
     this.initForm();
 
     // Load truck data if editing
-    if (this.truckId()) {
-      this.loadTruck(this.truckId()!);
+    const truckId = this.truckId();
+    if (truckId) {
+      this.loadTruck(truckId);
     }
   }
 
@@ -64,24 +78,27 @@ export class TruckFormComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.truckService.getTruck(id).pipe(
-      finalize(() => this.isLoading.set(false)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (truck) => {
-        this.form.patchValue({
-          name: truck.name,
-          registrationNumber: truck.registrationNumber,
-          status: truck.status,
-          notes: truck.notes || '',
-        });
-      },
-      error: (err) => {
-        console.error('Error loading truck:', err);
-        this.error.set('Failed to load truck. Please try again.');
-        this.notificationService.error('Failed to load truck');
-      },
-    });
+    this.truckService
+      .getTruck(id)
+      .pipe(
+        finalize(() => this.isLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (truck) => {
+          this.form.patchValue({
+            name: truck.name,
+            registrationNumber: truck.registrationNumber,
+            status: truck.status,
+            notes: truck.notes || '',
+          });
+        },
+        error: (err) => {
+          console.error('Error loading truck:', err);
+          this.error.set('Failed to load truck. Please try again.');
+          this.notificationService.error('Failed to load truck');
+        },
+      });
   }
 
   /**
@@ -107,19 +124,22 @@ export class TruckFormComponent implements OnInit {
         notes: formValue.notes || undefined,
       };
 
-      this.truckService.updateTruck(this.truckId()!, updateRequest).pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: (truck) => {
-          this.submit.emit(new CustomEvent('submit', { detail: { mode: 'update', truck } }));
-        },
-        error: (err) => {
-          console.error('Update error:', err);
-          this.error.set(err.error?.detail || 'Failed to update truck');
-          this.notificationService.error('Failed to update truck');
-        },
-      });
+      this.truckService
+        .updateTruck(this.truckId() ?? 0, updateRequest)
+        .pipe(
+          finalize(() => this.isSaving.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (truck) => {
+            this.submit.emit(new CustomEvent('submit', { detail: { mode: 'update', truck } }));
+          },
+          error: (err) => {
+            console.error('Update error:', err);
+            this.error.set(err.error?.detail || 'Failed to update truck');
+            this.notificationService.error('Failed to update truck');
+          },
+        });
     } else {
       // Create new truck
       const createRequest: CreateTruckRequest = {
@@ -129,19 +149,22 @@ export class TruckFormComponent implements OnInit {
         notes: formValue.notes || undefined,
       };
 
-      this.truckService.createTruck(createRequest).pipe(
-        finalize(() => this.isSaving.set(false)),
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe({
-        next: (truck) => {
-          this.submit.emit(new CustomEvent('submit', { detail: { mode: 'create', truck } }));
-        },
-        error: (err) => {
-          console.error('Create error:', err);
-          this.error.set(err.error?.detail || 'Failed to create truck');
-          this.notificationService.error('Failed to create truck');
-        },
-      });
+      this.truckService
+        .createTruck(createRequest)
+        .pipe(
+          finalize(() => this.isSaving.set(false)),
+          takeUntilDestroyed(this.destroyRef),
+        )
+        .subscribe({
+          next: (truck) => {
+            this.submit.emit(new CustomEvent('submit', { detail: { mode: 'create', truck } }));
+          },
+          error: (err) => {
+            console.error('Create error:', err);
+            this.error.set(err.error?.detail || 'Failed to create truck');
+            this.notificationService.error('Failed to create truck');
+          },
+        });
     }
   }
 
@@ -157,7 +180,7 @@ export class TruckFormComponent implements OnInit {
    */
   protected hasError(fieldName: string): boolean {
     const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
+    return !!(field?.invalid && (field.dirty || field.touched));
   }
 
   /**
@@ -171,7 +194,7 @@ export class TruckFormComponent implements OnInit {
       return 'This field is required';
     }
     if (field.hasError('maxlength')) {
-      const maxLength = field.errors?.['maxlength']?.requiredLength || 0;
+      const maxLength = field.errors?.maxlength?.requiredLength || 0;
       return `Maximum length is ${maxLength} characters`;
     }
 

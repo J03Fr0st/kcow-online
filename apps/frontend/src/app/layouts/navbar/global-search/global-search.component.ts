@@ -1,9 +1,19 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  computed,
+  HostListener,
+  inject,
+  type OnDestroy,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
-import { StudentService, StudentSearchResult } from '../../../core/services/student.service';
+import { type StudentSearchResult, StudentService } from '../../../core/services/student.service';
 
 @Component({
   selector: 'app-global-search',
@@ -11,7 +21,7 @@ import { StudentService, StudentSearchResult } from '../../../core/services/stud
   imports: [CommonModule, FormsModule],
   templateUrl: './global-search.component.html',
   styleUrls: ['./global-search.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GlobalSearchComponent implements OnInit, OnDestroy {
   private readonly studentService = inject(StudentService);
@@ -31,16 +41,16 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
 
   // Computed signals
   readonly hasResults = computed(() => this.results().length > 0);
-  readonly showNoResults = computed(() => !this.isLoading() && this.searchTerm().trim().length >= 2 && this.results().length === 0);
+  readonly showNoResults = computed(
+    () => !this.isLoading() && this.searchTerm().trim().length >= 2 && this.results().length === 0,
+  );
 
   ngOnInit(): void {
-    this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe((term) => {
-      this.performSearch(term);
-    });
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((term) => {
+        this.performSearch(term);
+      });
   }
 
   ngOnDestroy(): void {
@@ -74,7 +84,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.results.set([]);
         this.isLoading.set(false);
         this.cdr.markForCheck();
-      }
+      },
     });
   }
 

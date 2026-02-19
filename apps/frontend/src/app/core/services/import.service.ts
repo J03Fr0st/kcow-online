@@ -1,8 +1,8 @@
+import { HttpClient, type HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '@environments/environment';
 import type { ImportAuditLog } from '@features/import/models/import-log.model';
+import { catchError, type Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +20,7 @@ export class ImportService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error loading import audit logs:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -33,7 +33,7 @@ export class ImportService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error loading import audit log ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

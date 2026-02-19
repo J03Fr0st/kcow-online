@@ -1,11 +1,11 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivityService } from '@core/services/activity.service';
-import type { Activity } from '@features/activities/models/activity.model';
 import { NotificationService } from '@core/services/notification.service';
-import { ActivityFormComponent } from './activity-form.component';
+import type { Activity } from '@features/activities/models/activity.model';
 import { environment } from '../../../../../environments/environment';
+import { ActivityFormComponent } from './activity-form.component';
 
 describe('ActivityFormComponent', () => {
   let component: ActivityFormComponent;
@@ -13,7 +13,7 @@ describe('ActivityFormComponent', () => {
   let activityService: ActivityService;
   let notificationService: NotificationService;
   let httpMock: HttpTestingController;
-  let fb: FormBuilder;
+  let _fb: FormBuilder;
 
   const mockActivity: Activity = {
     id: 1,
@@ -39,7 +39,7 @@ describe('ActivityFormComponent', () => {
     activityService = TestBed.inject(ActivityService);
     notificationService = TestBed.inject(NotificationService);
     httpMock = TestBed.inject(HttpTestingController);
-    fb = TestBed.inject(FormBuilder);
+    _fb = TestBed.inject(FormBuilder);
   }));
 
   afterEach(() => {
@@ -70,7 +70,7 @@ describe('ActivityFormComponent', () => {
 
       codeControl?.setValue('A'.repeat(256));
       expect(codeControl?.valid).toBe(false);
-      expect(codeControl?.errors?.['maxlength']).toBeTruthy();
+      expect(codeControl?.errors?.maxlength).toBeTruthy();
     });
 
     it('should have maxlength validator on name field', () => {
@@ -79,7 +79,7 @@ describe('ActivityFormComponent', () => {
 
       nameControl?.setValue('A'.repeat(256));
       expect(nameControl?.valid).toBe(false);
-      expect(nameControl?.errors?.['maxlength']).toBeTruthy();
+      expect(nameControl?.errors?.maxlength).toBeTruthy();
     });
 
     it('should have maxlength validator on folder field', () => {
@@ -88,7 +88,7 @@ describe('ActivityFormComponent', () => {
 
       folderControl?.setValue('A'.repeat(256));
       expect(folderControl?.valid).toBe(false);
-      expect(folderControl?.errors?.['maxlength']).toBeTruthy();
+      expect(folderControl?.errors?.maxlength).toBeTruthy();
     });
 
     it('should have maxlength validator on gradeLevel field', () => {
@@ -97,7 +97,7 @@ describe('ActivityFormComponent', () => {
 
       gradeLevelControl?.setValue('A'.repeat(256));
       expect(gradeLevelControl?.valid).toBe(false);
-      expect(gradeLevelControl?.errors?.['maxlength']).toBeTruthy();
+      expect(gradeLevelControl?.errors?.maxlength).toBeTruthy();
     });
   });
 
@@ -254,7 +254,7 @@ describe('ActivityFormComponent', () => {
         pipe: () => ({ subscribe: (callbacks: any) => callbacks.next?.(mockActivity) }),
       } as any);
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(createSpy).toHaveBeenCalledWith({
         code: 'ACT002',
@@ -272,7 +272,7 @@ describe('ActivityFormComponent', () => {
 
       const submitSpy = jest.spyOn(component.submit, 'emit');
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(submitSpy).toHaveBeenCalled();
     });
@@ -297,7 +297,7 @@ describe('ActivityFormComponent', () => {
         pipe: () => ({ subscribe: (callbacks: any) => callbacks.next?.(mockActivity) }),
       } as any);
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(updateSpy).toHaveBeenCalledWith(1, {
         code: 'ACT001',
@@ -339,7 +339,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should show "Saving..." when form is submitting', () => {
-      component['isSaving'].set(true);
+      component.isSaving.set(true);
       expect(component.submitButtonText).toBe('Saving...');
     });
   });

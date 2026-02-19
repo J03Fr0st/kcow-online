@@ -1,14 +1,14 @@
+import { HttpClient, type HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, tap, catchError, finalize, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import type {
+  CheckConflictsRequest,
+  CheckConflictsResponse,
   ClassGroup,
   CreateClassGroupRequest,
   UpdateClassGroupRequest,
-  CheckConflictsRequest,
-  CheckConflictsResponse,
 } from '@features/class-groups/models/class-group.model';
+import { catchError, finalize, type Observable, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -30,14 +30,17 @@ export class ClassGroupService {
     if (schoolId) params += `${params ? '&' : '?'}schoolId=${schoolId}`;
     if (truckId) params += `${params ? '&' : '?'}truckId=${truckId}`;
 
-    this.http.get<ClassGroup[]>(`${this.apiUrl}${params}`).pipe(
-      tap((classGroups) => this.classGroups.set(Array.isArray(classGroups) ? classGroups : [])),
-      catchError((error: HttpErrorResponse) => {
-        console.error('Error loading class groups:', error);
-        return throwError(() => error);
-      }),
-      finalize(() => this.loading.set(false))
-    ).subscribe();
+    this.http
+      .get<ClassGroup[]>(`${this.apiUrl}${params}`)
+      .pipe(
+        tap((classGroups) => this.classGroups.set(Array.isArray(classGroups) ? classGroups : [])),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error loading class groups:', error);
+          return throwError(() => error);
+        }),
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe();
   }
 
   /**
@@ -48,7 +51,7 @@ export class ClassGroupService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error loading class group ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -65,7 +68,7 @@ export class ClassGroupService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error creating class group:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -87,7 +90,7 @@ export class ClassGroupService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error updating class group ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -104,7 +107,7 @@ export class ClassGroupService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error deleting class group ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -116,7 +119,7 @@ export class ClassGroupService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error checking conflicts:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

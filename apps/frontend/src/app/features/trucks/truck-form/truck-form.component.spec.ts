@@ -1,10 +1,10 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
-import { TruckService, type Truck } from '@core/services/truck.service';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NotificationService } from '@core/services/notification.service';
-import { TruckFormComponent } from './truck-form.component';
+import { type Truck, TruckService } from '@core/services/truck.service';
 import { environment } from '../../../../../environments/environment';
+import { TruckFormComponent } from './truck-form.component';
 
 describe('TruckFormComponent', () => {
   let component: TruckFormComponent;
@@ -12,7 +12,7 @@ describe('TruckFormComponent', () => {
   let truckService: TruckService;
   let notificationService: NotificationService;
   let httpMock: HttpTestingController;
-  let fb: FormBuilder;
+  let _fb: FormBuilder;
 
   const mockTruck: Truck = {
     id: 1,
@@ -35,7 +35,7 @@ describe('TruckFormComponent', () => {
     truckService = TestBed.inject(TruckService);
     notificationService = TestBed.inject(NotificationService);
     httpMock = TestBed.inject(HttpTestingController);
-    fb = TestBed.inject(FormBuilder);
+    _fb = TestBed.inject(FormBuilder);
   }));
 
   afterEach(() => {
@@ -64,7 +64,7 @@ describe('TruckFormComponent', () => {
 
       nameControl?.setValue('');
       expect(nameControl?.valid).toBe(false);
-      expect(nameControl?.errors?.['required']).toBeTruthy();
+      expect(nameControl?.errors?.required).toBeTruthy();
 
       nameControl?.setValue('Truck Name');
       expect(nameControl?.valid).toBe(true);
@@ -76,7 +76,7 @@ describe('TruckFormComponent', () => {
 
       nameControl?.setValue('A'.repeat(101));
       expect(nameControl?.valid).toBe(false);
-      expect(nameControl?.errors?.['maxlength']).toBeTruthy();
+      expect(nameControl?.errors?.maxlength).toBeTruthy();
     });
 
     it('should have required validators on registrationNumber field', () => {
@@ -85,7 +85,7 @@ describe('TruckFormComponent', () => {
 
       regControl?.setValue('');
       expect(regControl?.valid).toBe(false);
-      expect(regControl?.errors?.['required']).toBeTruthy();
+      expect(regControl?.errors?.required).toBeTruthy();
     });
 
     it('should have maxlength validator on registrationNumber field', () => {
@@ -94,7 +94,7 @@ describe('TruckFormComponent', () => {
 
       regControl?.setValue('A'.repeat(51));
       expect(regControl?.valid).toBe(false);
-      expect(regControl?.errors?.['maxlength']).toBeTruthy();
+      expect(regControl?.errors?.maxlength).toBeTruthy();
     });
 
     it('should have required validators on status field', () => {
@@ -103,7 +103,7 @@ describe('TruckFormComponent', () => {
 
       statusControl?.setValue('');
       expect(statusControl?.valid).toBe(false);
-      expect(statusControl?.errors?.['required']).toBeTruthy();
+      expect(statusControl?.errors?.required).toBeTruthy();
     });
   });
 
@@ -204,7 +204,7 @@ describe('TruckFormComponent', () => {
         pipe: () => ({ subscribe: (callbacks: any) => callbacks.next?.(mockTruck) }),
       } as any);
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(createSpy).toHaveBeenCalledWith({
         name: 'New Truck',
@@ -221,7 +221,7 @@ describe('TruckFormComponent', () => {
 
       const submitSpy = jest.spyOn(component.submit, 'emit');
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(submitSpy).toHaveBeenCalled();
     });
@@ -231,7 +231,7 @@ describe('TruckFormComponent', () => {
 
       const createSpy = jest.spyOn(truckService, 'createTruck');
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(createSpy).not.toHaveBeenCalled();
     });
@@ -254,7 +254,7 @@ describe('TruckFormComponent', () => {
         pipe: () => ({ subscribe: (callbacks: any) => callbacks.next?.(mockTruck) }),
       } as any);
 
-      component['submitForm']();
+      component.submitForm();
 
       expect(updateSpy).toHaveBeenCalledWith(1, {
         name: 'Updated Truck',
@@ -295,7 +295,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should show "Saving..." when form is submitting', () => {
-      component['isSaving'].set(true);
+      component.isSaving.set(true);
       expect(component.submitButtonText).toBe('Saving...');
     });
   });

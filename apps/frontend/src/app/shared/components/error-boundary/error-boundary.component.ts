@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, inject, type OnDestroy, type OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  Input,
+  inject,
+  type OnDestroy,
+  type OnInit,
+} from '@angular/core';
 import { Subject, takeUntil } from 'rxjs';
 import { ErrorLoggingService } from '../../../core/services/error-logging.service';
 import type { AppError } from '../../../models/error.model';

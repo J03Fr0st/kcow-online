@@ -1,12 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
-import { of, throwError } from 'rxjs';
-import { FinancialTabComponent } from './financial-tab.component';
+import { DestroyRef } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { BillingService } from '@core/services/billing.service';
 import { NotificationService } from '@core/services/notification.service';
-import { DestroyRef } from '@angular/core';
-import type { BillingSummary, Invoice, Payment } from '@features/billing/models/billing.model';
-import type { CreateInvoiceRequest } from '@features/billing/models/billing.model';
+import type {
+  BillingSummary,
+  CreateInvoiceRequest,
+  Invoice,
+  Payment,
+} from '@features/billing/models/billing.model';
+import { of, throwError } from 'rxjs';
+import { FinancialTabComponent } from './financial-tab.component';
 
 describe('FinancialTabComponent', () => {
   let component: FinancialTabComponent;
@@ -16,12 +20,12 @@ describe('FinancialTabComponent', () => {
 
   const mockBillingSummary: BillingSummary = {
     studentId: 1,
-    currentBalance: 1500.00,
-    totalInvoiced: 5000.00,
-    totalPaid: 3500.00,
-    overdueAmount: 500.00,
+    currentBalance: 1500.0,
+    totalInvoiced: 5000.0,
+    totalPaid: 3500.0,
+    overdueAmount: 500.0,
     lastPaymentDate: '2026-01-15',
-    lastPaymentAmount: 500.00,
+    lastPaymentAmount: 500.0,
     outstandingInvoicesCount: 2,
   };
 
@@ -30,7 +34,7 @@ describe('FinancialTabComponent', () => {
       id: 1,
       studentId: 1,
       invoiceDate: '2026-01-01',
-      amount: 1000.00,
+      amount: 1000.0,
       dueDate: '2026-01-15',
       status: 0, // Pending
       description: 'January tuition',
@@ -40,7 +44,7 @@ describe('FinancialTabComponent', () => {
       id: 2,
       studentId: 1,
       invoiceDate: '2025-12-01',
-      amount: 2000.00,
+      amount: 2000.0,
       dueDate: '2025-12-15',
       status: 1, // Paid
       description: 'December tuition',
@@ -54,7 +58,7 @@ describe('FinancialTabComponent', () => {
       studentId: 1,
       invoiceId: 2,
       paymentDate: '2026-01-15',
-      amount: 500.00,
+      amount: 500.0,
       paymentMethod: 0, // Cash
       receiptNumber: 'RCP-001234',
       notes: 'Partial payment',
@@ -195,7 +199,7 @@ describe('FinancialTabComponent', () => {
     });
 
     it('should format positive amounts correctly', () => {
-      const formatted = component.formatCurrency(1500.50);
+      const formatted = component.formatCurrency(1500.5);
       // en-ZA locale uses space as thousands separator and comma as decimal
       expect(formatted).toMatch(/^R\s*1[\s,]500[,.]50$/);
     });
@@ -349,7 +353,11 @@ describe('FinancialTabComponent', () => {
       component.refresh();
 
       // Just verify that the notification was called
-      expect(notificationServiceSpy.success).toHaveBeenCalledWith('Billing data refreshed', undefined, 2000);
+      expect(notificationServiceSpy.success).toHaveBeenCalledWith(
+        'Billing data refreshed',
+        undefined,
+        2000,
+      );
     });
   });
 
@@ -498,7 +506,7 @@ describe('FinancialTabComponent', () => {
       expect(notificationServiceSpy.error).toHaveBeenCalledWith(
         'Please enter a valid payment amount',
         undefined,
-        5000
+        5000,
       );
       expect(billingServiceSpy.createPayment).not.toHaveBeenCalled();
     });
@@ -515,7 +523,11 @@ describe('FinancialTabComponent', () => {
       });
       component.submitPayment();
 
-      expect(notificationServiceSpy.error).toHaveBeenCalledWith('Failed to record payment', undefined, 5000);
+      expect(notificationServiceSpy.error).toHaveBeenCalledWith(
+        'Failed to record payment',
+        undefined,
+        5000,
+      );
       expect(component.isSavingPayment()).toBe(false);
     });
   });
@@ -696,7 +708,7 @@ describe('FinancialTabComponent', () => {
       expect(notificationServiceSpy.error).toHaveBeenCalledWith(
         'Please enter a valid invoice amount',
         undefined,
-        5000
+        5000,
       );
       expect(billingServiceSpy.createInvoice).not.toHaveBeenCalled();
     });
@@ -714,7 +726,7 @@ describe('FinancialTabComponent', () => {
       expect(notificationServiceSpy.error).toHaveBeenCalledWith(
         'Please select a due date',
         undefined,
-        5000
+        5000,
       );
       expect(billingServiceSpy.createInvoice).not.toHaveBeenCalled();
     });
@@ -731,7 +743,11 @@ describe('FinancialTabComponent', () => {
       });
       component.submitInvoice();
 
-      expect(notificationServiceSpy.error).toHaveBeenCalledWith('Failed to create invoice', undefined, 5000);
+      expect(notificationServiceSpy.error).toHaveBeenCalledWith(
+        'Failed to create invoice',
+        undefined,
+        5000,
+      );
       expect(component.isSavingInvoice()).toBe(false);
     });
   });

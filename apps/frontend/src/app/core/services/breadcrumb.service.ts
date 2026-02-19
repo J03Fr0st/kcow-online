@@ -26,7 +26,7 @@ export class BreadcrumbService {
     this.router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
       map(() => {
-        let route: ActivatedRoute | null = this.router.routerState.root;
+        const route: ActivatedRoute | null = this.router.routerState.root;
         return this.buildBreadcrumbs(route);
       }),
     ),

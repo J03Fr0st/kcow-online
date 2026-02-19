@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
+import type { RecentActivity } from '@models/recent-activity.model';
 import type { StatCard } from '@models/stats.model';
 import type { ServerPaginationResponse, User } from '@models/table-data.model';
-import type { RecentActivity } from '@models/recent-activity.model';
 import { type Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 

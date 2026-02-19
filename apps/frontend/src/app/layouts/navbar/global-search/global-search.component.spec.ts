@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { type StudentSearchResult, StudentService } from '../../../core/services/student.service';
 import { GlobalSearchComponent } from './global-search.component';
-import { StudentService, StudentSearchResult } from '../../../core/services/student.service';
 
 describe('GlobalSearchComponent', () => {
   let component: GlobalSearchComponent;
@@ -16,20 +16,20 @@ describe('GlobalSearchComponent', () => {
       fullName: 'John Smith',
       schoolName: 'Greenwood Primary',
       grade: 'Grade 5',
-      classGroupName: 'Class 5A'
+      classGroupName: 'Class 5A',
     },
     {
       id: 2,
       fullName: 'Jane Doe',
       schoolName: 'Oakwood Elementary',
       grade: 'Grade 3',
-      classGroupName: 'Class 3B'
-    }
+      classGroupName: 'Class 3B',
+    },
   ];
 
   beforeEach(async () => {
     mockStudentService = jasmine.createSpyObj('StudentService', [], {
-      searchStudents: of(mockSearchResults)
+      searchStudents: of(mockSearchResults),
     });
 
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
@@ -38,8 +38,8 @@ describe('GlobalSearchComponent', () => {
       imports: [GlobalSearchComponent],
       providers: [
         { provide: StudentService, useValue: mockStudentService },
-        { provide: Router, useValue: mockRouter }
-      ]
+        { provide: Router, useValue: mockRouter },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GlobalSearchComponent);
@@ -83,7 +83,7 @@ describe('GlobalSearchComponent', () => {
 
   it('should clear search and close dropdown on clearSearch', () => {
     component.onSearchChange('John');
-    component['performSearch']('John'); // Simulate search completion
+    component.performSearch('John'); // Simulate search completion
     component.results.set(mockSearchResults);
 
     component.clearSearch();

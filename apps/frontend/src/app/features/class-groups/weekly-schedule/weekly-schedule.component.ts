@@ -1,5 +1,5 @@
-import { Component, inject, OnInit, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, type OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ClassGroupService } from '@core/services/class-group.service';
 import type { ClassGroup } from '@features/class-groups/models/class-group.model';
@@ -59,7 +59,7 @@ export class WeeklyScheduleComponent implements OnInit {
     const byDay: Record<number, ClassGroup[]> = {};
     for (const day of DAY_OF_WEEK_OPTIONS) {
       const dayNum = this.getDayNumber(day);
-      byDay[dayNum] = classGroups.filter(cg => cg.dayOfWeek === dayNum);
+      byDay[dayNum] = classGroups.filter((cg) => cg.dayOfWeek === dayNum);
     }
 
     // Detect conflicts and create blocks
@@ -164,11 +164,11 @@ export class WeeklyScheduleComponent implements OnInit {
    */
   private getDayNumber(dayName: string): number {
     const dayMap: Record<string, number> = {
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
     };
     return dayMap[dayName] || 1;
   }
@@ -195,10 +195,12 @@ export class WeeklyScheduleComponent implements OnInit {
    */
   protected getBlocksForSlot(day: string, slotIndex: number): ScheduleBlock[] {
     const dayNum = this.getDayNumber(day);
-    return this.scheduleBlocks().filter(block => {
-      return block.column === dayNum + 1 &&
+    return this.scheduleBlocks().filter((block) => {
+      return (
+        block.column === dayNum + 1 &&
         block.rowStart <= slotIndex + 2 &&
-        block.rowEnd > slotIndex + 2;
+        block.rowEnd > slotIndex + 2
+      );
     });
   }
 }

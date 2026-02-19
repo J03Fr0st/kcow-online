@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { errorInterceptor } from './error.interceptor';
 import { ErrorLoggingService } from '../services/error-logging.service';
 
 // Mock req object for testing
@@ -13,7 +12,7 @@ const createMockRequest = (url: string, method: string) => ({
     get: (key: string) => {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       };
       return headers[key] || null;
     },
@@ -21,14 +20,14 @@ const createMockRequest = (url: string, method: string) => ({
 });
 
 // Mock next function
-const createMockNext = () => ({
+const _createMockNext = () => ({
   pipe: jest.fn(),
   handle: jest.fn(),
 });
 
 describe('errorInterceptor', () => {
   let errorLoggingService: jest.Mocked<ErrorLoggingService>;
-  let router: Router;
+  let _router: Router;
 
   beforeEach(() => {
     // Mock ErrorLoggingService
@@ -47,7 +46,7 @@ describe('errorInterceptor', () => {
     });
 
     errorLoggingService = TestBed.inject(ErrorLoggingService) as jest.Mocked<ErrorLoggingService>;
-    router = TestBed.inject(Router);
+    _router = TestBed.inject(Router);
   });
 
   afterEach(() => {
@@ -92,7 +91,7 @@ describe('errorInterceptor', () => {
           context: expect.objectContaining({
             problemDetails: problemDetails,
           }),
-        })
+        }),
       );
     });
 
@@ -131,7 +130,7 @@ describe('errorInterceptor', () => {
           context: expect.objectContaining({
             problemDetails: problemDetails,
           }),
-        })
+        }),
       );
     });
 
@@ -164,7 +163,7 @@ describe('errorInterceptor', () => {
           context: expect.objectContaining({
             problemDetails: null,
           }),
-        })
+        }),
       );
     });
   });
@@ -206,7 +205,7 @@ describe('errorInterceptor', () => {
           context: expect.objectContaining({
             problemDetails: problemDetails,
           }),
-        })
+        }),
       );
 
       // Verify the ProblemDetails have the expected properties
@@ -245,7 +244,7 @@ describe('errorInterceptor', () => {
           context: expect.objectContaining({
             problemDetails: null,
           }),
-        })
+        }),
       );
 
       // Verify fallback to statusText
@@ -287,7 +286,7 @@ describe('errorInterceptor', () => {
         'GET',
         expect.objectContaining({
           logToServer: true,
-        })
+        }),
       );
     });
 
@@ -324,7 +323,7 @@ describe('errorInterceptor', () => {
         'GET',
         expect.objectContaining({
           logToServer: true,
-        })
+        }),
       );
     });
 
@@ -361,7 +360,7 @@ describe('errorInterceptor', () => {
         'GET',
         expect.objectContaining({
           logToServer: false,
-        })
+        }),
       );
     });
   });
@@ -400,7 +399,7 @@ describe('errorInterceptor', () => {
         'GET',
         expect.objectContaining({
           showUserNotification: false,
-        })
+        }),
       );
     });
 
@@ -437,7 +436,7 @@ describe('errorInterceptor', () => {
         'GET',
         expect.objectContaining({
           showUserNotification: true,
-        })
+        }),
       );
     });
   });
@@ -452,8 +451,8 @@ describe('errorInterceptor', () => {
           get: (key: string) => {
             const headers: Record<string, string> = {
               'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'Authorization': 'Bearer secret-token',
+              Accept: 'application/json',
+              Authorization: 'Bearer secret-token',
             };
             return headers[key] || null;
           },
@@ -475,8 +474,8 @@ describe('errorInterceptor', () => {
           requestBody: req.body,
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer [REDACTED]',
+            Accept: 'application/json',
+            Authorization: 'Bearer [REDACTED]',
           },
           problemDetails: null,
         },
@@ -489,10 +488,10 @@ describe('errorInterceptor', () => {
         expect.objectContaining({
           context: expect.objectContaining({
             headers: expect.objectContaining({
-              'Authorization': 'Bearer [REDACTED]',
+              Authorization: 'Bearer [REDACTED]',
             }),
           }),
-        })
+        }),
       );
     });
   });
@@ -526,7 +525,7 @@ describe('errorInterceptor', () => {
         'GET',
         expect.objectContaining({
           logToServer: false,
-        })
+        }),
       );
 
       // Verify status code and statusText are accessible
@@ -563,7 +562,7 @@ describe('errorInterceptor', () => {
         expect.objectContaining({
           logToServer: false,
           showUserNotification: true,
-        })
+        }),
       );
 
       // Verify status information is available

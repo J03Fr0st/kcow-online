@@ -1,10 +1,23 @@
-import { Component, inject, input, OnInit, signal, DestroyRef, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AttendanceService } from '@core/services/attendance.service';
 import { ClassGroupService } from '@core/services/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
-import type { Attendance, AttendanceStatus, CreateAttendanceRequest } from '@features/attendance/models/attendance.model';
+import type {
+  Attendance,
+  AttendanceStatus,
+  CreateAttendanceRequest,
+} from '@features/attendance/models/attendance.model';
 import type { ClassGroup } from '@features/class-groups/models/class-group.model';
 import { AuditTrailPanelComponent } from '../audit-trail-panel/audit-trail-panel.component';
 
@@ -86,19 +99,20 @@ export class AttendanceTabComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.attendanceService.getAttendance({ studentId: this.studentId() }).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (records) => {
-        this.attendanceRecords.set(Array.isArray(records) ? records : []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set('Failed to load attendance records');
-        this.isLoading.set(false);
-        console.error('Error loading attendance:', err);
-      },
-    });
+    this.attendanceService
+      .getAttendance({ studentId: this.studentId() })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (records) => {
+          this.attendanceRecords.set(Array.isArray(records) ? records : []);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.error.set('Failed to load attendance records');
+          this.isLoading.set(false);
+          console.error('Error loading attendance:', err);
+        },
+      });
   }
 
   /**
@@ -163,25 +177,26 @@ export class AttendanceTabComponent implements OnInit {
 
     this.isSaving.set(true);
 
-    this.attendanceService.updateAttendance(form.id, {
-      status: form.status,
-      notes: form.notes || undefined,
-    }).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (updated) => {
-        this.updateRecordInList(updated);
-        this.editingId.set(null);
-        this.editingForm.set(null);
-        this.isSaving.set(false);
-        this.showSuccessMessage('Attendance updated successfully');
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.showErrorMessage('Failed to update attendance');
-        console.error('Error updating attendance:', err);
-      },
-    });
+    this.attendanceService
+      .updateAttendance(form.id, {
+        status: form.status,
+        notes: form.notes || undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.updateRecordInList(updated);
+          this.editingId.set(null);
+          this.editingForm.set(null);
+          this.isSaving.set(false);
+          this.showSuccessMessage('Attendance updated successfully');
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.showErrorMessage('Failed to update attendance');
+          console.error('Error updating attendance:', err);
+        },
+      });
   }
 
   /**
@@ -197,11 +212,13 @@ export class AttendanceTabComponent implements OnInit {
 
     // Check for duplicate attendance record
     const existingRecord = this.attendanceRecords().find(
-      r => r.sessionDate === form.sessionDate && r.classGroupId === form.classGroupId
+      (r) => r.sessionDate === form.sessionDate && r.classGroupId === form.classGroupId,
     );
 
     if (existingRecord) {
-      this.showErrorMessage('An attendance record for this student, date, and class group already exists');
+      this.showErrorMessage(
+        'An attendance record for this student, date, and class group already exists',
+      );
       return;
     }
 
@@ -215,21 +232,22 @@ export class AttendanceTabComponent implements OnInit {
       notes: form.notes || undefined,
     };
 
-    this.attendanceService.createAttendance(request).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (created) => {
-        this.attendanceRecords.set([...this.attendanceRecords(), created]);
-        this.cancelAdd();
-        this.isSaving.set(false);
-        this.showSuccessMessage('Attendance added successfully');
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.showErrorMessage('Failed to add attendance');
-        console.error('Error adding attendance:', err);
-      },
-    });
+    this.attendanceService
+      .createAttendance(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (created) => {
+          this.attendanceRecords.set([...this.attendanceRecords(), created]);
+          this.cancelAdd();
+          this.isSaving.set(false);
+          this.showSuccessMessage('Attendance added successfully');
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.showErrorMessage('Failed to add attendance');
+          console.error('Error adding attendance:', err);
+        },
+      });
   }
 
   /**
@@ -305,7 +323,10 @@ export class AttendanceTabComponent implements OnInit {
    */
   isEditFormValid(): boolean {
     const form = this.editingForm();
-    return form !== null && (form.status === 'Present' || form.status === 'Absent' || form.status === 'Late');
+    return (
+      form !== null &&
+      (form.status === 'Present' || form.status === 'Absent' || form.status === 'Late')
+    );
   }
 
   /**
@@ -313,11 +334,7 @@ export class AttendanceTabComponent implements OnInit {
    */
   isNewFormValid(): boolean {
     const form = this.newAttendanceForm();
-    return (
-      form.sessionDate !== '' &&
-      form.classGroupId > 0 &&
-      !!form.status
-    );
+    return form.sessionDate !== '' && form.classGroupId > 0 && !!form.status;
   }
 
   /**

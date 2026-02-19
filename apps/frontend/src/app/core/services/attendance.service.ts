@@ -1,13 +1,13 @@
+import { HttpClient, type HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '@environments/environment';
 import type {
   Attendance,
+  AttendanceQueryParams,
   CreateAttendanceRequest,
   UpdateAttendanceRequest,
-  AttendanceQueryParams,
 } from '@features/attendance/models/attendance.model';
+import { catchError, type Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -27,7 +27,7 @@ export class AttendanceService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error loading attendance records:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -41,7 +41,7 @@ export class AttendanceService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error loading attendance record ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -55,7 +55,7 @@ export class AttendanceService {
       catchError((error: HttpErrorResponse) => {
         console.error('Error creating attendance record:', error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 
@@ -70,7 +70,7 @@ export class AttendanceService {
       catchError((error: HttpErrorResponse) => {
         console.error(`Error updating attendance record ${id}:`, error);
         return throwError(() => error);
-      })
+      }),
     );
   }
 

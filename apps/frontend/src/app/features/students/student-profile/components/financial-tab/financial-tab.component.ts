@@ -1,12 +1,29 @@
-import { Component, inject, input, OnInit, signal, DestroyRef, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
 import { BillingService } from '@core/services/billing.service';
 import { NotificationService } from '@core/services/notification.service';
-import { AuditTrailPanelComponent } from '../audit-trail-panel/audit-trail-panel.component';
-import type { BillingSummary, Invoice, Payment, InvoiceStatus, PaymentMethod, CreatePaymentRequest, CreateInvoiceRequest } from '@features/billing/models/billing.model';
+import type {
+  BillingSummary,
+  CreateInvoiceRequest,
+  CreatePaymentRequest,
+  Invoice,
+  InvoiceStatus,
+  Payment,
+  PaymentMethod,
+} from '@features/billing/models/billing.model';
 import { InvoiceStatusValues, PaymentMethodValues } from '@features/billing/models/billing.model';
+import { forkJoin } from 'rxjs';
+import { AuditTrailPanelComponent } from '../audit-trail-panel/audit-trail-panel.component';
 
 interface PaymentForm {
   paymentDate: string;
@@ -96,7 +113,7 @@ export class FinancialTabComponent implements OnInit {
 
   // Computed: pending invoices for dropdown
   readonly pendingInvoices = computed(() => {
-    return this.invoices().filter(inv => {
+    return this.invoices().filter((inv) => {
       const status = this.getInvoiceStatus(inv.status);
       return status === 'Pending' || status === 'Overdue';
     });
@@ -124,21 +141,21 @@ export class FinancialTabComponent implements OnInit {
       summary: this.billingService.getBillingSummary(studentId),
       invoices: this.billingService.getInvoices(studentId),
       payments: this.billingService.getPayments(studentId),
-    }).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: ({ summary, invoices, payments }) => {
-        this.billingSummary.set(summary);
-        this.invoices.set(Array.isArray(invoices) ? invoices : []);
-        this.payments.set(Array.isArray(payments) ? payments : []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading billing data:', err);
-        this.error.set('Failed to load billing data');
-        this.isLoading.set(false);
-      },
-    });
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ summary, invoices, payments }) => {
+          this.billingSummary.set(summary);
+          this.invoices.set(Array.isArray(invoices) ? invoices : []);
+          this.payments.set(Array.isArray(payments) ? payments : []);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error loading billing data:', err);
+          this.error.set('Failed to load billing data');
+          this.isLoading.set(false);
+        },
+      });
   }
 
   /**
@@ -283,29 +300,30 @@ export class FinancialTabComponent implements OnInit {
       notes: form.notes || undefined,
     };
 
-    this.billingService.createPayment(this.studentId(), request).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (payment) => {
-        // Add new payment to list
-        this.payments.set([...this.payments(), payment]);
-        // Reload billing data to update balance and invoice statuses
-        this.loadBillingData();
-        // Hide form
-        this.cancelPaymentForm();
-        this.isSavingPayment.set(false);
-        this.notificationService.success(
-          `Payment recorded successfully. Receipt: ${payment.receiptNumber}`,
-          undefined,
-          5000
-        );
-      },
-      error: (err) => {
-        this.isSavingPayment.set(false);
-        this.notificationService.error('Failed to record payment', undefined, 5000);
-        console.error('Error recording payment:', err);
-      },
-    });
+    this.billingService
+      .createPayment(this.studentId(), request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (payment) => {
+          // Add new payment to list
+          this.payments.set([...this.payments(), payment]);
+          // Reload billing data to update balance and invoice statuses
+          this.loadBillingData();
+          // Hide form
+          this.cancelPaymentForm();
+          this.isSavingPayment.set(false);
+          this.notificationService.success(
+            `Payment recorded successfully. Receipt: ${payment.receiptNumber}`,
+            undefined,
+            5000,
+          );
+        },
+        error: (err) => {
+          this.isSavingPayment.set(false);
+          this.notificationService.error('Failed to record payment', undefined, 5000);
+          console.error('Error recording payment:', err);
+        },
+      });
   }
 
   /**
@@ -388,29 +406,30 @@ export class FinancialTabComponent implements OnInit {
       notes: form.notes || undefined,
     };
 
-    this.billingService.createInvoice(this.studentId(), request).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (invoice) => {
-        // Add new invoice to list
-        this.invoices.set([...this.invoices(), invoice]);
-        // Reload billing data to update balance
-        this.loadBillingData();
-        // Hide form
-        this.cancelInvoiceForm();
-        this.isSavingInvoice.set(false);
-        this.notificationService.success(
-          `Invoice created successfully. ID: #${invoice.id}`,
-          undefined,
-          5000
-        );
-      },
-      error: (err) => {
-        this.isSavingInvoice.set(false);
-        this.notificationService.error('Failed to create invoice', undefined, 5000);
-        console.error('Error creating invoice:', err);
-      },
-    });
+    this.billingService
+      .createInvoice(this.studentId(), request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (invoice) => {
+          // Add new invoice to list
+          this.invoices.set([...this.invoices(), invoice]);
+          // Reload billing data to update balance
+          this.loadBillingData();
+          // Hide form
+          this.cancelInvoiceForm();
+          this.isSavingInvoice.set(false);
+          this.notificationService.success(
+            `Invoice created successfully. ID: #${invoice.id}`,
+            undefined,
+            5000,
+          );
+        },
+        error: (err) => {
+          this.isSavingInvoice.set(false);
+          this.notificationService.error('Failed to create invoice', undefined, 5000);
+          console.error('Error creating invoice:', err);
+        },
+      });
   }
 
   /**

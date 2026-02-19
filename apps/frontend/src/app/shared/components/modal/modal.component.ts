@@ -95,17 +95,21 @@ export class ModalComponent implements OnInit {
 
     // Subscribe to component outputs if they exist
     const instance = this.componentRef.instance;
-    const closeModal = instance['closeModal'];
-    if (closeModal && typeof (closeModal as { subscribe?: unknown })['subscribe'] === 'function') {
-      (closeModal as { subscribe: (fn: (result: unknown) => void) => void }).subscribe((result: unknown) => {
-        this.onClose(result);
-      });
+    const closeModal = instance.closeModal;
+    if (closeModal && typeof (closeModal as { subscribe?: unknown }).subscribe === 'function') {
+      (closeModal as { subscribe: (fn: (result: unknown) => void) => void }).subscribe(
+        (result: unknown) => {
+          this.onClose(result);
+        },
+      );
     }
-    const dismissModal = instance['dismissModal'];
-    if (dismissModal && typeof (dismissModal as { subscribe?: unknown })['subscribe'] === 'function') {
-      (dismissModal as { subscribe: (fn: (reason: unknown) => void) => void }).subscribe((reason: unknown) => {
-        this.onDismiss(reason);
-      });
+    const dismissModal = instance.dismissModal;
+    if (dismissModal && typeof (dismissModal as { subscribe?: unknown }).subscribe === 'function') {
+      (dismissModal as { subscribe: (fn: (reason: unknown) => void) => void }).subscribe(
+        (reason: unknown) => {
+          this.onDismiss(reason);
+        },
+      );
     }
   }
 
@@ -128,12 +132,18 @@ export class ModalComponent implements OnInit {
 
   isConfirmationDialog(): boolean {
     const data = this.modal.config.data;
-    return data != null && typeof data === 'object' && (data as Record<string, unknown>)['type'] === 'confirmation';
+    return (
+      data != null &&
+      typeof data === 'object' &&
+      (data as Record<string, unknown>).type === 'confirmation'
+    );
   }
 
   isAlertDialog(): boolean {
     const data = this.modal.config.data;
-    return data != null && typeof data === 'object' && (data as Record<string, unknown>)['type'] === 'alert';
+    return (
+      data != null && typeof data === 'object' && (data as Record<string, unknown>).type === 'alert'
+    );
   }
 
   onConfirm(): void {

@@ -1,5 +1,5 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 /**
  * Accessible form field wrapper component (Story 1.5)

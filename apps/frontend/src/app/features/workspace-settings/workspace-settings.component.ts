@@ -1,8 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, type OnDestroy, type OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  type OnDestroy,
+  type OnInit,
+} from '@angular/core';
 import {
   FormBuilder,
-  type FormGroup,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,

@@ -1,5 +1,12 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EvaluationService } from '@core/services/evaluation.service';
 import type { Evaluation } from '@features/evaluations/models/evaluation.model';
@@ -35,7 +42,7 @@ export class EvaluationsListComponent implements OnInit {
     }
 
     return data.sort(
-      (a, b) => new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime()
+      (a, b) => new Date(b.evaluationDate).getTime() - new Date(a.evaluationDate).getTime(),
     );
   });
 

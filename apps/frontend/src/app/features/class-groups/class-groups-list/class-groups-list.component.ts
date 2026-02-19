@@ -1,23 +1,35 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  type OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ClassGroupService } from '@core/services/class-group.service';
-import { SchoolService, type School } from '@core/services/school.service';
-import { TruckService } from '@core/services/truck.service';
-import type { ClassGroup } from '../models/class-group.model';
-import type { Truck } from '@features/trucks/models/truck.model';
 import { NotificationService } from '@core/services/notification.service';
-import { ClassGroupFormComponent } from '../class-group-form/class-group-form.component';
-import { WeeklyScheduleComponent } from '../weekly-schedule/weekly-schedule.component';
+import { type School, SchoolService } from '@core/services/school.service';
+import { TruckService } from '@core/services/truck.service';
 import { BulkAttendanceComponent } from '../bulk-attendance/bulk-attendance.component';
+import { ClassGroupFormComponent } from '../class-group-form/class-group-form.component';
+import type { ClassGroup } from '../models/class-group.model';
 import { getDayOfWeekName } from '../models/class-group.model';
+import { WeeklyScheduleComponent } from '../weekly-schedule/weekly-schedule.component';
 
 type ViewMode = 'list' | 'weekly';
 
 @Component({
   selector: 'app-class-groups-list',
   standalone: true,
-  imports: [CommonModule, ClassGroupFormComponent, WeeklyScheduleComponent, BulkAttendanceComponent],
+  imports: [
+    CommonModule,
+    ClassGroupFormComponent,
+    WeeklyScheduleComponent,
+    BulkAttendanceComponent,
+  ],
   templateUrl: './class-groups-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -69,22 +81,26 @@ export class ClassGroupsListComponent implements OnInit {
   }
 
   protected loadClassGroups(): void {
-    this.classGroupService.loadClassGroups(this.filterSchoolId() ?? undefined, this.filterTruckId() ?? undefined);
+    this.classGroupService.loadClassGroups(
+      this.filterSchoolId() ?? undefined,
+      this.filterTruckId() ?? undefined,
+    );
   }
 
   /**
    * Load schools for filter dropdown
    */
   private loadSchools(): void {
-    this.schoolService.getSchools().pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (schools) => this.availableSchools.set(schools.filter((s) => s.isActive)),
-      error: (err) => {
-        console.error('Error loading schools:', err);
-        this.notificationService.error('Failed to load schools');
-      },
-    });
+    this.schoolService
+      .getSchools()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (schools) => this.availableSchools.set(schools.filter((s) => s.isActive)),
+        error: (err) => {
+          console.error('Error loading schools:', err);
+          this.notificationService.error('Failed to load schools');
+        },
+      });
   }
 
   /**
@@ -123,7 +139,7 @@ export class ClassGroupsListComponent implements OnInit {
    * Handle form submission (create or update)
    */
   protected onFormSubmit(data: { mode: 'create' | 'update'; classGroup: ClassGroup }): void {
-    const { mode, classGroup } = data;
+    const { mode } = data;
 
     if (mode === 'create') {
       this.notificationService.success('Class group created successfully');
@@ -154,17 +170,18 @@ export class ClassGroupsListComponent implements OnInit {
   protected confirmDelete(classGroup: ClassGroup): void {
     this.deletingId.set(null);
 
-    this.classGroupService.deleteClassGroup(classGroup.id).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: () => {
-        this.notificationService.success('Class group archived successfully');
-      },
-      error: (err) => {
-        console.error('Delete error:', err);
-        this.notificationService.error('Failed to archive class group');
-      },
-    });
+    this.classGroupService
+      .deleteClassGroup(classGroup.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.notificationService.success('Class group archived successfully');
+        },
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.notificationService.error('Failed to archive class group');
+        },
+      });
   }
 
   /**

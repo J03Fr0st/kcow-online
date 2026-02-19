@@ -1,10 +1,16 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { AuthService } from '@core/services/auth.service';
-import { LoginRequest } from './models/login-request.model';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, type OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
+import type { LoginRequest } from './models/login-request.model';
 
 /**
  * Login Component
@@ -88,7 +94,13 @@ export class LoginComponent implements OnInit {
    */
   private extractErrorMessage(error: unknown): string {
     // Type guard for error object
-    const isErrorObject = (err: unknown): err is { error?: { detail?: string; title?: string }; status?: number; message?: string } => {
+    const isErrorObject = (
+      err: unknown,
+    ): err is {
+      error?: { detail?: string; title?: string };
+      status?: number;
+      message?: string;
+    } => {
       return typeof err === 'object' && err !== null;
     };
 
@@ -123,8 +135,8 @@ export class LoginComponent implements OnInit {
    */
   private navigateToReturnUrl(): void {
     // Check for return URL in query params
-    const returnUrl = this.route.snapshot.queryParams['returnUrl'] ||
-                     this.authService.getReturnUrl();
+    const returnUrl =
+      this.route.snapshot.queryParams['returnUrl'] || this.authService.getReturnUrl();
 
     this.router.navigateByUrl(returnUrl);
   }

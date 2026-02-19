@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ModalService } from '@core/services/modal.service';
+import type { ModalService } from '@core/services/modal.service';
 import { ModalComponent } from '../modal/modal.component';
 
 @Component({

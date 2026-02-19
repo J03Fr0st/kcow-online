@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { MENU_ICONS } from '@core/constants/icons.constants';
 import { SidebarService } from '@core/services/sidebar.service';
 import { MENU_ITEMS } from '@models/menu-item.model';
-import { MENU_ICONS } from '@core/constants/icons.constants';
 
 @Component({
   selector: 'app-sidebar',

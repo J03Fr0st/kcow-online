@@ -1,8 +1,12 @@
-import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
+import type {
+  Attendance,
+  CreateAttendanceRequest,
+  UpdateAttendanceRequest,
+} from '@features/attendance/models/attendance.model';
 import { of, throwError } from 'rxjs';
 import { AttendanceService } from './attendance.service';
-import type { Attendance, CreateAttendanceRequest, UpdateAttendanceRequest } from '@features/attendance/models/attendance.model';
 
 // Configurable base URL for tests - update if API URL changes
 const TEST_API_URL = 'http://localhost:5039/api';
@@ -19,10 +23,7 @@ describe('AttendanceService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        AttendanceService,
-        { provide: HttpClient, useValue: httpClientSpy },
-      ],
+      providers: [AttendanceService, { provide: HttpClient, useValue: httpClientSpy }],
     });
 
     service = TestBed.inject(AttendanceService);
@@ -81,7 +82,9 @@ describe('AttendanceService', () => {
       httpClientSpy.get.mockReturnValue(of([]));
 
       service.getAttendance({ fromDate: '2026-01-01', toDate: '2026-01-31' }).subscribe(() => {
-        expect(httpClientSpy.get).toHaveBeenCalledWith(`${TEST_API_URL}/attendance?fromDate=2026-01-01&toDate=2026-01-31`);
+        expect(httpClientSpy.get).toHaveBeenCalledWith(
+          `${TEST_API_URL}/attendance?fromDate=2026-01-01&toDate=2026-01-31`,
+        );
         done();
       });
     });
@@ -89,10 +92,14 @@ describe('AttendanceService', () => {
     it('should combine multiple filters', (done) => {
       httpClientSpy.get.mockReturnValue(of([]));
 
-      service.getAttendance({ studentId: 1, classGroupId: 2, fromDate: '2026-01-01' }).subscribe(() => {
-        expect(httpClientSpy.get).toHaveBeenCalledWith(`${TEST_API_URL}/attendance?studentId=1&classGroupId=2&fromDate=2026-01-01`);
-        done();
-      });
+      service
+        .getAttendance({ studentId: 1, classGroupId: 2, fromDate: '2026-01-01' })
+        .subscribe(() => {
+          expect(httpClientSpy.get).toHaveBeenCalledWith(
+            `${TEST_API_URL}/attendance?studentId=1&classGroupId=2&fromDate=2026-01-01`,
+          );
+          done();
+        });
     });
 
     it('should handle error response', (done) => {

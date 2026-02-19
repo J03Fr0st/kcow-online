@@ -1,6 +1,6 @@
 import { CommonModule, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 /**
  * 500 Server Error Page
@@ -162,8 +162,7 @@ import { Router, RouterLink } from '@angular/router';
 })
 export class ServerErrorComponent {
   private readonly location = inject(Location);
-  private readonly router = inject(Router);
-  
+
   readonly errorId: string;
 
   constructor() {

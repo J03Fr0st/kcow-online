@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FormFieldComponent } from './form-field.component';
 import { Component } from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormFieldComponent } from './form-field.component';
 
 @Component({
   template: `

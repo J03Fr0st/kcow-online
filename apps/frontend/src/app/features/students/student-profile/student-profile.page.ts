@@ -1,160 +1,179 @@
-import { Component, inject, OnInit, DestroyRef, ChangeDetectionStrategy, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  type OnInit,
+  signal,
+  type WritableSignal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { StudentService } from '@core/services/student.service';
-import type { Student, ProblemDetails } from '@core/services/student.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BillingService } from '@core/services/billing.service';
+import type { ProblemDetails, Student } from '@core/services/student.service';
+import { StudentService } from '@core/services/student.service';
 import type { BillingSummary } from '@features/billing/models/billing.model';
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
-import { ChildInfoTabComponent } from './components/child-info-tab/child-info-tab.component';
-import { FamilySectionComponent } from './components/family-section/family-section.component';
 import { AttendanceTabComponent } from './components/attendance-tab/attendance-tab.component';
+import { ChildInfoTabComponent } from './components/child-info-tab/child-info-tab.component';
 import { EvaluationTabComponent } from './components/evaluation-tab/evaluation-tab.component';
+import { FamilySectionComponent } from './components/family-section/family-section.component';
 import { FinancialTabComponent } from './components/financial-tab/financial-tab.component';
 
 type TabId = 'child-info' | 'financial' | 'attendance' | 'evaluation';
 
 interface Tab {
-    id: TabId;
-    label: string;
-    icon: string;
+  id: TabId;
+  label: string;
+  icon: string;
 }
 
 @Component({
-    selector: 'app-student-profile',
-    standalone: true,
-    imports: [CommonModule, StudentAvatarComponent, RouterLink, ChildInfoTabComponent, FamilySectionComponent, AttendanceTabComponent, EvaluationTabComponent, FinancialTabComponent],
-    templateUrl: './student-profile.page.html',
-    styleUrls: ['./student-profile.page.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'app-student-profile',
+  standalone: true,
+  imports: [
+    CommonModule,
+    StudentAvatarComponent,
+    RouterLink,
+    ChildInfoTabComponent,
+    FamilySectionComponent,
+    AttendanceTabComponent,
+    EvaluationTabComponent,
+    FinancialTabComponent,
+  ],
+  templateUrl: './student-profile.page.html',
+  styleUrls: ['./student-profile.page.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentProfilePage implements OnInit {
-    private router = inject(Router);
-    private route = inject(ActivatedRoute);
-    private studentService = inject(StudentService);
-    private billingService = inject(BillingService);
-    private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private studentService = inject(StudentService);
+  private billingService = inject(BillingService);
+  private destroyRef = inject(DestroyRef);
 
-    protected student: WritableSignal<Student | null> = signal(null);
-    protected billingSummary: WritableSignal<BillingSummary | null> = signal(null);
-    protected isLoading = signal(false);
-    protected error = signal<ProblemDetails | null>(null);
-    protected activeTab: WritableSignal<TabId> = signal('child-info');
+  protected student: WritableSignal<Student | null> = signal(null);
+  protected billingSummary: WritableSignal<BillingSummary | null> = signal(null);
+  protected isLoading = signal(false);
+  protected error = signal<ProblemDetails | null>(null);
+  protected activeTab: WritableSignal<TabId> = signal('child-info');
 
-    protected readonly tabs: Tab[] = [
-        { id: 'child-info', label: 'Child Info', icon: '👤' },
-        { id: 'financial', label: 'Financial', icon: '💰' },
-        { id: 'attendance', label: 'Attendance', icon: '📋' },
-        { id: 'evaluation', label: 'Evaluation', icon: '📊' },
-    ];
+  protected readonly tabs: Tab[] = [
+    { id: 'child-info', label: 'Child Info', icon: '👤' },
+    { id: 'financial', label: 'Financial', icon: '💰' },
+    { id: 'attendance', label: 'Attendance', icon: '📋' },
+    { id: 'evaluation', label: 'Evaluation', icon: '📊' },
+  ];
 
-    ngOnInit(): void {
-        const id = this.route.snapshot.paramMap.get('id');
-        if (id) {
-            this.loadStudent(+id);
-        } else {
-            this.router.navigate(['/students']);
-        }
+  ngOnInit(): void {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.loadStudent(+id);
+    } else {
+      this.router.navigate(['/students']);
     }
+  }
 
-    /**
-     * Load student data
-     */
-    private loadStudent(id: number): void {
-        this.isLoading.set(true);
-        this.error.set(null);
+  /**
+   * Load student data
+   */
+  private loadStudent(id: number): void {
+    this.isLoading.set(true);
+    this.error.set(null);
 
-        this.studentService.getStudentById(id).pipe(
-            takeUntilDestroyed(this.destroyRef)
-        ).subscribe({
-            next: (student) => {
-                this.student.set(student);
-                this.isLoading.set(false);
-                // Load billing summary after student loads
-                this.loadBillingSummary(id);
-            },
-            error: (err: ProblemDetails) => {
-                this.error.set(err);
-                this.isLoading.set(false);
-            },
-        });
+    this.studentService
+      .getStudentById(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (student) => {
+          this.student.set(student);
+          this.isLoading.set(false);
+          // Load billing summary after student loads
+          this.loadBillingSummary(id);
+        },
+        error: (err: ProblemDetails) => {
+          this.error.set(err);
+          this.isLoading.set(false);
+        },
+      });
+  }
+
+  /**
+   * Load billing summary for the student
+   */
+  private loadBillingSummary(studentId: number): void {
+    this.billingService
+      .getBillingSummary(studentId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (summary) => {
+          this.billingSummary.set(summary);
+        },
+        error: (err) => {
+          // Log error but don't fail the page load
+          console.error('Failed to load billing summary:', err);
+          this.billingSummary.set(null);
+        },
+      });
+  }
+
+  /**
+   * Set active tab
+   */
+  protected setActiveTab(tabId: TabId): void {
+    this.activeTab.set(tabId);
+  }
+
+  /**
+   * Check if tab is active
+   */
+  protected isTabActive(tabId: TabId): boolean {
+    return this.activeTab() === tabId;
+  }
+
+  /**
+   * Navigate back to list
+   */
+  protected goBack(): void {
+    this.router.navigate(['/students']);
+  }
+
+  /**
+   * Format date for display
+   */
+  protected formatDate(dateString?: string): string {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch {
+      return dateString;
     }
+  }
 
-    /**
-     * Load billing summary for the student
-     */
-    private loadBillingSummary(studentId: number): void {
-        this.billingService.getBillingSummary(studentId).pipe(
-            takeUntilDestroyed(this.destroyRef)
-        ).subscribe({
-            next: (summary) => {
-                this.billingSummary.set(summary);
-            },
-            error: (err) => {
-                // Log error but don't fail the page load
-                console.error('Failed to load billing summary:', err);
-                this.billingSummary.set(null);
-            },
-        });
-    }
+  /**
+   * Get display value with fallback
+   */
+  protected getDisplayValue(value: string | null | undefined): string {
+    return value || '-';
+  }
 
-    /**
-     * Set active tab
-     */
-    protected setActiveTab(tabId: TabId): void {
-        this.activeTab.set(tabId);
-    }
+  /**
+   * Handle student updated event from child info tab
+   */
+  protected onStudentUpdated(updatedStudent: Student): void {
+    this.student.set(updatedStudent);
+  }
 
-    /**
-     * Check if tab is active
-     */
-    protected isTabActive(tabId: TabId): boolean {
-        return this.activeTab() === tabId;
+  /**
+   * Handle student updated event from family section
+   */
+  protected onFamilyUpdated(): void {
+    // Reload student data to get updated family info
+    const s = this.student();
+    if (s) {
+      this.loadStudent(s.id);
     }
-
-    /**
-     * Navigate back to list
-     */
-    protected goBack(): void {
-        this.router.navigate(['/students']);
-    }
-
-    /**
-     * Format date for display
-     */
-    protected formatDate(dateString?: string): string {
-        if (!dateString) return '-';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString();
-        } catch {
-            return dateString;
-        }
-    }
-
-    /**
-     * Get display value with fallback
-     */
-    protected getDisplayValue(value: string | null | undefined): string {
-        return value || '-';
-    }
-
-    /**
-     * Handle student updated event from child info tab
-     */
-    protected onStudentUpdated(updatedStudent: Student): void {
-        this.student.set(updatedStudent);
-    }
-
-    /**
-     * Handle student updated event from family section
-     */
-    protected onFamilyUpdated(): void {
-        // Reload student data to get updated family info
-        const s = this.student();
-        if (s) {
-            this.loadStudent(s.id);
-        }
-    }
+  }
 }

@@ -113,8 +113,9 @@ export class ErrorLoggingService {
     method: string,
     options: ErrorHandlerOptions = {},
   ): AppError {
-    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
-    const statusCode = (typeof errorObj?.['status'] === 'number' ? errorObj['status'] : 0);
+    const errorObj =
+      error != null && typeof error === 'object' ? (error as Record<string, unknown>) : null;
+    const statusCode = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : 0;
     const errorType = this.getHttpErrorType(statusCode);
     const severity = this.getHttpErrorSeverity(statusCode);
     const _userMessage = this.getHttpErrorUserMessage(statusCode);
@@ -191,7 +192,8 @@ export class ErrorLoggingService {
 
     // Extract error details
     const message = this.extractErrorMessage(error);
-    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const errorObj =
+      error != null && typeof error === 'object' ? (error as Record<string, unknown>) : null;
     const stack = error instanceof Error ? error.stack : undefined;
     const statusCode = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
     const url = typeof errorObj?.['url'] === 'string' ? errorObj['url'] : undefined;
@@ -365,7 +367,8 @@ export class ErrorLoggingService {
     }
 
     // Check HTTP status
-    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const errorObj =
+      error != null && typeof error === 'object' ? (error as Record<string, unknown>) : null;
     const status = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
 
     if (status !== undefined) {
@@ -393,7 +396,8 @@ export class ErrorLoggingService {
    * Determine error severity
    */
   private determineSeverity(error: unknown): ErrorSeverity {
-    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const errorObj =
+      error != null && typeof error === 'object' ? (error as Record<string, unknown>) : null;
     const status = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
 
     if (status !== undefined && status >= 500) {
@@ -504,7 +508,8 @@ export class ErrorLoggingService {
    * Check if error is retryable
    */
   private isRetryable(error: unknown): boolean {
-    const errorObj = error != null && typeof error === 'object' ? error as Record<string, unknown> : null;
+    const errorObj =
+      error != null && typeof error === 'object' ? (error as Record<string, unknown>) : null;
     const status = typeof errorObj?.['status'] === 'number' ? errorObj['status'] : undefined;
 
     // Network errors are retryable

@@ -1,12 +1,12 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivityService } from '@core/services/activity.service';
 import { NotificationService } from '@core/services/notification.service';
-import { ActivitiesListComponent } from './activities-list.component';
-import { ActivityFormComponent } from '../activity-form/activity-form.component';
 import type { Activity } from '@features/activities/models/activity.model';
 import { environment } from '../../../../../environments/environment';
+import { ActivityFormComponent } from '../activity-form/activity-form.component';
+import { ActivitiesListComponent } from './activities-list.component';
 
 describe('ActivitiesListComponent', () => {
   let component: ActivitiesListComponent;
@@ -165,7 +165,7 @@ describe('ActivitiesListComponent', () => {
     });
 
     it('should handle delete error', () => {
-      const deleteSpy = jest.spyOn(activityService, 'deleteActivity').mockReturnValue({
+      const _deleteSpy = jest.spyOn(activityService, 'deleteActivity').mockReturnValue({
         subscribe: (callbacks: any) => {
           callbacks.error?.({ message: 'Error' });
           return { unsubscribe: () => {} };
@@ -200,9 +200,7 @@ describe('ActivitiesListComponent', () => {
       const successSpy = jest.spyOn(notificationService, 'success');
       const closeSpy = jest.spyOn(component, 'closeForm');
 
-      component.onFormSubmit(
-        new CustomEvent('submit', { detail: { mode: 'create' } })
-      );
+      component.onFormSubmit(new CustomEvent('submit', { detail: { mode: 'create' } }));
 
       expect(successSpy).toHaveBeenCalledWith('Activity created successfully');
       expect(closeSpy).toHaveBeenCalled();
@@ -215,7 +213,7 @@ describe('ActivitiesListComponent', () => {
       component.onFormSubmit(
         new CustomEvent('submit', {
           detail: { mode: 'update', activity: mockActivities[0] },
-        })
+        }),
       );
 
       expect(successSpy).toHaveBeenCalledWith('Activity updated successfully');
