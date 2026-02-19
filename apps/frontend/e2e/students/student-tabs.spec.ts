@@ -126,7 +126,6 @@ test.describe('Student Form Tab Switching Regression — tab fix (3609804)', () 
 
     const financialTab = page.locator('[role="tab"]:has-text("Child Financial")');
     await financialTab.click();
-    await page.waitForTimeout(300);
 
     // Tab must now be marked active
     await expect(financialTab).toHaveClass(/tab-active/);
@@ -145,7 +144,6 @@ test.describe('Student Form Tab Switching Regression — tab fix (3609804)', () 
 
     const classGroupsTab = page.locator('[role="tab"]:has-text("Class Groups")').first();
     await classGroupsTab.click();
-    await page.waitForTimeout(300);
 
     // Tab must now be marked active
     await expect(classGroupsTab).toHaveClass(/tab-active/);
@@ -161,7 +159,6 @@ test.describe('Student Form Tab Switching Regression — tab fix (3609804)', () 
     // Use .first() — "Child Attendance" appears before "Class Groups Attendance"
     const attendanceTab = page.locator('[role="tab"]:has-text("Child Attendance")').first();
     await attendanceTab.click();
-    await page.waitForTimeout(300);
 
     // Tab must now be marked active
     await expect(attendanceTab).toHaveClass(/tab-active/);
@@ -179,7 +176,6 @@ test.describe('Student Form Tab Switching Regression — tab fix (3609804)', () 
     // Use .first() — "Child Evaluation" appears before "Class Groups Evaluation"
     const evaluationTab = page.locator('[role="tab"]:has-text("Child Evaluation")').first();
     await evaluationTab.click();
-    await page.waitForTimeout(300);
 
     // Tab must now be marked active
     await expect(evaluationTab).toHaveClass(/tab-active/);
@@ -198,17 +194,14 @@ test.describe('Student Form Tab Switching Regression — tab fix (3609804)', () 
 
     // Click Child Financial — URL must stay the same
     await page.locator('[role="tab"]:has-text("Child Financial")').click();
-    await page.waitForTimeout(300);
     expect(page.url()).toBe(originalUrl);
 
     // Click Class Groups — URL must stay the same
     await page.locator('[role="tab"]:has-text("Class Groups")').first().click();
-    await page.waitForTimeout(300);
     expect(page.url()).toBe(originalUrl);
 
     // Click Child Info — URL must stay the same and info content returns
     await page.locator('[role="tab"]:has-text("Child Info")').click();
-    await page.waitForTimeout(300);
     expect(page.url()).toBe(originalUrl);
 
     // Info panel must be visible again (confirms tab switch back worked)
