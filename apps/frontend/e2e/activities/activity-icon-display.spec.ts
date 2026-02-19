@@ -57,7 +57,30 @@ test.describe('Activity Icon Display Regression — BMP OLE fix (74d0a34)', () =
   test('activities page loads and shows icon column header', async ({ page }) => {
     await page.goto('/activities');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
+
+    // If the DB is empty the table is replaced by the empty-state div.
+    // Create a throwaway activity so the table renders, then clean it up.
+    let createdCode: string | null = null;
+    const emptyState = page.locator('.empty-state');
+    if (await emptyState.count() > 0) {
+      const suffix = `${Date.now()}`;
+      createdCode = `HEADER-CHECK-${suffix}`;
+
+      const addBtn = page.locator('button').filter({ hasText: /add|new|create/i }).first();
+      await expect(addBtn).toBeVisible();
+      await addBtn.click();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(300);
+
+      const form = page.locator('form');
+      await form.locator('input#code').fill(createdCode);
+      await form.locator('input#name').fill('Header Check');
+
+      await page.locator('button').filter({ hasText: /Create Activity/i }).click();
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(500);
+    }
 
     const table = page.locator('table[aria-label="Activities Registry"]');
     await expect(table).toBeVisible({ timeout: 5000 });
@@ -65,6 +88,23 @@ test.describe('Activity Icon Display Regression — BMP OLE fix (74d0a34)', () =
     const headers = table.locator('thead th');
     const headerTexts = await headers.allTextContents();
     expect(headerTexts).toContain('Icon');
+
+    // Clean up throwaway activity if created
+    if (createdCode) {
+      const rows = page.locator('table tbody tr').filter({ hasText: createdCode });
+      if (await rows.count() > 0) {
+        const deleteBtn = rows.locator('button').filter({ hasText: /archive/i });
+        if (await deleteBtn.count() > 0) {
+          await deleteBtn.click();
+          await page.waitForTimeout(300);
+          const confirmBtn = page.locator('button').filter({ hasText: /^\s*✓\s*$/ });
+          if (await confirmBtn.count() > 0) {
+            await confirmBtn.click();
+            await page.waitForTimeout(500);
+          }
+        }
+      }
+    }
   });
 
   // --------------------------------------------------------------------------
@@ -101,8 +141,9 @@ test.describe('Activity Icon Display Regression — BMP OLE fix (74d0a34)', () =
       await iconInput.setInputFiles(tmpPath);
       await page.waitForTimeout(500);
 
-      // Submit
-      const submitButton = form.locator('button[type="submit"]');
+      // Submit — the activity form uses type="button" (not type="submit")
+      // Submit button is in the footer div, outside <form> — scope to page
+      const submitButton = page.locator('button').filter({ hasText: /Create Activity/i });
       await expect(submitButton).toBeVisible();
       await submitButton.click();
       await page.waitForLoadState('networkidle');
@@ -149,44 +190,44 @@ test.describe('Activity Icon Display Regression — BMP OLE fix (74d0a34)', () =
   });
 
   // --------------------------------------------------------------------------
-  // Test 3 — BMP icon produces a valid (non-broken) data URI
+  // Test 3 — BMP icon (injected via API) produces the correct data URI
+  //
+  // The upload form only accepts PNG files; BMP icons enter the DB via legacy
+  // MS Access import only.  This test bypasses the form and POSTs a raw BMP
+  // base64 icon directly to the API — exactly as a migrated record would look
+  // in the database — then verifies that getIconSrc() maps the "Qk" prefix to
+  // a valid data URI rather than a broken or placeholder image.
   // --------------------------------------------------------------------------
-  test('uploading a BMP icon displays with a valid data URI (not broken)', async ({ page }) => {
+  test('BMP icon data from API displays with correct MIME type (getIconSrc fix)', async ({ page }) => {
     const suffix = `${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
-    const tmpPath = join(os.tmpdir(), `test-icon-bmp-${suffix}.bmp`);
     const activityCode = `ICON-BMP-${suffix}`;
     let createdCode: string | null = null;
 
+    // Must be on the activities page before reading localStorage (Angular sets
+    // auth_token only after the app bootstraps on a page that requires auth)
+    await page.goto('/activities');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(500);
+
+    // Grab the JWT that Angular stored after login
+    const token = await page.evaluate(() => localStorage.getItem('auth_token'));
+    expect(token).not.toBeNull();
+
+    // Create an activity with a raw BMP base64 icon via the API.
+    // This mimics what the legacy importer writes to the DB after stripping
+    // the OLE wrapper — the icon column contains a "Qk…" base64 BMP string.
+    const createResp = await page.request.post('http://localhost:5039/api/activities', {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { code: activityCode, name: 'BMP Icon Test', icon: MINIMAL_BMP_B64 },
+    });
+    expect(createResp.ok()).toBeTruthy();
+    createdCode = activityCode;
+
     try {
-      writeFileSync(tmpPath, Buffer.from(MINIMAL_BMP_B64, 'base64'));
-
-      await page.goto('/activities');
+      // Reload so Angular fetches the updated activities list
+      await page.reload();
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(500);
-
-      const addButton = page.locator('button').filter({ hasText: /add|new|create/i }).first();
-      await expect(addButton).toBeVisible();
-      await addButton.click();
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(300);
-
-      const form = page.locator('form');
-      await form.locator('input#code').fill(activityCode);
-      await form.locator('input#name').fill('BMP Icon Test');
-
-      const iconInput = form.locator('input#icon[type="file"]');
-      await expect(iconInput).toBeVisible();
-      await iconInput.setInputFiles(tmpPath);
-      await page.waitForTimeout(500);
-
-      const submitButton = form.locator('button[type="submit"]');
-      await expect(submitButton).toBeVisible();
-      await submitButton.click();
-      await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
-
-      // Record that the activity was created so finally can clean it up
-      createdCode = activityCode;
 
       const activityRow = page
         .locator('table tbody tr')
@@ -194,21 +235,17 @@ test.describe('Activity Icon Display Regression — BMP OLE fix (74d0a34)', () =
         .first();
       await expect(activityRow).toBeVisible({ timeout: 5000 });
 
-      // Hard assertion — the img must be present (not silently skipped)
+      // Hard assertion — the img element must exist (not silently absent)
       const iconImg = activityRow.locator('.avatar img');
       await expect(iconImg).toHaveCount(1, { timeout: 3000 });
       const src = (await iconImg.getAttribute('src')) ?? '';
-      // getIconSrc() maps "Qk…" → bmp, but the browser may also accept jpeg/png
-      // if the server re-encodes the image.  Any recognised MIME type is valid.
+
+      // getIconSrc() must map "Qk…" → data:image/bmp;base64,…
+      // (other image/* MIME types are also acceptable if the server re-encodes)
       expect(src).toMatch(/^data:image\/(bmp|jpeg|png);base64,/);
       expect(src.length).toBeGreaterThan(20);
     } finally {
-      // Always clean up temp file
-      if (existsSync(tmpPath)) {
-        unlinkSync(tmpPath);
-      }
-
-      // Always clean up created activity
+      // Clean up via the UI archive button
       if (createdCode) {
         const rows = page.locator('table tbody tr').filter({ hasText: createdCode });
         if ((await rows.count()) > 0) {
@@ -251,7 +288,9 @@ test.describe('Activity Icon Display Regression — BMP OLE fix (74d0a34)', () =
       await form.locator('input#name').fill('No Icon Test');
       // Intentionally do NOT upload any icon
 
-      const submitButton = form.locator('button[type="submit"]');
+      // Submit — the activity form uses type="button" (not type="submit")
+      // Submit button is in the footer div, outside <form> — scope to page
+      const submitButton = page.locator('button').filter({ hasText: /Create Activity/i });
       await expect(submitButton).toBeVisible();
       await submitButton.click();
       await page.waitForLoadState('networkidle');
