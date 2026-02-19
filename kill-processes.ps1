@@ -10,7 +10,7 @@ Write-Host "Killing KCOW dev processes (safe mode)..." -ForegroundColor Yellow
 
 function Stop-ProcessById([int]$ProcessId, [string]$Reason)
 {
-  $proc = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue %
+  $proc = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
   if (-not $proc)
   { return 
   }
