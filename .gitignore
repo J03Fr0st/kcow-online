@@ -341,3 +341,8 @@ docs/legacy/**/*.xml
 # Build artifacts
 build-errors.txt
 build-output.txt
+
+# =========================
+# Git Worktrees
+# =========================
+.worktrees/
