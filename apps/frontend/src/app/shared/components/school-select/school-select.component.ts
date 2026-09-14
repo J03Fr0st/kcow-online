@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   effect,
@@ -12,7 +13,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { type School, SchoolService } from '@core/services/school.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -34,6 +35,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
   protected schoolService = inject(SchoolService);
   private destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   // Two-way binding for schoolId
   readonly schoolId = model<number | null>(null);
@@ -96,6 +98,7 @@ export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
       .subscribe((query) => {
         this.searchQuery = query;
         this.filterSchools();
+        this.cdr.markForCheck();
       });
   }
 
@@ -105,7 +108,10 @@ export class SchoolSelectComponent implements ControlValueAccessor, OnInit {
   private loadSchools(): void {
     this.isLoading = true;
     this.schoolService.getActiveSchools().subscribe({
-      next: () => {
+      next: (schools) => {
+        this.allSchools = schools;
+        this.filterSchools();
+        this.cdr.markForCheck();
         this.isLoading = false;
       },
       error: () => {

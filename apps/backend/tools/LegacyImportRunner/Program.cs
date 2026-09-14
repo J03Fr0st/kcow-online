@@ -4,6 +4,13 @@ using Kcow.Infrastructure.Import;
 using Kcow.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 
+if (args.Contains("--help"))
+{
+    Console.WriteLine("Legacy import: [xmlPath] [xsdPath] [auditPath] [summaryPath] [--count | --sample N]. Activity runner also supports --preview.");
+    Console.WriteLine("Set ConnectionStrings__DefaultConnection to an absolute SQLite path. Count/sample/preview use read-only access to existing schema.");
+    return;
+}
+
 var countOnly = args.Any(arg => string.Equals(arg, "--count", StringComparison.OrdinalIgnoreCase));
 var sampleArgIndex = Array.FindIndex(args, arg => string.Equals(arg, "--sample", StringComparison.OrdinalIgnoreCase));
 var sampleCount = sampleArgIndex >= 0 && sampleArgIndex + 1 < args.Length && int.TryParse(args[sampleArgIndex + 1], out var parsedSample)
@@ -31,43 +38,20 @@ var xsdPath = args.Length > 1 && !args[1].StartsWith("--") ? args[1] : Path.Comb
 var auditPath = args.Length > 2 && !args[2].StartsWith("--") ? args[2] : Path.Combine(projectRoot, "migration-output", "school-import-audit.log");
 var summaryPath = args.Length > 3 && !args[3].StartsWith("--") ? args[3] : Path.Combine(projectRoot, "migration-output", "school-import-summary.txt");
 
-// Ensure database exists and migrations are run
-// Use the same database location as the API (in the Api directory)
-// The API runs from apps/backend/src/Api, so it uses "kcow.db" relative to that directory
-var apiDbPath = Path.Combine(projectRoot, "apps", "backend", "src", "Api", "kcow.db");
-var connectionString = $"Data Source={apiDbPath}";
-Console.WriteLine($"Using database: {apiDbPath}");
-var connectionFactory = new SqliteConnectionFactory(connectionString);
-
-// Run migrations
-var scriptsPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Infrastructure", "Migrations", "Scripts");
-if (!Directory.Exists(scriptsPath))
+if (!countOnly && sampleCount == 0 && (!File.Exists(xmlPath) || !File.Exists(xsdPath)))
 {
-    scriptsPath = Path.Combine(AppContext.BaseDirectory, "Migrations", "Scripts");
+    Console.Error.WriteLine("XML and XSD input files must exist.");
+    Environment.ExitCode = 1;
+    return;
 }
-
-using var loggerFactory = LoggerFactory.Create(builder =>
-{
-    builder.AddConsole();
-    builder.SetMinimumLevel(LogLevel.Warning);
-});
-
+var apiDbPath = Path.Combine(projectRoot, "apps", "backend", "src", "Api", "kcow.db");
+var connectionFactory = LegacyToolDatabase.Open(!countOnly && sampleCount == 0, $"Data Source={apiDbPath}");
+using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 var logger = loggerFactory.CreateLogger<DbUpBootstrapper>();
-var dbUpBootstrapper = new DbUpBootstrapper(connectionString, logger, scriptsPath);
-dbUpBootstrapper.RunMigrations();
 
 // Create repositories
 var schoolRepository = new SchoolRepository(connectionFactory);
 var truckRepository = new TruckRepository(connectionFactory);
-
-// Seed trucks if database is empty (needed for foreign key constraints)
-var existingTrucks = await truckRepository.GetAllAsync();
-if (!existingTrucks.Any())
-{
-    Console.WriteLine("No trucks found. Seeding trucks...");
-    await TruckSeeder.SeedAsync(truckRepository, logger);
-    Console.WriteLine("Trucks seeded successfully.");
-}
 
 if (countOnly)
 {
@@ -92,6 +76,15 @@ if (sampleCount > 0)
     }
 
     return;
+}
+
+// Seed trucks if database is empty (needed for foreign key constraints)
+var existingTrucks = await truckRepository.GetAllAsync();
+if (!existingTrucks.Any())
+{
+    Console.WriteLine("No trucks found. Seeding trucks...");
+    await TruckSeeder.SeedAsync(truckRepository, logger);
+    Console.WriteLine("Trucks seeded successfully.");
 }
 
 Directory.CreateDirectory(Path.GetDirectoryName(auditPath) ?? ".");

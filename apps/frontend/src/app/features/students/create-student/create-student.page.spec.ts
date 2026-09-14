@@ -1,7 +1,7 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { type Student, StudentService } from '@core/services/student.service';
+import { type Student, StudentService } from '@features/students/data-access/student.service';
 import { of } from 'rxjs';
 import { CreateStudentPage } from './create-student.page';
 

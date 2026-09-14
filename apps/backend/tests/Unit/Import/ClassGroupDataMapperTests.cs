@@ -31,18 +31,19 @@ public class ClassGroupDataMapperTests
     }
 
     [Fact]
-    public void Map_MissingName_ReturnsError()
+    public void Map_MissingName_GeneratesNameWithWarning()
     {
         var record = CreateRecord(classGroup: "", description: null);
 
         var result = _mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
+        Assert.True(result.Success);
+        Assert.Equal("ClassGroup-1-Unnamed", result.Data!.Name);
+        Assert.Contains(result.Warnings, w => w.Field == "Name");
     }
 
     [Fact]
-    public void Map_InvalidSchoolId_ReturnsError()
+    public void Map_InvalidSchoolId_ClearsLinkWithWarning()
     {
         var validSchoolIds = new HashSet<int> { 1, 2, 3 };
         var mapper = new ClassGroupDataMapper(validSchoolIds);
@@ -50,8 +51,9 @@ public class ClassGroupDataMapperTests
 
         var result = mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
+        Assert.True(result.Success);
+        Assert.Null(result.Data!.SchoolId);
+        Assert.Contains(result.Warnings, w => w.Field == "SchoolId");
     }
 
     [Fact]
@@ -101,14 +103,16 @@ public class ClassGroupDataMapperTests
     }
 
     [Fact]
-    public void Map_EndTimeBeforeStartTime_ReturnsError()
+    public void Map_EndTimeBeforeStartTime_SwapsTimesWithWarning()
     {
         var record = CreateRecord(startTime: "10:00", endTime: "09:00");
 
         var result = _mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
+        Assert.True(result.Success);
+        Assert.Equal(new TimeOnly(9, 0), result.Data!.StartTime);
+        Assert.Equal(new TimeOnly(10, 0), result.Data.EndTime);
+        Assert.Contains(result.Warnings, w => w.Field == "EndTime");
     }
 
     [Fact]

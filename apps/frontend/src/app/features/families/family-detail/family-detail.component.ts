@@ -8,7 +8,7 @@ import {
   type Guardian,
   type MergeFamiliesResult,
   type StudentSummary,
-} from '@core/services/family.service';
+} from '@features/families/data-access/family.service';
 import { ModalService } from '@core/services/modal.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MergeFamiliesModalComponent } from '@shared/components/merge-families-modal/merge-families-modal.component';
@@ -148,7 +148,7 @@ export class FamilyDetailComponent implements OnInit {
 
     if (this.family?.primaryBillingContactId) {
       const billingGuardian = this.guardians.find(
-        (g) => g.id === this.family.primaryBillingContactId,
+        (g) => g.id === this.family?.primaryBillingContactId,
       );
       if (billingGuardian) {
         return `${billingGuardian.firstName} ${billingGuardian.lastName}`;
@@ -212,7 +212,7 @@ export class FamilyDetailComponent implements OnInit {
       this.familyService.reactivateFamily(this.family.id, this.family).subscribe({
         next: () => {
           this.notificationService.success('Family reactivated successfully');
-          this.loadFamily(this.family.id); // Reload to get updated data
+          if (this.family) this.loadFamily(this.family.id); // Reload to get updated data
         },
         error: (err) => {
           this.notificationService.error(err.detail || 'Failed to reactivate family', 'Error');

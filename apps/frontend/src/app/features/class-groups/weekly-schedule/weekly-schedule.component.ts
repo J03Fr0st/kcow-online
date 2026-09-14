@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, type OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { ClassGroupService } from '@core/services/class-group.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
 import type { ClassGroup } from '@features/class-groups/models/class-group.model';
 import { ScheduleBlockComponent } from '../components/schedule-block/schedule-block.component';
 import { DAY_OF_WEEK_OPTIONS } from '../models/class-group.model';

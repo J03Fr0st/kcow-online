@@ -66,13 +66,13 @@ public class SchoolRepository : ISchoolRepository
     {
         using var connection = await _connectionFactory.CreateAsync(cancellationToken);
         const string sql = @"
-            INSERT INTO schools (name, short_name, school_description, truck_id, price, fee_description, formula,
+            INSERT INTO schools (id, name, short_name, school_description, truck_id, price, fee_description, formula,
                    visit_day, visit_sequence, contact_person, contact_cell, phone, telephone, fax, email,
                    circulars_email, address, address2, headmaster, headmaster_cell, is_active, language,
                    print_invoice, import_flag, afterschool1_name, afterschool1_contact, afterschool2_name,
                    afterschool2_contact, scheduling_notes, money_message, safe_notes, web_page, omsendbriewe,
                    kcow_web_page_link, created_at, updated_at)
-            VALUES (@Name, @ShortName, @SchoolDescription, @TruckId, @Price, @FeeDescription, @Formula,
+            VALUES (NULLIF(@Id, 0), @Name, @ShortName, @SchoolDescription, @TruckId, @Price, @FeeDescription, @Formula,
                    @VisitDay, @VisitSequence, @ContactPerson, @ContactCell, @Phone, @Telephone, @Fax, @Email,
                    @CircularsEmail, @Address, @Address2, @Headmaster, @HeadmasterCell, @IsActive, @Language,
                    @PrintInvoice, @ImportFlag, @Afterschool1Name, @Afterschool1Contact, @Afterschool2Name,

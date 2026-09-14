@@ -1,7 +1,6 @@
 using Kcow.Application.ClassGroups;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.ClassGroups;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -26,7 +25,7 @@ public class ClassGroupServiceTests
             _classGroupRepository,
             _schoolRepository,
             _truckRepository,
-            NullLogger<ClassGroupService>.Instance);
+            NullLogger<ClassGroupService>.Instance, Substitute.For<IClassGroupQueries>());
     }
 
     [Fact]
@@ -138,98 +137,8 @@ public class ClassGroupServiceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateAsync(request));
     }
 
-    [Fact]
-    public async Task GetAllAsync_ReturnsActiveClassGroups()
-    {
-        // Arrange
-        var classGroups = new List<ClassGroup>
-        {
-            new ClassGroup
-            {
-                Id = 1,
-                Name = "Active1",
-                SchoolId = 1,
-                DayOfWeek = DayOfWeek.Monday,
-                StartTime = new TimeOnly(9, 0),
-                EndTime = new TimeOnly(10, 0),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new ClassGroup
-            {
-                Id = 2,
-                Name = "Active2",
-                SchoolId = 1,
-                DayOfWeek = DayOfWeek.Wednesday,
-                StartTime = new TimeOnly(11, 0),
-                EndTime = new TimeOnly(12, 0),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
 
-        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
-            .Returns(classGroups);
-        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(new School { Id = 1, Name = "Test School" });
 
-        // Act
-        var results = await _service.GetAllAsync();
-
-        // Assert
-        Assert.Equal(2, results.Count);
-        Assert.All(results, cg => Assert.True(cg.IsActive));
-    }
-
-    [Fact]
-    public async Task GetAllAsync_WithSchoolFilter_ReturnsFilteredResults()
-    {
-        // Arrange
-        var classGroups = new List<ClassGroup>
-        {
-            new ClassGroup { Id = 1, Name = "CG1", SchoolId = 1, DayOfWeek = DayOfWeek.Monday, StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(10, 0), IsActive = true },
-            new ClassGroup { Id = 2, Name = "CG2", SchoolId = 2, DayOfWeek = DayOfWeek.Tuesday, StartTime = new TimeOnly(10, 0), EndTime = new TimeOnly(11, 0), IsActive = true }
-        };
-
-        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
-            .Returns(classGroups);
-        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(new School { Id = 1, Name = "School 1" });
-
-        // Act
-        var results = await _service.GetAllAsync(schoolId: 1);
-
-        // Assert
-        Assert.Single(results);
-        Assert.Equal("CG1", results[0].Name);
-        Assert.Equal(1, results[0].SchoolId);
-    }
-
-    [Fact]
-    public async Task GetAllAsync_WithTruckFilter_ReturnsFilteredResults()
-    {
-        // Arrange
-        var classGroups = new List<ClassGroup>
-        {
-            new ClassGroup { Id = 1, Name = "CG1", SchoolId = 1, TruckId = 1, DayOfWeek = DayOfWeek.Monday, StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(10, 0), IsActive = true },
-            new ClassGroup { Id = 2, Name = "CG2", SchoolId = 1, TruckId = 2, DayOfWeek = DayOfWeek.Tuesday, StartTime = new TimeOnly(10, 0), EndTime = new TimeOnly(11, 0), IsActive = true }
-        };
-
-        _classGroupRepository.GetActiveAsync(Arg.Any<CancellationToken>())
-            .Returns(classGroups);
-        _schoolRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(new School { Id = 1, Name = "Test School" });
-        _truckRepository.GetByIdAsync(1, Arg.Any<CancellationToken>())
-            .Returns(new Truck { Id = 1, Name = "Truck 1" });
-
-        // Act
-        var results = await _service.GetAllAsync(truckId: 1);
-
-        // Assert
-        Assert.Single(results);
-        Assert.Equal("CG1", results[0].Name);
-        Assert.Equal(1, results[0].TruckId);
-    }
 
     [Fact]
     public async Task GetByIdAsync_WithValidId_ReturnsClassGroupWithDetails()

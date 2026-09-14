@@ -2,8 +2,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NotificationService } from '@core/services/notification.service';
-import { type Truck, TruckService } from '@core/services/truck.service';
-import { environment } from '../../../../../environments/environment';
+import { type Truck, TruckService } from '@features/trucks/data-access/truck.service';
+import { environment } from '@environments/environment';
 import { TruckFormComponent } from './truck-form.component';
 
 describe('TruckFormComponent', () => {
@@ -48,7 +48,7 @@ describe('TruckFormComponent', () => {
 
   describe('Form Initialization', () => {
     it('should initialize form with empty values for create mode', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
 
       expect(component.form.value).toEqual({
         name: '',
@@ -59,7 +59,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should have required validators on name field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const nameControl = component.form.get('name');
 
       nameControl?.setValue('');
@@ -71,7 +71,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should have maxlength validator on name field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const nameControl = component.form.get('name');
 
       nameControl?.setValue('A'.repeat(101));
@@ -80,7 +80,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should have required validators on registrationNumber field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const regControl = component.form.get('registrationNumber');
 
       regControl?.setValue('');
@@ -89,7 +89,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should have maxlength validator on registrationNumber field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const regControl = component.form.get('registrationNumber');
 
       regControl?.setValue('A'.repeat(51));
@@ -98,7 +98,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should have required validators on status field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const statusControl = component.form.get('status');
 
       statusControl?.setValue('');
@@ -109,8 +109,8 @@ describe('TruckFormComponent', () => {
 
   describe('Load Truck for Edit', () => {
     it('should load truck data when truckId is provided', () => {
-      component.truckId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('truckId', 1);
+      fixture.detectChanges();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/trucks/1`);
       request.flush(mockTruck);
@@ -124,8 +124,8 @@ describe('TruckFormComponent', () => {
     });
 
     it('should set loading state during load', () => {
-      component.truckId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('truckId', 1);
+      fixture.detectChanges();
 
       expect(component.isLoading()).toBe(true);
 
@@ -136,14 +136,14 @@ describe('TruckFormComponent', () => {
     });
 
     it('should handle load error', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       const errorSpy = jest.spyOn(notificationService, 'error');
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      component.ngOnInit();
+      fixture.detectChanges();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/trucks/1`);
-      request.flush({ message: 'Not found' }, { status: 404 });
+      request.flush({ message: 'Not found' }, { status: 404, statusText: 'Not Found' });
 
       expect(component.error()).not.toBeNull();
       expect(errorSpy).toHaveBeenCalled();
@@ -153,7 +153,7 @@ describe('TruckFormComponent', () => {
 
   describe('Form Validation Display', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      fixture.detectChanges();
     });
 
     it('should show error for touched invalid field', () => {
@@ -190,7 +190,7 @@ describe('TruckFormComponent', () => {
 
   describe('Submit Form - Create', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      fixture.detectChanges();
       component.form.setValue({
         name: 'New Truck',
         registrationNumber: 'CA 999 999',
@@ -239,8 +239,9 @@ describe('TruckFormComponent', () => {
 
   describe('Submit Form - Update', () => {
     beforeEach(() => {
-      component.truckId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('truckId', 1);
+      fixture.detectChanges();
+      httpMock.expectOne(`${environment.apiUrl}/trucks/1`).flush(mockTruck);
       component.form.setValue({
         name: 'Updated Truck',
         registrationNumber: 'CA 123 456',
@@ -281,7 +282,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should show "Edit Truck" title for edit mode', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       expect(component.title).toBe('Edit Truck');
     });
 
@@ -290,7 +291,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should show "Update Truck" button text for edit mode', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       expect(component.submitButtonText).toBe('Update Truck');
     });
 

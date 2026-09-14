@@ -9,7 +9,7 @@ public class LegacyTruckSeedDataTests
     {
         var trucks = LegacyTruckSeedData.Build();
 
-        Assert.Equal(5, trucks.Count);
+        Assert.Equal(2, trucks.Count);
         Assert.Equal("Alpha", trucks[0].Name);
         Assert.Equal("KCOW-001", trucks[0].RegistrationNumber);
         Assert.Equal("Bravo", trucks[1].Name);

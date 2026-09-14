@@ -10,7 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BillingService } from '@core/services/billing.service';
+import { BillingService } from '@features/billing/data-access/billing.service';
 import { NotificationService } from '@core/services/notification.service';
 import type {
   BillingSummary,
@@ -283,6 +283,7 @@ export class FinancialTabComponent implements OnInit {
    * Submit payment
    */
   submitPayment(): void {
+    if (this.isSavingPayment()) return;
     const form = this.paymentForm();
 
     if (!form.amount || form.amount <= 0) {
@@ -384,6 +385,7 @@ export class FinancialTabComponent implements OnInit {
    * Submit invoice
    */
   submitInvoice(): void {
+    if (this.isSavingInvoice()) return;
     const form = this.invoiceForm();
 
     if (!form.amount || form.amount <= 0) {

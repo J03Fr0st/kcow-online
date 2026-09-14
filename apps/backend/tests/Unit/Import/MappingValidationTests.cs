@@ -62,8 +62,9 @@ public class MappingValidationTests
 
         var result = mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.Contains(result.Errors, e => e.Field == "Name");
+        Assert.True(result.Success);
+        Assert.Equal("ClassGroup-1-Unnamed", result.Data!.Name);
+        Assert.Contains(result.Warnings, e => e.Field == "Name");
     }
 
     [Fact]
@@ -74,8 +75,9 @@ public class MappingValidationTests
 
         var result = mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.Contains(result.Errors, e => e.Field == "Reference");
+        Assert.True(result.Success);
+        Assert.Equal("AUTO-000001", result.Data!.Student.Reference);
+        Assert.Contains(result.Warnings, w => w.Field == "Reference");
     }
 
     [Fact]
@@ -125,15 +127,15 @@ public class MappingValidationTests
         var mapper = new StudentDataMapper();
         var records = new[]
         {
-            CreateMinimalChildRecord(reference: ""), // error
+            CreateMinimalChildRecord(reference: ""), // generated reference
             CreateMinimalChildRecord(reference: "R1", birthdate: "bad-date"), // warning
             CreateMinimalChildRecord(reference: "R2") // clean
         };
 
         var result = mapper.MapMany(records);
 
-        Assert.Equal(2, result.Data!.Count); // 2 successful
-        Assert.True(result.HasErrors); // 1 error from first record
+        Assert.Equal(3, result.Data!.Count); // all accepted, with diagnostics
+        Assert.False(result.HasErrors); // blank reference is generated
         Assert.True(result.HasWarnings); // 1 warning from second record
     }
 

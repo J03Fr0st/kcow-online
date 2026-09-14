@@ -49,8 +49,8 @@ export class GlobalErrorHandler implements ErrorHandler {
       severity,
       context: {
         type: errorType,
-        zone: errorRecord?.zone,
-        task: errorRecord?.task,
+        zone: errorRecord?.['zone'],
+        task: errorRecord?.['task'],
       },
     });
 
@@ -66,12 +66,12 @@ export class GlobalErrorHandler implements ErrorHandler {
     if (error != null && typeof error === 'object') {
       const errorObj = error as Record<string, unknown>;
 
-      if (errorObj.rejection instanceof Error) {
-        return errorObj.rejection;
+      if (errorObj['rejection'] instanceof Error) {
+        return errorObj['rejection'];
       }
 
-      if (errorObj.error instanceof Error) {
-        return errorObj.error;
+      if (errorObj['error'] instanceof Error) {
+        return errorObj['error'];
       }
     }
 

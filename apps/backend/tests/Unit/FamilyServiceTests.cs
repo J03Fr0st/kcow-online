@@ -2,7 +2,6 @@ using Kcow.Application.Families;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Kcow.Infrastructure.Database;
-using Kcow.Infrastructure.Families;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
@@ -12,18 +11,20 @@ public class FamilyServiceTests
 {
     private readonly IFamilyRepository _familyRepository;
     private readonly IStudentRepository _studentRepository;
-    private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IFamilyRelationships _relationships;
     private readonly FamilyService _service;
 
     public FamilyServiceTests()
     {
         _familyRepository = Substitute.For<IFamilyRepository>();
         _studentRepository = Substitute.For<IStudentRepository>();
-        _connectionFactory = Substitute.For<IDbConnectionFactory>();
+        _relationships = Substitute.For<IFamilyRelationships>();
+        _relationships.GetStudentsAsync(Arg.Any<int[]>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<int, List<StudentFamilyDto>>());
         _service = new FamilyService(
             _familyRepository,
             _studentRepository,
-            _connectionFactory,
+            _relationships,
             NullLogger<FamilyService>.Instance);
     }
 

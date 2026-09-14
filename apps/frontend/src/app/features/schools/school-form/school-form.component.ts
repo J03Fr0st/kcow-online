@@ -10,7 +10,7 @@ import {
 import { FormBuilder, type FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NotificationService } from '@core/services/notification.service';
-import { type School, SchoolService } from '@core/services/school.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -271,13 +271,13 @@ export class SchoolFormComponent implements OnInit {
     const label =
       controlName.charAt(0).toUpperCase() + controlName.slice(1).replace(/([A-Z])/g, ' $1');
 
-    if (control.errors.required) {
+    if (control.errors['required']) {
       return `${label} is required`;
     }
-    if (control.errors.maxlength) {
-      return `${label} cannot exceed ${control.errors.maxlength.requiredLength} characters`;
+    if (control.errors['maxlength']) {
+      return `${label} cannot exceed ${control.errors['maxlength'].requiredLength} characters`;
     }
-    if (control.errors.email) {
+    if (control.errors['email']) {
       return 'Please enter a valid email address';
     }
 

@@ -157,6 +157,9 @@ public class ImportRerunCommandTests
         public ConflictResolutionMode? LastConflictMode { get; private set; }
         public ImportExecutionResult? ResultOverride { get; set; }
 
+        public Task<ImportExecutionResult> ExecuteAsync(ImportPlan plan, CancellationToken cancellationToken = default) =>
+            ExecuteAsync(plan.InputPath, plan.ConflictMode, cancellationToken);
+
         public Task<ImportExecutionResult> ExecuteAsync(string inputPath, CancellationToken cancellationToken = default)
         {
             return ExecuteAsync(inputPath, ConflictResolutionMode.FailOnConflict, cancellationToken);

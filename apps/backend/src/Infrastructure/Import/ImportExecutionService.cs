@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System.Data;
 using Dapper;
 using Kcow.Application.Import;
@@ -17,11 +18,13 @@ public sealed class ImportExecutionService : IImportExecutionService
 {
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly ILegacyParser _parser;
+    private readonly ILogger<ImportExecutionService>? _logger;
 
-    public ImportExecutionService(IDbConnectionFactory connectionFactory, ILegacyParser parser)
+    public ImportExecutionService(IDbConnectionFactory connectionFactory, ILegacyParser parser, ILogger<ImportExecutionService>? logger = null)
     {
         _connectionFactory = connectionFactory;
         _parser = parser;
+        _logger = logger;
     }
 
     public Task<ImportExecutionResult> ExecuteAsync(string inputPath, CancellationToken cancellationToken = default)
@@ -29,44 +32,37 @@ public sealed class ImportExecutionService : IImportExecutionService
         return ExecuteAsync(inputPath, ConflictResolutionMode.FailOnConflict, cancellationToken);
     }
 
-    public async Task<ImportExecutionResult> ExecuteAsync(string inputPath, ConflictResolutionMode conflictMode, CancellationToken cancellationToken = default)
+    public Task<ImportExecutionResult> ExecuteAsync(string inputPath, ConflictResolutionMode conflictMode, CancellationToken cancellationToken = default) =>
+        ExecuteAsync(new ImportPlanBuilder(_parser).Build(inputPath, conflictMode, cancellationToken), cancellationToken);
+
+    public async Task<ImportExecutionResult> ExecuteAsync(ImportPlan plan, CancellationToken cancellationToken = default)
     {
-        var result = new ImportExecutionResult
-        {
-            InputPath = inputPath,
-            ExecutedAt = DateTime.UtcNow,
-            ConflictMode = conflictMode
-        };
-
+        var result = new ImportExecutionResult { InputPath = plan.InputPath, ConflictMode = plan.ConflictMode,
+            RunId = plan.RunId, SourceFingerprint = plan.SourceFingerprint };
         using var connection = await _connectionFactory.CreateAsync(cancellationToken);
-
-        // Import in dependency order: Schools → ClassGroups → Activities → Students
-        result.Schools = await ImportSchoolsAsync(connection, inputPath, conflictMode, result.Exceptions);
-        result.ClassGroups = await ImportClassGroupsAsync(connection, inputPath, conflictMode, result.Exceptions);
-        result.Activities = await ImportActivitiesAsync(connection, inputPath, conflictMode, result.Exceptions);
-        result.Students = await ImportStudentsAsync(connection, inputPath, conflictMode, result.Exceptions);
-
+        result.Schools = await ImportSchoolsAsync(connection, plan.Schools, plan.ConflictMode, result.Exceptions, cancellationToken);
+        LogOutcome(plan, "Schools", result.Schools);
+        result.ClassGroups = await ImportClassGroupsAsync(connection, plan.ClassGroups, plan.ConflictMode, result.Exceptions, cancellationToken);
+        LogOutcome(plan, "ClassGroups", result.ClassGroups);
+        result.Activities = await ImportActivitiesAsync(connection, plan.Activities, plan.ConflictMode, result.Exceptions, cancellationToken);
+        LogOutcome(plan, "Activities", result.Activities);
+        result.Students = await ImportStudentsAsync(connection, plan.Students, plan.ConflictMode, result.Exceptions, cancellationToken);
+        LogOutcome(plan, "Students", result.Students);
         return result;
     }
 
+    private void LogOutcome(ImportPlan plan, string entity, EntityImportResult outcome) =>
+        _logger?.LogInformation("Import {RunId} source {Fingerprint} entity {Entity} committed={Committed}, imported={Imported}, updated={Updated}, skipped={Skipped}, rejected={Failed}",
+            plan.RunId, plan.SourceFingerprint, entity, outcome.Committed, outcome.Imported, outcome.Updated, outcome.Skipped, outcome.Failed);
+
     private async Task<EntityImportResult> ImportSchoolsAsync(
-        IDbConnection connection, string inputPath, ConflictResolutionMode conflictMode, List<ImportException> exceptions)
+        IDbConnection connection, EntityPlan<School> plan, ConflictResolutionMode conflictMode, List<ImportException> exceptions, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var counts = new EntityImportResult();
-        var folder = Path.Combine(inputPath, "1_School");
-        var xmlPath = Path.Combine(folder, "School.xml");
-        var xsdPath = Path.Combine(folder, "School.xsd");
-
-        if (!File.Exists(xmlPath) || !File.Exists(xsdPath))
-            return counts;
-
-        var parseResult = _parser.ParseSchools(xmlPath, xsdPath);
-        AddParseExceptions(parseResult, "School", exceptions);
-
-        var mapper = new SchoolDataMapper();
-        var mapResult = mapper.MapMany(parseResult.Records);
+        foreach (var error in plan.ParseErrors) exceptions.Add(new ImportException("School", "", "_parse", error));
+        var mapResult = plan.GetMapping();
         AddMappingExceptions(mapResult, "School", exceptions, ref counts);
-
         if (mapResult.Data is null || mapResult.Data.Count == 0) return counts;
 
         using var transaction = connection.BeginTransaction();
@@ -74,9 +70,10 @@ public sealed class ImportExecutionService : IImportExecutionService
         {
             foreach (var school in mapResult.Data)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var existing = await FindByLegacyIdAsync<School>(connection, transaction, "schools", school.LegacyId);
+                    var existing = await FindByLegacyIdAsync<School>(connection, transaction, "schools", school.LegacyId, cancellationToken);
                     if (existing is not null)
                     {
                         switch (conflictMode)
@@ -91,22 +88,25 @@ public sealed class ImportExecutionService : IImportExecutionService
                                 school.Id = existing.Id;
                                 school.CreatedAt = existing.CreatedAt;
                                 school.UpdatedAt = DateTime.UtcNow;
-                                await UpdateSchoolAsync(connection, transaction, school);
+                                await UpdateSchoolAsync(connection, transaction, school, cancellationToken);
                                 counts.Updated++;
                                 continue;
                         }
                     }
 
-                    await InsertSchoolAsync(connection, transaction, school);
+                    await InsertSchoolAsync(connection, transaction, school, cancellationToken);
                     counts.Imported++;
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
                     counts.Failed++;
                     exceptions.Add(new ImportException("School", school.LegacyId ?? school.Id.ToString(), "_insert", ex.Message));
                 }
             }
+            cancellationToken.ThrowIfCancellationRequested();
             transaction.Commit();
+            counts.Committed = true;
         }
         catch (Exception)
         {
@@ -118,26 +118,20 @@ public sealed class ImportExecutionService : IImportExecutionService
     }
 
     private async Task<EntityImportResult> ImportClassGroupsAsync(
-        IDbConnection connection, string inputPath, ConflictResolutionMode conflictMode, List<ImportException> exceptions)
+        IDbConnection connection, EntityPlan<ClassGroup> plan, ConflictResolutionMode conflictMode, List<ImportException> exceptions, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var counts = new EntityImportResult();
-        var folder = Path.Combine(inputPath, "2_Class_Group");
-        var xmlPath = Path.Combine(folder, "Class Group.xml");
-        var xsdPath = Path.Combine(folder, "Class Group.xsd");
-
-        if (!File.Exists(xmlPath) || !File.Exists(xsdPath))
-            return counts;
-
-        var parseResult = _parser.ParseClassGroups(xmlPath, xsdPath);
-        AddParseExceptions(parseResult, "ClassGroup", exceptions);
-
-        // Load valid school IDs so the mapper can null-out invalid FK references
-        var validSchoolIds = new HashSet<int>(
-            (await connection.QueryAsync<int>("SELECT id FROM schools")).ToList());
-        var mapper = new ClassGroupDataMapper(validSchoolIds);
-        var mapResult = mapper.MapMany(parseResult.Records);
+        foreach (var error in plan.ParseErrors) exceptions.Add(new ImportException("ClassGroup", "", "_parse", error));
+        var mapResult = plan.GetMapping();
         AddMappingExceptions(mapResult, "ClassGroup", exceptions, ref counts);
-
+        var validSchoolIds = (await connection.QueryAsync<int>(new CommandDefinition("SELECT id FROM schools", cancellationToken: cancellationToken))).ToHashSet();
+        foreach (var group in mapResult.Data ?? [])
+            if (group.SchoolId.HasValue && validSchoolIds.Count > 0 && !validSchoolIds.Contains(group.SchoolId.Value))
+            {
+                exceptions.Add(new ImportException("ClassGroup", group.LegacyId ?? group.Name, "SchoolId", "Missing school reference cleared at execution"));
+                group.SchoolId = null;
+            }
         if (mapResult.Data is null || mapResult.Data.Count == 0) return counts;
 
         using var transaction = connection.BeginTransaction();
@@ -145,9 +139,10 @@ public sealed class ImportExecutionService : IImportExecutionService
         {
             foreach (var classGroup in mapResult.Data)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var existing = await FindByLegacyIdAsync<ClassGroup>(connection, transaction, "class_groups", classGroup.LegacyId);
+                    var existing = await FindByLegacyIdAsync<ClassGroup>(connection, transaction, "class_groups", classGroup.LegacyId, cancellationToken);
                     if (existing is not null)
                     {
                         switch (conflictMode)
@@ -162,22 +157,25 @@ public sealed class ImportExecutionService : IImportExecutionService
                                 classGroup.Id = existing.Id;
                                 classGroup.CreatedAt = existing.CreatedAt;
                                 classGroup.UpdatedAt = DateTime.UtcNow;
-                                await UpdateClassGroupAsync(connection, transaction, classGroup);
+                                await UpdateClassGroupAsync(connection, transaction, classGroup, cancellationToken);
                                 counts.Updated++;
                                 continue;
                         }
                     }
 
-                    await InsertClassGroupAsync(connection, transaction, classGroup);
+                    await InsertClassGroupAsync(connection, transaction, classGroup, cancellationToken);
                     counts.Imported++;
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
                     counts.Failed++;
                     exceptions.Add(new ImportException("ClassGroup", classGroup.LegacyId ?? classGroup.Name, "_insert", ex.Message));
                 }
             }
+            cancellationToken.ThrowIfCancellationRequested();
             transaction.Commit();
+            counts.Committed = true;
         }
         catch (Exception)
         {
@@ -189,23 +187,13 @@ public sealed class ImportExecutionService : IImportExecutionService
     }
 
     private async Task<EntityImportResult> ImportActivitiesAsync(
-        IDbConnection connection, string inputPath, ConflictResolutionMode conflictMode, List<ImportException> exceptions)
+        IDbConnection connection, EntityPlan<Activity> plan, ConflictResolutionMode conflictMode, List<ImportException> exceptions, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var counts = new EntityImportResult();
-        var folder = Path.Combine(inputPath, "3_Activity");
-        var xmlPath = Path.Combine(folder, "Activity.xml");
-        var xsdPath = Path.Combine(folder, "Activity.xsd");
-
-        if (!File.Exists(xmlPath) || !File.Exists(xsdPath))
-            return counts;
-
-        var parseResult = _parser.ParseActivities(xmlPath, xsdPath);
-        AddParseExceptions(parseResult, "Activity", exceptions);
-
-        var mapper = new ActivityDataMapper();
-        var mapResult = mapper.MapMany(parseResult.Records);
+        foreach (var error in plan.ParseErrors) exceptions.Add(new ImportException("Activity", "", "_parse", error));
+        var mapResult = plan.GetMapping();
         AddMappingExceptions(mapResult, "Activity", exceptions, ref counts);
-
         if (mapResult.Data is null || mapResult.Data.Count == 0) return counts;
 
         using var transaction = connection.BeginTransaction();
@@ -213,9 +201,10 @@ public sealed class ImportExecutionService : IImportExecutionService
         {
             foreach (var activity in mapResult.Data)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var existing = await FindByLegacyIdAsync<Activity>(connection, transaction, "activities", activity.LegacyId);
+                    var existing = await FindByLegacyIdAsync<Activity>(connection, transaction, "activities", activity.LegacyId, cancellationToken);
                     if (existing is not null)
                     {
                         switch (conflictMode)
@@ -230,22 +219,25 @@ public sealed class ImportExecutionService : IImportExecutionService
                                 activity.Id = existing.Id;
                                 activity.CreatedAt = existing.CreatedAt;
                                 activity.UpdatedAt = DateTime.UtcNow;
-                                await UpdateActivityAsync(connection, transaction, activity);
+                                await UpdateActivityAsync(connection, transaction, activity, cancellationToken);
                                 counts.Updated++;
                                 continue;
                         }
                     }
 
-                    await InsertActivityAsync(connection, transaction, activity);
+                    await InsertActivityAsync(connection, transaction, activity, cancellationToken);
                     counts.Imported++;
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
                     counts.Failed++;
                     exceptions.Add(new ImportException("Activity", activity.LegacyId ?? activity.Id.ToString(), "_insert", ex.Message));
                 }
             }
+            cancellationToken.ThrowIfCancellationRequested();
             transaction.Commit();
+            counts.Committed = true;
         }
         catch (Exception)
         {
@@ -257,23 +249,13 @@ public sealed class ImportExecutionService : IImportExecutionService
     }
 
     private async Task<EntityImportResult> ImportStudentsAsync(
-        IDbConnection connection, string inputPath, ConflictResolutionMode conflictMode, List<ImportException> exceptions)
+        IDbConnection connection, EntityPlan<StudentMappingData> plan, ConflictResolutionMode conflictMode, List<ImportException> exceptions, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var counts = new EntityImportResult();
-        var folder = Path.Combine(inputPath, "4_Children");
-        var xmlPath = Path.Combine(folder, "Children.xml");
-        var xsdPath = Path.Combine(folder, "Children.xsd");
-
-        if (!File.Exists(xmlPath) || !File.Exists(xsdPath))
-            return counts;
-
-        var parseResult = _parser.ParseChildren(xmlPath, xsdPath);
-        AddParseExceptions(parseResult, "Student", exceptions);
-
-        var mapper = new StudentDataMapper();
-        var mapResult = mapper.MapMany(parseResult.Records);
+        foreach (var error in plan.ParseErrors) exceptions.Add(new ImportException("Student", "", "_parse", error));
+        var mapResult = plan.GetMapping();
         AddMappingExceptions(mapResult, "Student", exceptions, ref counts);
-
         if (mapResult.Data is null || mapResult.Data.Count == 0) return counts;
 
         using var transaction = connection.BeginTransaction();
@@ -281,9 +263,10 @@ public sealed class ImportExecutionService : IImportExecutionService
         {
             foreach (var data in mapResult.Data)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    var existing = await FindByLegacyIdAsync<Student>(connection, transaction, "students", data.Student.LegacyId);
+                    var existing = await FindByLegacyIdAsync<Student>(connection, transaction, "students", data.Student.LegacyId, cancellationToken);
                     if (existing is not null)
                     {
                         switch (conflictMode)
@@ -298,22 +281,25 @@ public sealed class ImportExecutionService : IImportExecutionService
                                 data.Student.Id = existing.Id;
                                 data.Student.CreatedAt = existing.CreatedAt;
                                 data.Student.UpdatedAt = DateTime.UtcNow;
-                                await UpdateStudentAsync(connection, transaction, data.Student);
+                                await UpdateStudentAsync(connection, transaction, data.Student, cancellationToken);
                                 counts.Updated++;
                                 continue;
                         }
                     }
 
-                    await InsertStudentAsync(connection, transaction, data.Student);
+                    await InsertStudentAsync(connection, transaction, data.Student, cancellationToken);
                     counts.Imported++;
                 }
+                catch (OperationCanceledException) { throw; }
                 catch (Exception ex)
                 {
                     counts.Failed++;
                     exceptions.Add(new ImportException("Student", data.Student.LegacyId ?? data.Student.Reference ?? "", "_insert", ex.Message));
                 }
             }
+            cancellationToken.ThrowIfCancellationRequested();
             transaction.Commit();
+            counts.Committed = true;
         }
         catch (Exception)
         {
@@ -332,21 +318,13 @@ public sealed class ImportExecutionService : IImportExecutionService
     };
 
     private static async Task<T?> FindByLegacyIdAsync<T>(
-        IDbConnection connection, IDbTransaction transaction, string tableName, string? legacyId)
+        IDbConnection connection, IDbTransaction transaction, string tableName, string? legacyId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(legacyId)) return default;
         if (!AllowedTableNames.Contains(tableName))
             throw new ArgumentException($"Invalid table name: {tableName}", nameof(tableName));
         var sql = $"SELECT * FROM {tableName} WHERE legacy_id = @LegacyId LIMIT 1";
-        return await connection.QuerySingleOrDefaultAsync<T>(sql, new { LegacyId = legacyId }, transaction);
-    }
-
-    private static void AddParseExceptions<T>(ParseResult<T> result, string entityType, List<ImportException> exceptions)
-    {
-        foreach (var error in result.Errors)
-        {
-            exceptions.Add(new ImportException(entityType, "", "_parse", error.Message));
-        }
+        return await connection.QuerySingleOrDefaultAsync<T>(new CommandDefinition(sql, new { LegacyId = legacyId }, transaction, cancellationToken: cancellationToken));
     }
 
     private static void AddMappingExceptions<T>(MappingResult<List<T>> result, string entityType,
@@ -358,6 +336,9 @@ public sealed class ImportExecutionService : IImportExecutionService
             exceptions.Add(new ImportException(entityType, "", error.Field, error.Message));
         }
 
+        foreach (var warning in result.Warnings.Where(w => w.Field != "_skip"))
+            exceptions.Add(new ImportException(entityType, "", warning.Field, "Warning: " + warning.Message, warning.OriginalValue));
+
         // Count skipped items from warnings that indicate skips
         foreach (var warning in result.Warnings.Where(w => w.Field == "_skip"))
         {
@@ -367,7 +348,7 @@ public sealed class ImportExecutionService : IImportExecutionService
 
     // INSERT methods
 
-    private static async Task InsertSchoolAsync(IDbConnection connection, IDbTransaction transaction, School school)
+    private static async Task InsertSchoolAsync(IDbConnection connection, IDbTransaction transaction, School school, CancellationToken cancellationToken)
     {
         const string sql = @"
             INSERT INTO schools (name, short_name, school_description, truck_id, price, fee_description, formula,
@@ -382,10 +363,10 @@ public sealed class ImportExecutionService : IImportExecutionService
                    @PrintInvoice, @ImportFlag, @Afterschool1Name, @Afterschool1Contact, @Afterschool2Name,
                    @Afterschool2Contact, @SchedulingNotes, @MoneyMessage, @SafeNotes, @WebPage,
                    @Omsendbriewe, @KcowWebPageLink, @LegacyId, @CreatedAt)";
-        await connection.ExecuteAsync(sql, school, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, school, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task InsertClassGroupAsync(IDbConnection connection, IDbTransaction transaction, ClassGroup cg)
+    private static async Task InsertClassGroupAsync(IDbConnection connection, IDbTransaction transaction, ClassGroup cg, CancellationToken cancellationToken)
     {
         const string sql = @"
             INSERT INTO class_groups (name, day_truck, description, school_id, truck_id, day_of_week,
@@ -394,18 +375,18 @@ public sealed class ImportExecutionService : IImportExecutionService
             VALUES (@Name, @DayTruck, @Description, @SchoolId, @TruckId, @DayOfWeek,
                    @StartTime, @EndTime, @Sequence, @Evaluate, @Notes, @ImportFlag, @GroupMessage,
                    @SendCertificates, @MoneyMessage, @Ixl, @IsActive, @LegacyId, @CreatedAt)";
-        await connection.ExecuteAsync(sql, cg, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, cg, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task InsertActivityAsync(IDbConnection connection, IDbTransaction transaction, Activity activity)
+    private static async Task InsertActivityAsync(IDbConnection connection, IDbTransaction transaction, Activity activity, CancellationToken cancellationToken)
     {
         const string sql = @"
             INSERT INTO activities (code, name, description, folder, grade_level, icon, is_active, legacy_id, created_at)
             VALUES (@Code, @Name, @Description, @Folder, @GradeLevel, @Icon, @IsActive, @LegacyId, @CreatedAt)";
-        await connection.ExecuteAsync(sql, activity, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, activity, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task InsertStudentAsync(IDbConnection connection, IDbTransaction transaction, Student student)
+    private static async Task InsertStudentAsync(IDbConnection connection, IDbTransaction transaction, Student student, CancellationToken cancellationToken)
     {
         const string sql = @"
             INSERT INTO students (reference, first_name, last_name, date_of_birth, gender, language,
@@ -446,12 +427,12 @@ public sealed class ImportExecutionService : IImportExecutionService
                    @BookEmail, @Report1GivenOut, @AccountGivenOut, @CertificatePrinted,
                    @Report2GivenOut, @Social, @ActivityReportGivenOut, @PhotoUrl, @PhotoUpdated,
                    @IsActive, @LegacyId, @CreatedAt)";
-        await connection.ExecuteAsync(sql, student, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, student, transaction, cancellationToken: cancellationToken));
     }
 
     // UPDATE methods
 
-    private static async Task UpdateSchoolAsync(IDbConnection connection, IDbTransaction transaction, School school)
+    private static async Task UpdateSchoolAsync(IDbConnection connection, IDbTransaction transaction, School school, CancellationToken cancellationToken)
     {
         const string sql = @"
             UPDATE schools SET name = @Name, short_name = @ShortName,
@@ -469,10 +450,10 @@ public sealed class ImportExecutionService : IImportExecutionService
                    omsendbriewe = @Omsendbriewe, kcow_web_page_link = @KcowWebPageLink,
                    updated_at = @UpdatedAt
             WHERE id = @Id";
-        await connection.ExecuteAsync(sql, school, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, school, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task UpdateClassGroupAsync(IDbConnection connection, IDbTransaction transaction, ClassGroup cg)
+    private static async Task UpdateClassGroupAsync(IDbConnection connection, IDbTransaction transaction, ClassGroup cg, CancellationToken cancellationToken)
     {
         const string sql = @"
             UPDATE class_groups SET name = @Name, day_truck = @DayTruck, description = @Description,
@@ -483,20 +464,20 @@ public sealed class ImportExecutionService : IImportExecutionService
                    money_message = @MoneyMessage, ixl = @Ixl, is_active = @IsActive,
                    updated_at = @UpdatedAt
             WHERE id = @Id";
-        await connection.ExecuteAsync(sql, cg, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, cg, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task UpdateActivityAsync(IDbConnection connection, IDbTransaction transaction, Activity activity)
+    private static async Task UpdateActivityAsync(IDbConnection connection, IDbTransaction transaction, Activity activity, CancellationToken cancellationToken)
     {
         const string sql = @"
             UPDATE activities SET code = @Code, name = @Name, description = @Description,
                    folder = @Folder, grade_level = @GradeLevel, icon = @Icon,
                    is_active = @IsActive, updated_at = @UpdatedAt
             WHERE id = @Id";
-        await connection.ExecuteAsync(sql, activity, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, activity, transaction, cancellationToken: cancellationToken));
     }
 
-    private static async Task UpdateStudentAsync(IDbConnection connection, IDbTransaction transaction, Student student)
+    private static async Task UpdateStudentAsync(IDbConnection connection, IDbTransaction transaction, Student student, CancellationToken cancellationToken)
     {
         const string sql = @"
             UPDATE students SET reference = @Reference, first_name = @FirstName, last_name = @LastName,
@@ -543,6 +524,6 @@ public sealed class ImportExecutionService : IImportExecutionService
                    photo_url = @PhotoUrl, photo_updated = @PhotoUpdated,
                    is_active = @IsActive, updated_at = @UpdatedAt
             WHERE id = @Id";
-        await connection.ExecuteAsync(sql, student, transaction);
+        await connection.ExecuteAsync(new CommandDefinition(sql, student, transaction, cancellationToken: cancellationToken));
     }
 }

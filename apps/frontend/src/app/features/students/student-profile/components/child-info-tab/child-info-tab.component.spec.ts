@@ -7,7 +7,7 @@ import {
   type Student,
   StudentService,
   type UpdateStudentRequest,
-} from '@core/services/student.service';
+} from '@features/students/data-access/student.service';
 import { type Observable, of, throwError } from 'rxjs';
 import { ChildInfoTabComponent } from './child-info-tab.component';
 
@@ -28,7 +28,7 @@ describe('ChildInfoTabComponent', () => {
     dateOfBirth: '2015-03-15',
     gender: 'M',
     language: 'Eng',
-    grade: 'Grade 5',
+    grade: '5',
     generalNote: 'Some notes',
     schoolName: 'Test School',
     classGroupCode: '5A',
@@ -64,7 +64,7 @@ describe('ChildInfoTabComponent', () => {
     component = fixture.componentInstance;
 
     // Set the required input
-    component.student.set(mockStudent);
+    fixture.componentRef.setInput('student', mockStudent);
   });
 
   describe('Component Creation', () => {
@@ -124,7 +124,7 @@ describe('ChildInfoTabComponent', () => {
     it('should display grade', () => {
       const input = fixture.debugElement.query(By.css('#grade'));
       expect(input).toBeTruthy();
-      expect(input.nativeElement.value).toBe('Grade 5');
+      expect(input.nativeElement.value).toBe('5');
     });
 
     it('should display general notes', () => {
@@ -191,7 +191,7 @@ describe('ChildInfoTabComponent', () => {
         dateOfBirth: '2016-04-20',
         gender: 'F',
         language: 'Afr',
-        grade: 'Grade 6',
+        grade: '6',
         generalNote: 'Updated notes',
       });
 
@@ -214,7 +214,7 @@ describe('ChildInfoTabComponent', () => {
       const updatedStudent = { ...mockStudent, firstName: 'Jane' };
       mockStudentService.updateStudent.mockReturnValue(of(updatedStudent));
 
-      spyOn(component.updated, 'emit');
+      jest.spyOn(component.updated, 'emit');
 
       component.form.patchValue({ firstName: 'Jane' });
       component.save();

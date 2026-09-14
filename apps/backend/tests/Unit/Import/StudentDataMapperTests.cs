@@ -22,15 +22,15 @@ public class StudentDataMapperTests
     }
 
     [Fact]
-    public void Map_MissingReference_ReturnsError()
+    public void Map_MissingReference_GeneratesReferenceWithWarning()
     {
         var record = CreateRecord(reference: "");
 
         var result = _mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.Null(result.Data);
-        Assert.Contains(result.Errors, e => e.Field == "Reference");
+        Assert.True(result.Success);
+        Assert.Equal("AUTO-000001", result.Data!.Student.Reference);
+        Assert.Contains(result.Warnings, w => w.Field == "Reference");
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class StudentDataMapperTests
     }
 
     [Fact]
-    public void MapMany_MapsAllRecords_SkipsInvalid()
+    public void MapMany_MapsAllRecords_GeneratesMissingReferences()
     {
         var records = new[]
         {
@@ -154,8 +154,8 @@ public class StudentDataMapperTests
         var result = _mapper.MapMany(records);
 
         Assert.True(result.Success);
-        Assert.Equal(2, result.Data!.Count);
-        Assert.True(result.HasErrors); // from invalid record
+        Assert.Equal(3, result.Data!.Count);
+        Assert.False(result.HasErrors); // blank reference is generated
     }
 
     private static LegacyChildRecord CreateRecord(

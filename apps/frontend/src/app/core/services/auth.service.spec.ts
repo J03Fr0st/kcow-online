@@ -2,10 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import type { LoginRequest } from '../../features/auth/models/login-request.model';
-import type { LoginResponse } from '../../features/auth/models/login-response.model';
-import type { User } from '../../features/auth/models/user.model';
+import { environment } from '@environments/environment';
+import type { LoginRequest } from '@core/auth/models/login-request.model';
+import type { LoginResponse } from '@core/auth/models/login-response.model';
+import type { User } from '@core/auth/models/user.model';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {

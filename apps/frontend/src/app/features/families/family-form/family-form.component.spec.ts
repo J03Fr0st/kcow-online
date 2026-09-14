@@ -1,6 +1,6 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FamilyService } from '@core/services/family.service';
+import { FamilyService } from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
 import { GuardianFormComponent } from '@shared/components/guardian-form/guardian-form.component';
 import { of } from 'rxjs';
@@ -137,6 +137,7 @@ describe('FamilyFormComponent', () => {
     });
 
     it('should create family and guardian on submit', () => {
+      (component as any).guardians.set([{ firstName: 'Jane', lastName: 'Doe', isPrimaryContact: true }]);
       (component as any).form.setValue({ familyName: 'Test Family', notes: 'Test notes' });
       (component as any).onSubmit();
 

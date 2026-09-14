@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Kcow.Application.Auth;
 using Kcow.Application.Billing;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -166,4 +167,38 @@ public class BillingControllerTests : IClassFixture<CustomWebApplicationFactory>
         var response = await client.PostAsJsonAsync("/api/students/1/payments", request);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+    [Fact]
+    public async Task BillingCommandsReplayAndRejectChangedPayloadsAndCrossStudentLinks()
+    {
+        using var client = await CreateAuthenticatedClientAsync();
+        using var scope = _factory.Services.CreateScope();
+        var students = scope.ServiceProvider.GetRequiredService<Kcow.Application.Interfaces.IStudentRepository>();
+        var first = await students.CreateAsync(new Kcow.Domain.Entities.Student { Reference = "BILL-A" });
+        var other = await students.CreateAsync(new Kcow.Domain.Entities.Student { Reference = "BILL-B" });
+        client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        var invoiceRequest = new CreateInvoiceRequest { InvoiceDate = "2026-09-12", DueDate = "2026-10-12", Amount = 100m };
+        var invoiceResponse = await client.PostAsJsonAsync($"/api/students/{first}/invoices", invoiceRequest);
+        invoiceResponse.EnsureSuccessStatusCode();
+        var invoice = (await invoiceResponse.Content.ReadFromJsonAsync<InvoiceDto>())!;
+        var replayInvoice = await client.PostAsJsonAsync($"/api/students/{first}/invoices", invoiceRequest);
+        replayInvoice.EnsureSuccessStatusCode();
+        Assert.Equal(invoice.Id, (await replayInvoice.Content.ReadFromJsonAsync<InvoiceDto>())!.Id);
+        var request = new CreatePaymentRequest { PaymentDate = "2026-09-12", Amount = 100m, PaymentMethod = 0, InvoiceId = invoice.Id };
+        var crossStudent = await client.PostAsJsonAsync($"/api/students/{other}/payments", request);
+        Assert.Equal(HttpStatusCode.BadRequest, crossStudent.StatusCode);
+        var paymentResponse = await client.PostAsJsonAsync($"/api/students/{first}/payments", request);
+        paymentResponse.EnsureSuccessStatusCode();
+        var payment = (await paymentResponse.Content.ReadFromJsonAsync<PaymentDto>())!;
+        var replay = await client.PostAsJsonAsync($"/api/students/{first}/payments", request);
+        replay.EnsureSuccessStatusCode();
+        var replayed = (await replay.Content.ReadFromJsonAsync<PaymentDto>())!;
+        Assert.Equal(payment.Id, replayed.Id);
+        Assert.Equal(payment.ReceiptNumber, replayed.ReceiptNumber);
+        request.Amount = 101m;
+        var conflict = await client.PostAsJsonAsync($"/api/students/{first}/payments", request);
+        Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+        var payments = await client.GetFromJsonAsync<List<PaymentDto>>($"/api/students/{first}/payments");
+        Assert.Single(payments!);
+    }
+
 }

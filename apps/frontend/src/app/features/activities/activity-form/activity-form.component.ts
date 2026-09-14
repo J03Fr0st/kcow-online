@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, type FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivityService } from '@core/services/activity.service';
+import { ActivityService } from '@features/activities/data-access/activity.service';
 import { NotificationService } from '@core/services/notification.service';
 import type {
   Activity,
@@ -181,7 +181,7 @@ export class ActivityFormComponent implements OnInit {
       };
 
       this.activityService
-        .updateActivity(this.activityId() ?? '', updateRequest)
+        .updateActivity(this.activityId()!, updateRequest)
         .pipe(
           finalize(() => this.isSaving.set(false)),
           takeUntilDestroyed(this.destroyRef),
@@ -252,7 +252,7 @@ export class ActivityFormComponent implements OnInit {
       return 'This field is required';
     }
     if (field.hasError('maxlength')) {
-      const maxLength = field.errors?.maxlength?.requiredLength || 0;
+      const maxLength = field.errors?.['maxlength']?.requiredLength || 0;
       return `Maximum length is ${maxLength} characters`;
     }
 

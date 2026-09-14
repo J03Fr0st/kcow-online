@@ -1,7 +1,7 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { type Student, StudentService } from '@core/services/student.service';
+import { type Student, StudentService } from '@features/students/data-access/student.service';
 import { of } from 'rxjs';
 import { EditStudentPage } from './edit-student.page';
 
@@ -91,7 +91,7 @@ describe('EditStudentPage', () => {
       fixture.detectChanges();
       const form = fixture.debugElement.query(By.css('app-student-form'));
       // The studentId should be passed as input to the form (converted to number)
-      expect(form.componentInstance.studentId).toBe(1);
+      expect(form.componentInstance.studentId()).toBe(1);
     });
   });
 

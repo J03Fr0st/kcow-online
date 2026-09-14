@@ -12,20 +12,12 @@ using Kcow.Application.Interfaces;
 using Kcow.Application.Schools;
 using Kcow.Application.Students;
 using Kcow.Application.Trucks;
-using Kcow.Infrastructure.Activities;
-using Kcow.Infrastructure.Audit;
 using Kcow.Infrastructure.Auth;
 using Kcow.Infrastructure.Billing;
-using Kcow.Infrastructure.ClassGroups;
 using Kcow.Infrastructure.Database.Seeders;
 using Kcow.Infrastructure.Database;
-using Kcow.Infrastructure.Evaluations;
-using Kcow.Infrastructure.Families;
 using Kcow.Infrastructure.Import;
 using Kcow.Infrastructure.Repositories;
-using Kcow.Infrastructure.Schools;
-using Kcow.Infrastructure.Students;
-using Kcow.Infrastructure.Trucks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -51,6 +43,10 @@ public static class DependencyInjection
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? "Data Source=kcow.db";
+
+        services.AddSingleton<Kcow.Application.Common.IDatabaseReadiness>(sp => new DatabaseReadiness(
+            connectionString, Path.Combine(AppContext.BaseDirectory, "Migrations", "Scripts"),
+            sp.GetRequiredService<ILogger<DatabaseReadiness>>()));
 
         // Register Dapper connection factory
         services.AddSingleton<IDbConnectionFactory>(sp => new SqliteConnectionFactory(connectionString));
@@ -80,6 +76,9 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IImportAuditLogRepository, ImportAuditLogRepository>();
 
+        services.AddScoped<IFamilyRelationships, FamilyRelationships>();
+        services.AddScoped<IClassGroupQueries, ClassGroupQueries>();
+
         // Register import services
         services.AddScoped<ILegacyParser, LegacyParser>();
         services.AddScoped<IImportExecutionService, ImportExecutionService>();
@@ -89,35 +88,8 @@ public static class DependencyInjection
         services.AddSingleton<JwtService>();
         services.AddSingleton<PasswordHasher>();
 
-        // Register truck services
-        services.AddScoped<ITruckService, TruckService>();
-
-        // Register school services
-        services.AddScoped<ISchoolService, SchoolService>();
-
-        // Register class group services
-        services.AddScoped<IClassGroupService, ClassGroupService>();
-
-        // Register student services
-        services.AddScoped<IStudentService, StudentService>();
-
-        // Register family services
-        services.AddScoped<IFamilyService, FamilyService>();
-
-        // Register activity services
-        services.AddScoped<IActivityService, ActivityService>();
-
-        // Register attendance services
-        services.AddScoped<IAttendanceService, Kcow.Infrastructure.Attendance.AttendanceService>();
-
-        // Register audit services
-        services.AddScoped<IAuditService, AuditService>();
-
-        // Register evaluation services
-        services.AddScoped<IEvaluationService, EvaluationService>();
-
         // Register billing services
-        services.AddScoped<IBillingService, BillingService>();
+        services.AddScoped<IBillingWriter, BillingWriter>();
 
         return services;
     }

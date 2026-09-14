@@ -49,7 +49,7 @@ export class ModalComponent implements OnInit {
   @ViewChild('dynamicContent', { read: ViewContainerRef })
   dynamicContent!: ViewContainerRef;
 
-  private componentRef?: ComponentRef<Record<string, unknown>>;
+  private componentRef?: ComponentRef<unknown>;
 
   @HostListener('document:keydown.escape', ['$event'])
   handleEscape(event: KeyboardEvent): void {
@@ -79,7 +79,7 @@ export class ModalComponent implements OnInit {
     }
   }
 
-  private loadComponent(component: Type<Record<string, unknown>>): void {
+  private loadComponent(component: Type<unknown>): void {
     if (!this.dynamicContent) return;
 
     this.dynamicContent.clear();
@@ -93,9 +93,13 @@ export class ModalComponent implements OnInit {
       }
     }
 
+    for (const [name, value] of Object.entries(this.modal.config.inputs ?? {})) {
+      this.componentRef.setInput(name, value);
+    }
+
     // Subscribe to component outputs if they exist
-    const instance = this.componentRef.instance;
-    const closeModal = instance.closeModal;
+    const instance = this.componentRef.instance as Record<string, unknown>;
+    const closeModal = instance['closeModal'];
     if (closeModal && typeof (closeModal as { subscribe?: unknown }).subscribe === 'function') {
       (closeModal as { subscribe: (fn: (result: unknown) => void) => void }).subscribe(
         (result: unknown) => {
@@ -103,7 +107,7 @@ export class ModalComponent implements OnInit {
         },
       );
     }
-    const dismissModal = instance.dismissModal;
+    const dismissModal = instance['dismissModal'];
     if (dismissModal && typeof (dismissModal as { subscribe?: unknown }).subscribe === 'function') {
       (dismissModal as { subscribe: (fn: (reason: unknown) => void) => void }).subscribe(
         (reason: unknown) => {
@@ -135,14 +139,14 @@ export class ModalComponent implements OnInit {
     return (
       data != null &&
       typeof data === 'object' &&
-      (data as Record<string, unknown>).type === 'confirmation'
+      (data as Record<string, unknown>)['type'] === 'confirmation'
     );
   }
 
   isAlertDialog(): boolean {
     const data = this.modal.config.data;
     return (
-      data != null && typeof data === 'object' && (data as Record<string, unknown>).type === 'alert'
+      data != null && typeof data === 'object' && (data as Record<string, unknown>)['type'] === 'alert'
     );
   }
 

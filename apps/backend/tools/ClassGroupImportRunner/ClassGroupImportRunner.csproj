@@ -12,4 +12,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="../LegacyToolDatabase.cs" Link="LegacyToolDatabase.cs" />
+  </ItemGroup>
 </Project>

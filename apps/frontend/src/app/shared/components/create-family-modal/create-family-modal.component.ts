@@ -11,7 +11,7 @@ import {
   type CreateFamilyRequest,
   type Family,
   FamilyService,
-} from '@core/services/family.service';
+} from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
 import {
   GuardianFormComponent,
@@ -234,12 +234,12 @@ export class CreateFamilyModalComponent implements OnInit {
       return '';
     }
 
-    if (field.errors.required) {
+    if (field.errors['required']) {
       return 'This field is required';
     }
 
-    if (field.errors.maxlength) {
-      return `Family name cannot exceed ${field.errors.maxlength.requiredLength} characters`;
+    if (field.errors['maxlength']) {
+      return `Family name cannot exceed ${field.errors['maxlength'].requiredLength} characters`;
     }
 
     return 'Invalid value';

@@ -1,8 +1,15 @@
-using Kcow.Infrastructure.Data;
+using Kcow.Infrastructure.Database;
+using Kcow.Infrastructure.Repositories;
 using Kcow.Infrastructure.Import;
-using Microsoft.EntityFrameworkCore;
 
 // Parse command line arguments
+if (args.Contains("--help"))
+{
+    Console.WriteLine("Legacy import: [xmlPath] [xsdPath] [auditPath] [summaryPath] [--count | --sample N]. Activity runner also supports --preview.");
+    Console.WriteLine("Set ConnectionStrings__DefaultConnection to an absolute SQLite path. Count/sample/preview use read-only access to existing schema.");
+    return;
+}
+
 var countOnly = args.Any(arg => string.Equals(arg, "--count", StringComparison.OrdinalIgnoreCase));
 var preview = args.Any(arg => string.Equals(arg, "--preview", StringComparison.OrdinalIgnoreCase));
 var sampleArgIndex = Array.FindIndex(args, arg => string.Equals(arg, "--sample", StringComparison.OrdinalIgnoreCase));
@@ -17,17 +24,21 @@ var auditPath = args.Length > 2 && !args[2].StartsWith("--") ? args[2] : Path.Co
 var summaryPath = args.Length > 3 && !args[3].StartsWith("--") ? args[3] : Path.Combine("migration-output", "activity-import-summary.txt");
 
 // Build database context
-var options = new DbContextOptionsBuilder<AppDbContext>()
-    .UseSqlite("Data Source=kcow.db")
-    .Options;
+if (!countOnly && sampleCount == 0 && (!File.Exists(xmlPath) || !File.Exists(xsdPath)))
+{
+    Console.Error.WriteLine("XML and XSD input files must exist.");
+    Environment.ExitCode = 1;
+    return;
+}
+var connectionFactory = LegacyToolDatabase.Open(!countOnly && sampleCount == 0 && !preview);
 
-await using var context = new AppDbContext(options);
-await context.Database.EnsureCreatedAsync();
+
+var activityRepository = new ActivityRepository(connectionFactory);
 
 // Handle --count flag
 if (countOnly)
 {
-    var count = await context.Activities.CountAsync();
+    var count = (await activityRepository.GetAllAsync()).Count();
     Console.WriteLine($"Activities in kcow.db: {count}");
     return;
 }
@@ -35,11 +46,11 @@ if (countOnly)
 // Handle --sample flag
 if (sampleCount > 0)
 {
-    var samples = await context.Activities
+    var samples = (await activityRepository.GetAllAsync())
         .OrderBy(a => a.Id)
         .Select(a => new { a.Id, a.Code, a.Name, a.GradeLevel })
         .Take(sampleCount)
-        .ToListAsync();
+        .ToList();
 
     Console.WriteLine($"Sample activities (first {samples.Count}):");
     foreach (var sample in samples)
@@ -65,9 +76,12 @@ if (!File.Exists(xsdPath))
     return;
 }
 
-// Ensure output directories exist
-Directory.CreateDirectory(Path.GetDirectoryName(auditPath) ?? ".");
-Directory.CreateDirectory(Path.GetDirectoryName(summaryPath) ?? ".");
+// Preview must not create report directories.
+if (!preview)
+{
+    Directory.CreateDirectory(Path.GetDirectoryName(auditPath) ?? ".");
+    Directory.CreateDirectory(Path.GetDirectoryName(summaryPath) ?? ".");
+}
 
 Console.WriteLine($"Importing activities from: {xmlPath}");
 Console.WriteLine($"Using XSD schema: {xsdPath}");
@@ -78,7 +92,7 @@ if (preview)
 }
 
 // Run import
-var importer = new LegacyActivityImportService(context);
+var importer = new LegacyActivityImportService(activityRepository);
 var summary = await importer.ImportAsync(xmlPath, xsdPath, preview ? null : auditPath, preview ? null : summaryPath, preview);
 
 Console.WriteLine();
@@ -94,4 +108,4 @@ if (!preview)
 }
 
 Console.WriteLine();
-Console.WriteLine($"Total activities in database: {await context.Activities.CountAsync()}");
+Console.WriteLine($"Total activities in database: {(await activityRepository.GetAllAsync()).Count()}");

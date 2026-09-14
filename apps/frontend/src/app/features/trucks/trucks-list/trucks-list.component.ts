@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationService } from '@core/services/notification.service';
-import { type Truck, TruckService } from '@core/services/truck.service';
+import { type Truck, TruckService } from '@features/trucks/data-access/truck.service';
 import { TruckFormComponent } from '../truck-form/truck-form.component';
 
 @Component({

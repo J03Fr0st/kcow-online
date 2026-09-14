@@ -11,7 +11,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { ModalService } from '@core/services/modal.service';
 import { NotificationService } from '@core/services/notification.service';
-import { type School, SchoolService } from '@core/services/school.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
 
 interface ColumnConfig {
   key: keyof School;

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { BillingService } from '@core/services/billing.service';
+import { BillingService } from '@features/billing/data-access/billing.service';
 import { NotificationService } from '@core/services/notification.service';
 import type {
   BillingSummary,

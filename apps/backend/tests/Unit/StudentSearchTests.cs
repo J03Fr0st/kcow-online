@@ -1,7 +1,6 @@
 using Kcow.Application.Interfaces;
 using Kcow.Application.Students;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Students;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 

@@ -9,6 +9,7 @@ export interface ModalConfig {
   backdropDismiss?: boolean;
   showCloseButton?: boolean;
   data?: unknown;
+  inputs?: Record<string, unknown>;
 }
 
 export interface ModalButton {

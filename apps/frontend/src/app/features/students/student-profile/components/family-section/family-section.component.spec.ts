@@ -10,9 +10,9 @@ import {
   type Guardian,
   type StudentSummary,
   type UpdateFamilyRequest,
-} from '@core/services/family.service';
+} from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
-import { StudentService } from '@core/services/student.service';
+import { StudentService } from '@features/students/data-access/student.service';
 import { type Observable, of } from 'rxjs';
 import { FamilySectionComponent } from './family-section.component';
 
@@ -139,7 +139,7 @@ describe('FamilySectionComponent', () => {
     component = fixture.componentInstance;
 
     // Set the required input
-    component.student.set(mockStudent);
+    fixture.componentRef.setInput('student', mockStudent);
   });
 
   describe('Component Creation', () => {
@@ -268,9 +268,7 @@ describe('FamilySectionComponent', () => {
     });
 
     it('should show edit form when guardian edit is clicked', () => {
-      const editButton = fixture.debugElement
-        .queryAll(By.css('button'))
-        .find((b) => b.nativeElement.textContent.includes('Edit'));
+      const editButton = fixture.debugElement.query(By.css('button[aria-label="Edit guardian John"]'));
       editButton?.nativeElement.click();
       fixture.detectChanges();
 
@@ -355,7 +353,7 @@ describe('FamilySectionComponent', () => {
 
   describe('No Family State', () => {
     beforeEach(() => {
-      component.student.set({ id: 1 });
+      fixture.componentRef.setInput('student', { id: 1 });
       fixture.detectChanges();
     });
 

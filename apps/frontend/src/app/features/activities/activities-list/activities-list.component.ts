@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivityService } from '@core/services/activity.service';
+import { ActivityService } from '@features/activities/data-access/activity.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Activity } from '@features/activities/models/activity.model';
 import { ActivityFormComponent } from '../activity-form/activity-form.component';

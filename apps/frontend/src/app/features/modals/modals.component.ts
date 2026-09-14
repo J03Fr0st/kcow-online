@@ -37,7 +37,7 @@ export class ModalsComponent {
 
   openFormModal(): void {
     this.modalService
-      .open(FormModalComponent, {
+      .open<{ name: string; email: string }>(FormModalComponent, {
         title: 'User Form',
         size: 'lg',
         backdropDismiss: false,

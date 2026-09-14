@@ -13,7 +13,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
-import { type StudentSearchResult, StudentService } from '../../../core/services/student.service';
+import { type StudentSearchResult, StudentService } from '@features/students/data-access/student.service';
 
 @Component({
   selector: 'app-global-search',

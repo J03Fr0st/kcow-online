@@ -5,7 +5,7 @@ namespace Kcow.Application.Import;
 /// </summary>
 public enum ConflictResolutionMode
 {
-    /// <summary>Fail and stop if a matching record exists (default).</summary>
+    /// <summary>Reject conflicting rows; continue and commit other accepted rows per entity type.</summary>
     FailOnConflict,
 
     /// <summary>Skip records that already exist.</summary>
@@ -20,6 +20,8 @@ public enum ConflictResolutionMode
 /// </summary>
 public sealed class ImportExecutionResult
 {
+    public string RunId { get; set; } = "";
+    public string SourceFingerprint { get; set; } = "";
     public DateTime ExecutedAt { get; set; } = DateTime.UtcNow;
     public string InputPath { get; set; } = string.Empty;
     public ConflictResolutionMode ConflictMode { get; set; }
@@ -50,6 +52,7 @@ public sealed class ImportExecutionResult
 /// </summary>
 public sealed class EntityImportResult
 {
+    public bool Committed { get; set; }
     public int Imported { get; set; }
     public int Updated { get; set; }
     public int Failed { get; set; }

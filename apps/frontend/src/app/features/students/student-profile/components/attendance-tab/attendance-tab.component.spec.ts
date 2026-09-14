@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { AttendanceService } from '@core/services/attendance.service';
-import { ClassGroupService } from '@core/services/class-group.service';
+import { AttendanceService } from '@features/attendance/data-access/attendance.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Attendance, AttendanceStatus } from '@features/attendance/models/attendance.model';
 import { of, throwError } from 'rxjs';

@@ -12,7 +12,7 @@ public class EvaluationServiceTests
     private readonly IStudentRepository _studentRepository;
     private readonly IActivityRepository _activityRepository;
     private readonly IAuditService _auditService;
-    private readonly Infrastructure.Evaluations.EvaluationService _service;
+    private readonly Application.Evaluations.EvaluationService _service;
 
     public EvaluationServiceTests()
     {
@@ -20,11 +20,11 @@ public class EvaluationServiceTests
         _studentRepository = Substitute.For<IStudentRepository>();
         _activityRepository = Substitute.For<IActivityRepository>();
         _auditService = Substitute.For<IAuditService>();
-        _service = new Infrastructure.Evaluations.EvaluationService(
+        _service = new Application.Evaluations.EvaluationService(
             _evaluationRepository,
             _studentRepository,
             _activityRepository,
-            NullLogger<Infrastructure.Evaluations.EvaluationService>.Instance,
+            NullLogger<Application.Evaluations.EvaluationService>.Instance,
             _auditService);
     }
 

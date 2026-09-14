@@ -1,10 +1,10 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivityService } from '@core/services/activity.service';
+import { ActivityService } from '@features/activities/data-access/activity.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Activity } from '@features/activities/models/activity.model';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '@environments/environment';
 import { ActivityFormComponent } from './activity-form.component';
 
 describe('ActivityFormComponent', () => {
@@ -52,7 +52,7 @@ describe('ActivityFormComponent', () => {
 
   describe('Form Initialization', () => {
     it('should initialize form with empty values for create mode', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
 
       expect(component.form.value).toEqual({
         code: '',
@@ -65,7 +65,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should have maxlength validator on code field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const codeControl = component.form.get('code');
 
       codeControl?.setValue('A'.repeat(256));
@@ -74,7 +74,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should have maxlength validator on name field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const nameControl = component.form.get('name');
 
       nameControl?.setValue('A'.repeat(256));
@@ -83,7 +83,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should have maxlength validator on folder field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const folderControl = component.form.get('folder');
 
       folderControl?.setValue('A'.repeat(256));
@@ -92,7 +92,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should have maxlength validator on gradeLevel field', () => {
-      component.ngOnInit();
+      fixture.detectChanges();
       const gradeLevelControl = component.form.get('gradeLevel');
 
       gradeLevelControl?.setValue('A'.repeat(256));
@@ -103,8 +103,8 @@ describe('ActivityFormComponent', () => {
 
   describe('Load Activity for Edit', () => {
     it('should load activity data when activityId is provided', () => {
-      component.activityId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('activityId', 1);
+      fixture.detectChanges();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/activities/1`);
       request.flush(mockActivity);
@@ -120,8 +120,8 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should set icon preview when activity has icon', () => {
-      component.activityId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('activityId', 1);
+      fixture.detectChanges();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/activities/1`);
       request.flush(mockActivity);
@@ -130,8 +130,8 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should set loading state during load', () => {
-      component.activityId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('activityId', 1);
+      fixture.detectChanges();
 
       expect(component.isLoading()).toBe(true);
 
@@ -142,14 +142,14 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should handle load error', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       const errorSpy = jest.spyOn(notificationService, 'error');
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      component.ngOnInit();
+      fixture.detectChanges();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/activities/1`);
-      request.flush({ message: 'Not found' }, { status: 404 });
+      request.flush({ message: 'Not found' }, { status: 404, statusText: 'Not Found' });
 
       expect(component.error()).not.toBeNull();
       expect(errorSpy).toHaveBeenCalled();
@@ -159,7 +159,7 @@ describe('ActivityFormComponent', () => {
 
   describe('Icon Upload', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      fixture.detectChanges();
     });
 
     it('should reject non-PNG files', () => {
@@ -209,7 +209,7 @@ describe('ActivityFormComponent', () => {
 
   describe('Form Validation Display', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      fixture.detectChanges();
     });
 
     it('should show error for touched invalid field', () => {
@@ -238,7 +238,7 @@ describe('ActivityFormComponent', () => {
 
   describe('Submit Form - Create', () => {
     beforeEach(() => {
-      component.ngOnInit();
+      fixture.detectChanges();
       component.form.setValue({
         code: 'ACT002',
         name: 'New Activity',
@@ -280,8 +280,9 @@ describe('ActivityFormComponent', () => {
 
   describe('Submit Form - Update', () => {
     beforeEach(() => {
-      component.activityId.set(1);
-      component.ngOnInit();
+      fixture.componentRef.setInput('activityId', 1);
+      fixture.detectChanges();
+      httpMock.expectOne(`${environment.apiUrl}/activities/1`).flush(mockActivity);
       component.form.setValue({
         code: 'ACT001',
         name: 'Updated Activity',
@@ -325,7 +326,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should show "Edit Activity" title for edit mode', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       expect(component.title).toBe('Edit Activity');
     });
 
@@ -334,7 +335,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should show "Update Activity" button text for edit mode', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       expect(component.submitButtonText).toBe('Update Activity');
     });
 

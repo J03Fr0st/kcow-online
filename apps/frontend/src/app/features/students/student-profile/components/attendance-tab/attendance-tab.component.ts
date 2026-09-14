@@ -10,8 +10,8 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AttendanceService } from '@core/services/attendance.service';
-import { ClassGroupService } from '@core/services/class-group.service';
+import { AttendanceService } from '@features/attendance/data-access/attendance.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
 import type {
   Attendance,
