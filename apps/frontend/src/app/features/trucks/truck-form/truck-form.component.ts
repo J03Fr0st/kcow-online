@@ -16,7 +16,7 @@ import {
   type CreateTruckRequest,
   TruckService,
   type UpdateTruckRequest,
-} from '@core/services/truck.service';
+} from '@features/trucks/data-access/truck.service';
 import { TRUCK_STATUS_OPTIONS } from '@features/trucks/models/truck.model';
 import { finalize } from 'rxjs';
 
@@ -194,7 +194,7 @@ export class TruckFormComponent implements OnInit {
       return 'This field is required';
     }
     if (field.hasError('maxlength')) {
-      const maxLength = field.errors?.maxlength?.requiredLength || 0;
+      const maxLength = field.errors?.['maxlength']?.requiredLength || 0;
       return `Maximum length is ${maxLength} characters`;
     }
 

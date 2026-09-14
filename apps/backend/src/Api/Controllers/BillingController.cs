@@ -114,8 +114,12 @@ public class BillingController : ControllerBase
         try
         {
             var currentUser = GetCurrentUser();
-            var invoice = await _billingService.CreateInvoiceAsync(studentId, request, currentUser, cancellationToken);
+            var invoice = await _billingService.CreateInvoiceAsync(studentId, request, currentUser, cancellationToken, Request.Headers["Idempotency-Key"].FirstOrDefault());
             return CreatedAtAction(nameof(GetInvoices), new { studentId }, invoice);
+        }
+        catch (IdempotencyConflictException ex)
+        {
+            return Conflict(new ProblemDetails { Title = "Idempotency conflict", Status = 409, Detail = ex.Message });
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))
         {
@@ -199,8 +203,12 @@ public class BillingController : ControllerBase
         try
         {
             var currentUser = GetCurrentUser();
-            var payment = await _billingService.CreatePaymentAsync(studentId, request, currentUser, cancellationToken);
+            var payment = await _billingService.CreatePaymentAsync(studentId, request, currentUser, cancellationToken, Request.Headers["Idempotency-Key"].FirstOrDefault());
             return CreatedAtAction(nameof(GetPayments), new { studentId }, payment);
+        }
+        catch (IdempotencyConflictException ex)
+        {
+            return Conflict(new ProblemDetails { Title = "Idempotency conflict", Status = 409, Detail = ex.Message });
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("does not exist"))
         {

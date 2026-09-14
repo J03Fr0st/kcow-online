@@ -2,10 +2,10 @@ import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/t
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { FamilyService } from '@core/services/family.service';
+import { FamilyService } from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
-import { SchoolService } from '@core/services/school.service';
-import { type ProblemDetails, type Student, StudentService } from '@core/services/student.service';
+import { SchoolService } from '@features/schools/data-access/school.service';
+import { type ProblemDetails, type Student, StudentService } from '@features/students/data-access/student.service';
 import { of, throwError } from 'rxjs';
 import { StudentFormComponent } from './student-form.component';
 
@@ -205,6 +205,7 @@ describe('StudentFormComponent', () => {
 
     it('should enable Save button when form is valid', () => {
       component.form.patchValue({
+        reference: 'REF001',
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
@@ -232,6 +233,7 @@ describe('StudentFormComponent', () => {
 
     it('should call createStudent on valid form submission in create mode', fakeAsync(() => {
       component.form.patchValue({
+        reference: 'REF001',
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
@@ -245,6 +247,7 @@ describe('StudentFormComponent', () => {
 
     it('should show success notification on successful create', fakeAsync(() => {
       component.form.patchValue({
+        reference: 'REF001',
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
@@ -261,6 +264,7 @@ describe('StudentFormComponent', () => {
       component.saved.subscribe(savedSpy);
 
       component.form.patchValue({
+        reference: 'REF001',
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
@@ -277,6 +281,7 @@ describe('StudentFormComponent', () => {
       mockStudentService.createStudent = jest.fn().mockReturnValue(throwError(() => error));
 
       component.form.patchValue({
+        reference: 'REF001',
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,

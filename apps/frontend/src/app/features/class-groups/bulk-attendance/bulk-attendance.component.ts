@@ -13,7 +13,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationService } from '@core/services/notification.service';
-import { StudentService } from '@core/services/student.service';
+import { StudentService } from '@features/students/data-access/student.service';
 import { environment } from '@environments/environment';
 import { catchError, EMPTY, of } from 'rxjs';
 import type { ClassGroup } from '../models/class-group.model';

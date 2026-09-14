@@ -1,14 +1,14 @@
 import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { type StudentSearchResult, StudentService } from '../../../core/services/student.service';
+import { type StudentSearchResult, StudentService } from '@features/students/data-access/student.service';
 import { GlobalSearchComponent } from './global-search.component';
 
 describe('GlobalSearchComponent', () => {
   let component: GlobalSearchComponent;
   let fixture: ComponentFixture<GlobalSearchComponent>;
-  let mockStudentService: jasmine.SpyObj<StudentService>;
-  let mockRouter: jasmine.SpyObj<Router>;
+  let mockStudentService: { searchStudents: jest.Mock };
+  let mockRouter: { navigate: jest.Mock };
 
   const mockSearchResults: StudentSearchResult[] = [
     {
@@ -28,11 +28,9 @@ describe('GlobalSearchComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockStudentService = jasmine.createSpyObj('StudentService', [], {
-      searchStudents: of(mockSearchResults),
-    });
+    mockStudentService = { searchStudents: jest.fn().mockReturnValue(of(mockSearchResults)) };
 
-    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+    mockRouter = { navigate: jest.fn() };
 
     await TestBed.configureTestingModule({
       imports: [GlobalSearchComponent],
@@ -69,12 +67,12 @@ describe('GlobalSearchComponent', () => {
 
   it('should search for terms with 2 or more characters after debounce', fakeAsync(() => {
     component.onSearchChange('Jo');
-    tick(300);
+    tick(299);
 
     expect(component.isLoading()).toBe(true);
     expect(component.isOpen()).toBe(true);
 
-    tick();
+    tick(1);
 
     expect(mockStudentService.searchStudents).toHaveBeenCalledWith('Jo', 10);
     expect(component.results()).toEqual(mockSearchResults);
@@ -90,7 +88,7 @@ describe('GlobalSearchComponent', () => {
 
     expect(component.searchTerm()).toBe('');
     expect(component.results()).toEqual([]);
-    expect(component.isOpen()).be(false);
+    expect(component.isOpen()).toBe(false);
     expect(component.highlightedIndex()).toBe(-1);
   });
 
@@ -158,7 +156,7 @@ describe('GlobalSearchComponent', () => {
   });
 
   it('should handle search errors gracefully', fakeAsync(() => {
-    (mockStudentService as any).searchStudents = throwError(() => new Error('Search failed'));
+    mockStudentService.searchStudents.mockReturnValue(throwError(() => new Error('Search failed')));
 
     component.onSearchChange('John');
     tick(300);

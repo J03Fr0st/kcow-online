@@ -1,7 +1,14 @@
-using Kcow.Infrastructure.Data;
+using Kcow.Infrastructure.Database;
+using Kcow.Infrastructure.Repositories;
 using Kcow.Infrastructure.Import;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+
+if (args.Contains("--help"))
+{
+    Console.WriteLine("Legacy import: [xmlPath] [xsdPath] [auditPath] [summaryPath] [--count | --sample N]. Activity runner also supports --preview.");
+    Console.WriteLine("Set ConnectionStrings__DefaultConnection to an absolute SQLite path. Count/sample/preview use read-only access to existing schema.");
+    return;
+}
 
 var countOnly = args.Any(arg => string.Equals(arg, "--count", StringComparison.OrdinalIgnoreCase));
 var sampleArgIndex = Array.FindIndex(args, arg => string.Equals(arg, "--sample", StringComparison.OrdinalIgnoreCase));
@@ -11,17 +18,24 @@ var sampleCount = sampleArgIndex >= 0 && sampleArgIndex + 1 < args.Length && int
 var xmlPath = args.Length > 0 ? args[0] : Path.Combine("docs", "legacy", "4_Children", "Children.xml");
 var xsdPath = args.Length > 1 ? args[1] : Path.Combine("docs", "legacy", "4_Children", "Children.xsd");
 
-var options = new DbContextOptionsBuilder<AppDbContext>()
-    .UseSqlite("Data Source=kcow.db")
-    .Options;
+if (!countOnly && sampleCount == 0 && (!File.Exists(xmlPath) || !File.Exists(xsdPath)))
+{
+    Console.Error.WriteLine("XML and XSD input files must exist.");
+    Environment.ExitCode = 1;
+    return;
+}
+var connectionFactory = LegacyToolDatabase.Open(!countOnly && sampleCount == 0);
 
-await using var context = new AppDbContext(options);
-await context.Database.EnsureCreatedAsync();
+
+var students = new StudentRepository(connectionFactory);
+var schools = new SchoolRepository(connectionFactory);
+var groups = new ClassGroupRepository(connectionFactory);
+var families = new FamilyRepository(connectionFactory);
 
 if (countOnly)
 {
-    var studentCount = await context.Students.CountAsync();
-    var familyCount = await context.Families.CountAsync();
+    var studentCount = (await students.GetAllAsync()).Count();
+    var familyCount = (await families.GetAllAsync()).Count();
     Console.WriteLine($"Students in kcow.db: {studentCount}");
     Console.WriteLine($"Families in kcow.db: {familyCount}");
     return;
@@ -29,11 +43,11 @@ if (countOnly)
 
 if (sampleCount > 0)
 {
-    var samples = await context.Students
+    var samples = (await students.GetAllAsync())
         .OrderBy(s => s.Id)
         .Select(s => new { s.Id, s.Reference, s.FirstName, s.LastName, s.Family })
         .Take(sampleCount)
-        .ToListAsync();
+        .ToList();
 
     Console.WriteLine($"Sample students (first {samples.Count}):");
     foreach (var sample in samples)
@@ -54,7 +68,7 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 var logger = loggerFactory.CreateLogger<Program>();
 logger.LogInformation("Starting Child/Student import from {XmlPath}", xmlPath);
 
-var importer = new LegacyChildImportRunner(context, loggerFactory.CreateLogger<LegacyChildImportRunner>());
+var importer = new LegacyChildImportRunner(students, schools, groups, families, loggerFactory.CreateLogger<LegacyChildImportRunner>());
 
 try
 {

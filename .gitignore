@@ -346,3 +346,6 @@ build-output.txt
 # Git Worktrees
 # =========================
 .worktrees/
+
+# Python operational script caches
+__pycache__/

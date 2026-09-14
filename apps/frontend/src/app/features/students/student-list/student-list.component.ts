@@ -9,9 +9,9 @@ import {
   type WritableSignal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ClassGroupService } from '@core/services/class-group.service';
-import { type School, SchoolService } from '@core/services/school.service';
-import { type StudentListItem, StudentService } from '@core/services/student.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
+import { type StudentListItem, StudentService } from '@features/students/data-access/student.service';
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
 
 interface SortConfig {
@@ -38,6 +38,13 @@ interface SortConfig {
       </button>
     </div>
   </div>
+
+  @if (studentService.error(); as error) {
+    <div role="alert" class="alert alert-error">
+      <span>{{ error.title }}: {{ error.detail }}</span>
+      <button class="btn btn-ghost btn-sm" (click)="loadStudents()">Retry</button>
+    </div>
+  }
 
   <!-- Filters & Search -->
   <div class="card bg-base-100 shadow-sm border border-base-200">
@@ -142,10 +149,11 @@ interface SortConfig {
                 </tr>
               }
               
-              @if (!studentService.isLoading() && students().length === 0) {
+              @if (!studentService.isLoading() && !studentService.error() && students().length === 0) {
                 <tr>
-                  <td colspan="7" class="text-center py-10 text-base-content/50 italic">
+                  <td colspan="7" class="empty-state text-center py-10 text-base-content/50 italic">
                     No students found matching your criteria.
+                    <a routerLink="create" class="btn btn-primary btn-sm mt-3">Add Your First Student</a>
                   </td>
                 </tr>
               }
@@ -161,6 +169,7 @@ interface SortConfig {
         of <span class="font-medium text-base-content">{{ studentService.totalCount() }}</span> students
       </div>
       
+      @if (totalPages() > 1) {
       <div class="join">
         <button class="join-item btn btn-sm" 
                 [disabled]="currentPage() === 1"
@@ -176,6 +185,7 @@ interface SortConfig {
           Next
         </button>
       </div>
+      }
     </div>
   </div>
 </div>
@@ -222,7 +232,7 @@ export class StudentListComponent implements OnInit {
   });
 
   protected pageStart = computed(() => {
-    return (this.currentPage() - 1) * this.pageSize() + 1;
+    return this.studentService.totalCount() === 0 ? 0 : (this.currentPage() - 1) * this.pageSize() + 1;
   });
 
   protected pageEnd = computed(() => {

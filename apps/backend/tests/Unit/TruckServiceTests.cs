@@ -1,7 +1,6 @@
 using Kcow.Application.Interfaces;
 using Kcow.Application.Trucks;
 using Kcow.Domain.Entities;
-using Kcow.Infrastructure.Trucks;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 

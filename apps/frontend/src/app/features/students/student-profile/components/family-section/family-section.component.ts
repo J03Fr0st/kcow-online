@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   EventEmitter,
+  DestroyRef,
   inject,
   input,
   type OnInit,
@@ -17,9 +18,9 @@ import {
   type Guardian,
   type StudentSummary,
   type UpdateFamilyRequest,
-} from '@core/services/family.service';
+} from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
-import type { ProblemDetails } from '@core/services/student.service';
+import type { ProblemDetails } from '@features/students/data-access/student.service';
 
 @Component({
   selector: 'app-family-section',
@@ -30,6 +31,7 @@ import type { ProblemDetails } from '@core/services/student.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FamilySectionComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly formBuilder = inject(FormBuilder);
   private readonly familyService = inject(FamilyService);
   private readonly router = inject(Router);
@@ -101,7 +103,7 @@ export class FamilySectionComponent implements OnInit {
 
     this.familyService
       .getFamilyById(s.familyId)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (family) => {
           this.family.set(family);
@@ -125,7 +127,7 @@ export class FamilySectionComponent implements OnInit {
   private loadSiblings(familyId: number): void {
     this.familyService
       .getStudentsByFamily(familyId)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (students) => {
           // Filter out the current student
@@ -197,7 +199,7 @@ export class FamilySectionComponent implements OnInit {
 
     this.familyService
       .updateFamily(f.id, updateRequest)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (updatedFamily) => {
           this.family.set(updatedFamily);
@@ -298,7 +300,7 @@ export class FamilySectionComponent implements OnInit {
       const guardianId = editingGuardianId;
       this.familyService
         .updateGuardian(f.id, guardianId, formValue)
-        .pipe(takeUntilDestroyed(this))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (updatedGuardian) => {
             this.guardians.update((guardians) =>
@@ -319,7 +321,7 @@ export class FamilySectionComponent implements OnInit {
       // Create new guardian
       this.familyService
         .addGuardian(f.id, formValue)
-        .pipe(takeUntilDestroyed(this))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (newGuardian) => {
             this.guardians.update((guardians) => [...guardians, newGuardian]);
@@ -351,7 +353,7 @@ export class FamilySectionComponent implements OnInit {
 
     this.familyService
       .deleteGuardian(f.id, guardianId)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.guardians.update((guardians) => guardians.filter((g) => g.id !== guardianId));
@@ -394,14 +396,14 @@ export class FamilySectionComponent implements OnInit {
     const field = this.guardianForm.get(fieldName);
     if (!field || !field.errors) return '';
 
-    if (field.errors.required) {
+    if (field.errors['required']) {
       return 'This field is required';
     }
-    if (field.errors.email) {
+    if (field.errors['email']) {
       return 'Invalid email format';
     }
-    if (field.errors.maxlength) {
-      return `Maximum length is ${field.errors.maxlength.requiredLength} characters`;
+    if (field.errors['maxlength']) {
+      return `Maximum length is ${field.errors['maxlength'].requiredLength} characters`;
     }
     return 'Invalid value';
   }

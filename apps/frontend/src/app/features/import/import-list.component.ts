@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, type OnInit, signal } from '@angular/core';
-import { ImportService } from '@core/services/import.service';
+import { ImportService } from '@features/import/data-access/import.service';
 import type { ImportAuditLog } from '@features/import/models/import-log.model';
 
 @Component({

@@ -13,7 +13,7 @@ import {
   type FamilyMergePreview,
   FamilyService,
   type MergeFamiliesResult,
-} from '@core/services/family.service';
+} from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 

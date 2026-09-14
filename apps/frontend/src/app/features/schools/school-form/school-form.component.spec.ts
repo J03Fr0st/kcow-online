@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NotificationService } from '@core/services/notification.service';
-import { SchoolService } from '@core/services/school.service';
+import { SchoolService } from '@features/schools/data-access/school.service';
 import { of, throwError } from 'rxjs';
 import { SchoolFormComponent } from './school-form.component';
 

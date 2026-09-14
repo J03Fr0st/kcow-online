@@ -211,8 +211,9 @@ public class ImportPipelineIntegrationTests : IDisposable
         var mapper = new StudentDataMapper();
         var result = mapper.Map(record);
 
-        Assert.False(result.Success);
-        Assert.NotEmpty(result.Errors);
+        Assert.True(result.Success);
+        Assert.Equal("AUTO-000001", result.Data!.Student.Reference);
+        Assert.Contains(result.Warnings, w => w.Field == "Reference");
     }
 
     [Fact]
@@ -277,9 +278,9 @@ public class ImportPipelineIntegrationTests : IDisposable
         var result = mapper.MapMany(records);
 
         Assert.True(result.Success);
-        Assert.Equal(2, result.Data!.Count);
+        Assert.Equal(3, result.Data!.Count);
         Assert.NotEmpty(result.Warnings);
-        Assert.NotEmpty(result.Errors);
+        Assert.Empty(result.Errors);
     }
 
     // ==========================================

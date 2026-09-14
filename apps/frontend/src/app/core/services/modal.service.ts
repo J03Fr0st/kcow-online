@@ -26,7 +26,7 @@ export class ModalService {
           size: 'md',
           ...config,
         },
-        resolve,
+        resolve: (value) => resolve(value as T),
         reject,
       };
 
@@ -57,7 +57,7 @@ export class ModalService {
             cancelClass: config.cancelClass || 'btn-secondary',
           },
         },
-        resolve,
+        resolve: (value) => resolve(value === true),
         reject,
       };
 
@@ -84,7 +84,7 @@ export class ModalService {
             message,
           },
         },
-        resolve,
+        resolve: () => resolve(),
         reject,
       };
 

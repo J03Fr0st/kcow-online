@@ -38,7 +38,7 @@ public class ActivityDataMapperTests
     }
 
     [Fact]
-    public void Map_LargeIcon_WarnsAboutSize()
+    public void Map_UnrecognizedLargeIcon_PreservesDataWithWarning()
     {
         var largeIcon = new string('X', 200_000);
         var record = new LegacyActivityRecord(3, "P", "N", null, null, null, largeIcon);
@@ -46,7 +46,7 @@ public class ActivityDataMapperTests
         var result = _mapper.Map(record);
 
         Assert.True(result.Success);
-        Assert.Contains(result.Warnings, w => w.Field == "Icon" && w.Message.Contains("Large icon"));
+        Assert.Contains(result.Warnings, w => w.Field == "Icon" && w.Message.Contains("Could not find image data"));
     }
 
     [Fact]

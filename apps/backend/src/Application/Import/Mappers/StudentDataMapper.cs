@@ -12,7 +12,7 @@ public sealed record StudentMappingData(Student Student, FamilyInfo? FamilyInfo)
 /// <summary>
 /// Maps LegacyChildRecord to Student entity.
 /// Mapping rules:
-///   Reference → Reference (required, records without it are rejected)
+///   Reference → Reference (required, missing values get generated references and warnings)
 ///   ChildName → FirstName
 ///   ChildSurname → LastName
 ///   ChildBirthdate → DateOfBirth (parsed from multiple date formats)
@@ -55,6 +55,9 @@ public sealed class StudentDataMapper : IDataMapper<LegacyChildRecord, StudentMa
         }
 
         var result = new MappingResult<StudentMappingData> { Success = true };
+
+        if (string.IsNullOrWhiteSpace(source.Reference))
+            result.Warnings.Add(new MappingWarning("Reference", "Generated reference for legacy record without a reference.", source.Reference, reference));
 
         // Resolve SchoolId
         int? schoolId = null;

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import type { Student } from '@core/services/student.service';
+import type { Student } from '@features/students/data-access/student.service';
 import { StudentFormComponent } from '../student-form/student-form.component';
 
 @Component({

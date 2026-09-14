@@ -14,7 +14,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import type { Guardian } from '@core/services/family.service';
+import type { Guardian } from '@features/families/data-access/family.service';
 
 export interface GuardianFormData {
   firstName: string;

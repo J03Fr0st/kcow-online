@@ -3,9 +3,9 @@ import { computed, Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, type Observable, of, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { LoginRequest } from '../../features/auth/models/login-request.model';
-import type { LoginResponse } from '../../features/auth/models/login-response.model';
-import type { User } from '../../features/auth/models/user.model';
+import type { LoginRequest } from '@core/auth/models/login-request.model';
+import type { LoginResponse } from '@core/auth/models/login-response.model';
+import type { User } from '@core/auth/models/user.model';
 
 /**
  * Authentication Service

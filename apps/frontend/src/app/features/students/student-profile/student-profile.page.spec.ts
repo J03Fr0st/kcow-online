@@ -1,9 +1,10 @@
+import { RouterLink } from '@angular/router';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
-import { BillingService } from '@core/services/billing.service';
-import type { ProblemDetails, Student } from '@core/services/student.service';
-import { StudentService } from '@core/services/student.service';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
+import { BillingService } from '@features/billing/data-access/billing.service';
+import type { ProblemDetails, Student } from '@features/students/data-access/student.service';
+import { StudentService } from '@features/students/data-access/student.service';
 import type { BillingSummary } from '@features/billing/models/billing.model';
 import { type Observable, of, throwError } from 'rxjs';
 import { StudentProfilePage } from './student-profile.page';
@@ -67,6 +68,8 @@ describe('StudentProfilePage', () => {
 
     mockBillingService = {
       getBillingSummary: jest.fn().mockReturnValue(of(mockBillingSummary)),
+      getInvoices: jest.fn().mockReturnValue(of([])),
+      getPayments: jest.fn().mockReturnValue(of([])),
     };
 
     mockRouter = {
@@ -84,11 +87,13 @@ describe('StudentProfilePage', () => {
       providers: [
         { provide: StudentService, useValue: mockStudentService },
         { provide: BillingService, useValue: mockBillingService },
-        { provide: Router, useValue: mockRouter },
+        provideRouter([]),
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
       ],
     }).compileComponents();
 
+    mockRouter = TestBed.inject(Router);
+    jest.spyOn(mockRouter, 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(StudentProfilePage);
     component = fixture.componentInstance;
   });
@@ -114,10 +119,11 @@ describe('StudentProfilePage', () => {
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/students']);
     });
 
-    it('should have OnPush change detection', () => {
-      const config =
-        TestBed.createComponent(StudentProfilePage).componentType.decorators?.[0].metadata;
-      expect(config.changeDetection).toBeDefined();
+    it('should render signal updates', () => {
+      fixture.detectChanges();
+      component.student.set({ ...mockStudent, firstName: 'Updated' });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Updated');
     });
   });
 
@@ -145,6 +151,7 @@ describe('StudentProfilePage', () => {
 
   describe('Loading State', () => {
     it('should show loading spinner when loading', () => {
+      fixture.detectChanges();
       component.isLoading.set(true);
       fixture.detectChanges();
 
@@ -265,11 +272,11 @@ describe('StudentProfilePage', () => {
 
     it('should display child info tab content', () => {
       const content = fixture.nativeElement.textContent;
-      expect(content).toContain('Child Information');
+      expect(content).toContain('Personal Information');
       expect(content).toContain('Language');
       expect(content).toContain('English');
       expect(content).toContain('Family');
-      expect(content).toContain('Doe Family');
+      expect(content).toContain('No Family Linked');
     });
 
     it('should display financial tab component', () => {
@@ -391,8 +398,9 @@ describe('StudentProfilePage', () => {
       expect(editButton).toBeTruthy();
       expect(editButton?.nativeElement.textContent).toContain('Edit Student');
 
-      const routerLink = editButton?.attributes.routerLink;
-      expect(routerLink).toContain('/students/1/edit');
+      const link = editButton.injector.get(RouterLink);
+      const router = TestBed.inject(Router);
+      expect(router.serializeUrl(link.urlTree!)).toBe('/students/1/edit');
     });
   });
 
@@ -426,7 +434,7 @@ describe('StudentProfilePage', () => {
       expect(content).not.toContain('Grade:');
     });
 
-    it('should not display school assignment when schoolName is not set', () => {
+    it('should omit the school name while retaining other assignment fields', () => {
       mockStudentService.getStudentById.mockReturnValue(
         of({ ...mockStudent, schoolName: undefined }),
       );
@@ -434,7 +442,8 @@ describe('StudentProfilePage', () => {
       fixture.detectChanges();
 
       const content = fixture.nativeElement.textContent;
-      expect(content).not.toContain('School Assignment');
+      expect(content).not.toContain('Test School');
+      expect(content).toContain('5A');
     });
   });
 

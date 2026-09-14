@@ -314,7 +314,7 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problem);
-        Assert.Contains("Name", problem!.Title);
+        Assert.Contains("Name", problem!.Extensions["errors"].ToString());
     }
 
     [Fact]
@@ -565,6 +565,7 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
         var updateRequest = new UpdateClassGroupRequest
         {
             Name = "Test",
+            Sequence = 1,
             SchoolId = 1,
             DayOfWeek = DayOfWeek.Monday,
             StartTime = new TimeOnly(9, 0),
@@ -575,7 +576,7 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
         var response = await client.PutAsJsonAsync("/api/class-groups/99999", updateRequest);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.True(response.StatusCode == HttpStatusCode.NotFound, await response.Content.ReadAsStringAsync());
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -755,7 +756,7 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.NotNull(problem);
-        Assert.Contains("Name", problem!.Title);
+        Assert.Contains("Name", problem!.Extensions["errors"].ToString());
     }
 
     #endregion

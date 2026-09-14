@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { DestroyRef } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivityService } from '@core/services/activity.service';
-import { EvaluationService } from '@core/services/evaluation.service';
+import { ActivityService } from '@features/activities/data-access/activity.service';
+import { EvaluationService } from '@features/evaluations/data-access/evaluation.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Activity } from '@features/activities/models/activity.model';
 import type { Evaluation } from '@features/evaluations/models/evaluation.model';

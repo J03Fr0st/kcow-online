@@ -8,8 +8,8 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AttendanceService } from '@core/services/attendance.service';
-import { ClassGroupService } from '@core/services/class-group.service';
+import { AttendanceService } from '@features/attendance/data-access/attendance.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
 import type {
   Attendance,
   AttendanceQueryParams,

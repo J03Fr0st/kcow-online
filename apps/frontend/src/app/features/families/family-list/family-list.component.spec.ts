@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { FamilyService } from '@core/services/family.service';
+import { FamilyService } from '@features/families/data-access/family.service';
 import { ModalService } from '@core/services/modal.service';
 import { NotificationService } from '@core/services/notification.service';
 import { of, throwError } from 'rxjs';

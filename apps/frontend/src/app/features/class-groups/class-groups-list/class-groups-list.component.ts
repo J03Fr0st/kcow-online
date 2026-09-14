@@ -9,10 +9,10 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ClassGroupService } from '@core/services/class-group.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
-import { type School, SchoolService } from '@core/services/school.service';
-import { TruckService } from '@core/services/truck.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
+import { TruckService } from '@features/trucks/data-access/truck.service';
 import { BulkAttendanceComponent } from '../bulk-attendance/bulk-attendance.component';
 import { ClassGroupFormComponent } from '../class-group-form/class-group-form.component';
 import type { ClassGroup } from '../models/class-group.model';

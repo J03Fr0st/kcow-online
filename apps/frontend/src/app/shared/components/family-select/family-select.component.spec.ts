@@ -2,7 +2,7 @@ import { signal } from '@angular/core';
 import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { type Family, FamilyService } from '@core/services/family.service';
+import { type Family, FamilyService } from '@features/families/data-access/family.service';
 import { of } from 'rxjs';
 import { FamilySelectComponent } from './family-select.component';
 
@@ -149,7 +149,7 @@ describe('FamilySelectComponent', () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'Smith';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      input.triggerEventHandler('input', { target: input.nativeElement });
 
       tick(300);
       fixture.detectChanges();
@@ -159,8 +159,8 @@ describe('FamilySelectComponent', () => {
       const familyItems = fixture.debugElement.queryAll(
         By.css('.dropdown-content li a:not(.text-primary):not(.disabled)'),
       );
-      // Should show "No Family" + 1 Smith family + "Create New"
-      expect(familyItems.length).toBe(3);
+      // Selector excludes the Create New action: No Family + Smith family.
+      expect(familyItems.length).toBe(2);
     }));
 
     it('should filter families based on guardian name search query with debounce', fakeAsync(() => {
@@ -170,7 +170,7 @@ describe('FamilySelectComponent', () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'John';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      input.triggerEventHandler('input', { target: input.nativeElement });
 
       tick(300);
       fixture.detectChanges();

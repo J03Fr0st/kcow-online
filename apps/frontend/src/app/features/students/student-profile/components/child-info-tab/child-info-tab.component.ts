@@ -24,7 +24,7 @@ import {
   type Student,
   StudentService,
   type UpdateStudentRequest,
-} from '@core/services/student.service';
+} from '@features/students/data-access/student.service';
 
 interface StudentForm {
   firstName: string | null;
@@ -86,7 +86,7 @@ export class ChildInfoTabComponent implements OnInit, OnDestroy {
    * Initialize reactive form
    */
   private initializeForm(): void {
-    this.form = this.formBuilder.group<StudentForm>({
+    this.form = this.formBuilder.group({
       firstName: [null, [Validators.required, Validators.maxLength(50)]],
       lastName: [null, [Validators.required, Validators.maxLength(50)]],
       dateOfBirth: [null],
@@ -209,11 +209,11 @@ export class ChildInfoTabComponent implements OnInit, OnDestroy {
     const field = this.form.get(fieldName);
     if (!field || !field.errors) return '';
 
-    if (field.errors.required) {
+    if (field.errors['required']) {
       return 'This field is required';
     }
-    if (field.errors.maxlength) {
-      return `Maximum length is ${field.errors.maxlength.requiredLength} characters`;
+    if (field.errors['maxlength']) {
+      return `Maximum length is ${field.errors['maxlength'].requiredLength} characters`;
     }
     return 'Invalid value';
   }

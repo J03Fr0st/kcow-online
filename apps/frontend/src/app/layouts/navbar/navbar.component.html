@@ -47,7 +47,7 @@
 
       <!-- Theme Toggle -->
       <div class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-ghost btn-sm gap-2">
+        <button type="button" class="btn btn-ghost btn-sm gap-2">
           <span class="text-lg">
             @if (themeService.currentTheme() === 'light') {
               ☀️
@@ -58,7 +58,7 @@
             }
           </span>
           <span class="hidden sm:inline">Theme</span>
-        </label>
+        </button>
         <ul
           tabindex="0"
           class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 max-h-96 overflow-y-auto overflow-x-hidden scrollbar-thin z-50"
@@ -86,14 +86,14 @@
 
       <!-- User Menu -->
       <div class="dropdown dropdown-end">
-        <label tabindex="0" class="btn btn-ghost btn-sm gap-2">
+        <button type="button" class="btn btn-ghost btn-sm gap-2">
           <div class="avatar placeholder">
             <div class="bg-primary text-primary-content rounded-full w-8">
               <span class="text-sm">{{ currentUserInitials }}</span>
             </div>
           </div>
           <span class="hidden md:inline">{{ currentUserName }}</span>
-        </label>
+        </button>
         <ul
           tabindex="0"
           class="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 z-50">

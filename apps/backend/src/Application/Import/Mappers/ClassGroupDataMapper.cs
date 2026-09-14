@@ -46,6 +46,9 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
 
         var result = new MappingResult<ClassGroup> { Success = true };
 
+        if (string.IsNullOrWhiteSpace(source.Description) && string.IsNullOrWhiteSpace(source.ClassGroup))
+            result.Warnings.Add(new MappingWarning("Name", "Generated name for legacy class group without a name.", null, name));
+
         // Validate SchoolId - treat 0 as null (missing from legacy data)
         int? schoolId = source.SchoolId == 0 ? null : (int)source.SchoolId;
         if (schoolId.HasValue && _validSchoolIds.Count > 0 && !_validSchoolIds.Contains(schoolId.Value))

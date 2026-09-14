@@ -1,6 +1,13 @@
-using Kcow.Infrastructure.Data;
+using Kcow.Infrastructure.Database;
+using Kcow.Infrastructure.Repositories;
 using Kcow.Infrastructure.Import;
-using Microsoft.EntityFrameworkCore;
+
+if (args.Contains("--help"))
+{
+    Console.WriteLine("Legacy import: [xmlPath] [xsdPath] [auditPath] [summaryPath] [--count | --sample N]. Activity runner also supports --preview.");
+    Console.WriteLine("Set ConnectionStrings__DefaultConnection to an absolute SQLite path. Count/sample/preview use read-only access to existing schema.");
+    return;
+}
 
 var countOnly = args.Any(arg => string.Equals(arg, "--count", StringComparison.OrdinalIgnoreCase));
 var sampleArgIndex = Array.FindIndex(args, arg => string.Equals(arg, "--sample", StringComparison.OrdinalIgnoreCase));
@@ -12,28 +19,34 @@ var xsdPath = args.Length > 1 && !args[1].StartsWith("--") ? args[1] : Path.Comb
 var auditPath = args.Length > 2 && !args[2].StartsWith("--") ? args[2] : Path.Combine("migration-output", "classgroup-import-audit.log");
 var summaryPath = args.Length > 3 && !args[3].StartsWith("--") ? args[3] : Path.Combine("migration-output", "classgroup-import-summary.txt");
 
-var options = new DbContextOptionsBuilder<AppDbContext>()
-    .UseSqlite("Data Source=kcow.db")
-    .Options;
+if (!countOnly && sampleCount == 0 && (!File.Exists(xmlPath) || !File.Exists(xsdPath)))
+{
+    Console.Error.WriteLine("XML and XSD input files must exist.");
+    Environment.ExitCode = 1;
+    return;
+}
+var connectionFactory = LegacyToolDatabase.Open(!countOnly && sampleCount == 0);
 
-await using var context = new AppDbContext(options);
-await context.Database.EnsureCreatedAsync();
+
+var groups = new ClassGroupRepository(connectionFactory);
+var schools = new SchoolRepository(connectionFactory);
+var trucks = new TruckRepository(connectionFactory);
 
 if (countOnly)
 {
-    var count = await context.ClassGroups.CountAsync();
+    var count = (await groups.GetAllAsync()).Count();
     Console.WriteLine($"Class Groups in kcow.db: {count}");
     return;
 }
 
 if (sampleCount > 0)
 {
-    var samples = await context.ClassGroups
-        .Include(cg => cg.School)
+    var schoolNames = (await schools.GetAllAsync()).ToDictionary(school => school.Id, school => school.Name);
+    var samples = (await groups.GetAllAsync())
         .OrderBy(cg => cg.Id)
-        .Select(cg => new { cg.Id, cg.Name, SchoolName = cg.School!.Name, cg.DayOfWeek })
+        .Select(cg => new { cg.Id, cg.Name, SchoolName = cg.SchoolId.HasValue ? schoolNames.GetValueOrDefault(cg.SchoolId.Value) : null, cg.DayOfWeek })
         .Take(sampleCount)
-        .ToListAsync();
+        .ToList();
 
     Console.WriteLine($"Sample class groups (first {samples.Count}):");
     foreach (var sample in samples)
@@ -47,7 +60,7 @@ if (sampleCount > 0)
 Directory.CreateDirectory(Path.GetDirectoryName(auditPath) ?? ".");
 Directory.CreateDirectory(Path.GetDirectoryName(summaryPath) ?? ".");
 
-var importer = new LegacyClassGroupImportService(context);
+var importer = new LegacyClassGroupImportService(groups, schools, trucks);
 var summary = await importer.ImportAsync(xmlPath, xsdPath, auditPath, summaryPath);
 
 Console.WriteLine("Legacy class group import complete.");

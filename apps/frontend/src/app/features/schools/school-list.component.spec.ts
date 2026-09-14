@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { ModalService } from '../../core/services/modal.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { SchoolService } from '../../core/services/school.service';
+import { SchoolService } from '@features/schools/data-access/school.service';
 import { SchoolListComponent } from './school-list.component';
 
 describe('SchoolListComponent', () => {

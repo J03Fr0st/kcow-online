@@ -10,7 +10,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
-import type { LoginRequest } from './models/login-request.model';
+import type { LoginRequest } from '@core/auth/models/login-request.model';
 
 /**
  * Login Component

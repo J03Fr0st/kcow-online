@@ -22,7 +22,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { type Family, FamilyService } from '@core/services/family.service';
+import { type Family, FamilyService } from '@features/families/data-access/family.service';
 import { ModalService } from '@core/services/modal.service';
 import { NotificationService } from '@core/services/notification.service';
 import {
@@ -31,7 +31,7 @@ import {
   type Student,
   StudentService,
   type UpdateStudentRequest,
-} from '@core/services/student.service';
+} from '@features/students/data-access/student.service';
 import { ClassGroupSelectComponent } from '@shared/components/class-group-select/class-group-select.component';
 import { CreateFamilyModalComponent } from '@shared/components/create-family-modal/create-family-modal.component';
 import { FamilySelectComponent } from '@shared/components/family-select/family-select.component';
@@ -878,11 +878,11 @@ export class StudentFormComponent implements OnInit {
       return '';
     }
 
-    if (field.errors.required) {
+    if (field.errors['required']) {
       return 'This field is required';
     }
 
-    if (field.errors.positiveInteger) {
+    if (field.errors['positiveInteger']) {
       return 'Must be a positive integer';
     }
 

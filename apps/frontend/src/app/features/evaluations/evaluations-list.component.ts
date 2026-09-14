@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EvaluationService } from '@core/services/evaluation.service';
+import { EvaluationService } from '@features/evaluations/data-access/evaluation.service';
 import type { Evaluation } from '@features/evaluations/models/evaluation.model';
 
 @Component({

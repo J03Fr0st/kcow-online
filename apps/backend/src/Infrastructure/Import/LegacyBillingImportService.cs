@@ -191,28 +191,15 @@ public sealed class LegacyBillingImportService
     {
         using var connection = _connectionFactory.Create();
 
-        // Get all invoices with their payment totals
-        const string sql = @"
-            SELECT i.id, i.student_id, i.amount, COALESCE(SUM(p.amount), 0) as paid_amount
-            FROM invoices i
-            LEFT JOIN payments p ON p.invoice_id = i.id
-            WHERE i.status = 0
-            GROUP BY i.id, i.student_id, i.amount";
-
-        var invoiceStatuses = await connection.QueryAsync<dynamic>(sql);
-
-        foreach (var inv in invoiceStatuses)
+        // Typed reads preserve decimal values stored as SQLite TEXT.
+        var invoices = await connection.QueryAsync<Invoice>(new CommandDefinition("SELECT * FROM invoices WHERE status=0", cancellationToken: cancellationToken));
+        var payments = await connection.QueryAsync<Payment>(new CommandDefinition("SELECT * FROM payments WHERE invoice_id IS NOT NULL", cancellationToken: cancellationToken));
+        var paid = payments.GroupBy(p => p.InvoiceId).ToDictionary(g => g.Key!.Value, g => g.Sum(p => p.Amount));
+        foreach (var invoice in invoices)
         {
-            var invoiceAmount = (decimal)inv.amount;
-            var paidAmount = (decimal)inv.paid_amount;
-
-            if (paidAmount >= invoiceAmount)
-            {
-                // Mark as Paid
-                await connection.ExecuteAsync(
-                    "UPDATE invoices SET status = 1 WHERE id = @Id",
-                    new { Id = (int)inv.id });
-            }
+            cancellationToken.ThrowIfCancellationRequested();
+            if (paid.GetValueOrDefault(invoice.Id) >= invoice.Amount)
+                await connection.ExecuteAsync(new CommandDefinition("UPDATE invoices SET status=1 WHERE id=@Id", new { invoice.Id }, cancellationToken: cancellationToken));
         }
     }
 

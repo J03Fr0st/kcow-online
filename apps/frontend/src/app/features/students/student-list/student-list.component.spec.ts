@@ -6,7 +6,7 @@ import {
   type ProblemDetails,
   type StudentListItem,
   StudentService,
-} from '@core/services/student.service';
+} from '@features/students/data-access/student.service';
 import { of } from 'rxjs';
 import { StudentListComponent } from './student-list.component';
 
@@ -203,7 +203,7 @@ describe('StudentListComponent', () => {
     mockStudentService.getStudents.mockClear();
     fixture.detectChanges();
 
-    const nextButton = fixture.debugElement.queryAll(By.css('.join-item.btn'))[3]; // Last button (»)
+    const nextButton = fixture.debugElement.queryAll(By.css('.join-item.btn'))[2]; // Last button (»)
     nextButton.triggerEventHandler('click', null);
     fixture.detectChanges();
 
@@ -217,7 +217,7 @@ describe('StudentListComponent', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('.join-item.btn'));
     expect(buttons[0].nativeElement.disabled).toBe(true); // «
-    expect(buttons[1].nativeElement.textContent.trim()).toBe('1');
+    expect(buttons[1].nativeElement.textContent.trim()).toBe('Page 1 of 2');
   });
 
   it('should disable last and next buttons on last page', () => {
@@ -227,17 +227,17 @@ describe('StudentListComponent', () => {
     fixture.detectChanges();
 
     const buttons = fixture.debugElement.queryAll(By.css('.join-item.btn'));
-    expect(buttons[3].nativeElement.disabled).toBe(true); // »
+    expect(buttons[2].nativeElement.disabled).toBe(true); // »
   });
 
   it('should display student status badge correctly', () => {
     mockStudentService.students.set([
       { ...mockStudents[0], isActive: true },
-      { ...mockStudents[1], isActive: false },
+      { ...mockStudents[1], isActive: false, status: undefined },
     ]);
     fixture.detectChanges();
 
-    const badges = fixture.debugElement.queryAll(By.css('.badge'));
+    const badges = fixture.debugElement.queryAll(By.css('td:nth-child(6) .badge'));
     expect(badges[0].nativeElement.textContent).toContain('Active');
     expect(badges[0].nativeElement.classList).toContain('badge-success');
     expect(badges[1].nativeElement.textContent).toContain('Inactive');

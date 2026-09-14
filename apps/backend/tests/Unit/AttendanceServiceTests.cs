@@ -13,7 +13,7 @@ public class AttendanceServiceTests
     private readonly IStudentRepository _studentRepository;
     private readonly IClassGroupRepository _classGroupRepository;
     private readonly IAuditService _auditService;
-    private readonly Infrastructure.Attendance.AttendanceService _service;
+    private readonly Application.Attendance.AttendanceService _service;
 
     public AttendanceServiceTests()
     {
@@ -21,11 +21,13 @@ public class AttendanceServiceTests
         _studentRepository = Substitute.For<IStudentRepository>();
         _classGroupRepository = Substitute.For<IClassGroupRepository>();
         _auditService = Substitute.For<IAuditService>();
-        _service = new Infrastructure.Attendance.AttendanceService(
+        _studentRepository.ExistsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        _classGroupRepository.ExistsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        _service = new Application.Attendance.AttendanceService(
             _attendanceRepository,
             _studentRepository,
             _classGroupRepository,
-            NullLogger<Infrastructure.Attendance.AttendanceService>.Instance,
+            NullLogger<Application.Attendance.AttendanceService>.Instance,
             _auditService);
     }
 

@@ -244,7 +244,7 @@ public class ActivitiesControllerTests : IClassFixture<CustomWebApplicationFacto
         using var client = await CreateAuthenticatedClientAsync();
 
         // Act
-        var response = await client.GetAsync("/api/activities/99999");
+        var response = await client.GetAsync("/api/activities/2147483647");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -309,7 +309,7 @@ public class ActivitiesControllerTests : IClassFixture<CustomWebApplicationFacto
         };
 
         // Act
-        var response = await client.PutAsJsonAsync("/api/activities/99999", updateRequest);
+        var response = await client.PutAsJsonAsync("/api/activities/2147483647", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -359,7 +359,7 @@ public class ActivitiesControllerTests : IClassFixture<CustomWebApplicationFacto
         using var client = await CreateAuthenticatedClientAsync();
 
         // Act
-        var response = await client.DeleteAsync("/api/activities/99999");
+        var response = await client.DeleteAsync("/api/activities/2147483647");
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);

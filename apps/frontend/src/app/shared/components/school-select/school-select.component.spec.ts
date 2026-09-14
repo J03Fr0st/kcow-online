@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, signal } from '@angular/core';
 import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
-import { type School, SchoolService } from '@core/services/school.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
 import { Subject } from 'rxjs';
 import { SchoolSelectComponent } from './school-select.component';
 
@@ -107,7 +107,7 @@ describe('SchoolSelectComponent', () => {
 
       // Simulate typing
       input.nativeElement.value = 'Primary';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      input.triggerEventHandler('input', { target: input.nativeElement });
 
       // After 300ms debounce
       tick(300);
@@ -122,7 +122,7 @@ describe('SchoolSelectComponent', () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'HS';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      input.triggerEventHandler('input', { target: input.nativeElement });
 
       tick(300);
       fixture.detectChanges();
@@ -136,7 +136,7 @@ describe('SchoolSelectComponent', () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'xyz123';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      input.triggerEventHandler('input', { target: input.nativeElement });
 
       tick(300);
       fixture.detectChanges();

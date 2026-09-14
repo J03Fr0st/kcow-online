@@ -7,7 +7,7 @@ import {
   type Family,
   FamilyService,
   type Guardian,
-} from '@core/services/family.service';
+} from '@features/families/data-access/family.service';
 import { NotificationService } from '@core/services/notification.service';
 import {
   GuardianFormComponent,
@@ -295,11 +295,11 @@ export class FamilyFormComponent implements OnInit {
     const label =
       controlName.charAt(0).toUpperCase() + controlName.slice(1).replace(/([A-Z])/g, ' $1');
 
-    if (control.errors.required) {
+    if (control.errors['required']) {
       return `${label} is required`;
     }
-    if (control.errors.maxlength) {
-      return `${label} cannot exceed ${control.errors.maxlength.requiredLength} characters`;
+    if (control.errors['maxlength']) {
+      return `${label} cannot exceed ${control.errors['maxlength'].requiredLength} characters`;
     }
 
     return '';

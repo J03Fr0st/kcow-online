@@ -9,7 +9,7 @@ import {
   type WritableSignal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { type Family, FamilyService } from '@core/services/family.service';
+import { type Family, FamilyService } from '@features/families/data-access/family.service';
 import { ModalService } from '@core/services/modal.service';
 import { NotificationService } from '@core/services/notification.service';
 

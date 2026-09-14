@@ -10,9 +10,9 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BillingService } from '@core/services/billing.service';
-import type { ProblemDetails, Student } from '@core/services/student.service';
-import { StudentService } from '@core/services/student.service';
+import { BillingService } from '@features/billing/data-access/billing.service';
+import type { ProblemDetails, Student } from '@features/students/data-access/student.service';
+import { StudentService } from '@features/students/data-access/student.service';
 import type { BillingSummary } from '@features/billing/models/billing.model';
 import { StudentAvatarComponent } from '@shared/components/student-avatar/student-avatar.component';
 import { AttendanceTabComponent } from './components/attendance-tab/attendance-tab.component';
@@ -146,7 +146,7 @@ export class StudentProfilePage implements OnInit {
     if (!dateString) return '-';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString();
+      return Number.isNaN(date.getTime()) ? dateString : date.toLocaleDateString();
     } catch {
       return dateString;
     }

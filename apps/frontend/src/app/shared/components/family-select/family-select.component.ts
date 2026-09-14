@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   forwardRef,
@@ -11,7 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { type Family, FamilyService } from '@core/services/family.service';
+import { type Family, FamilyService } from '@features/families/data-access/family.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -33,6 +34,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 export class FamilySelectComponent implements ControlValueAccessor, OnInit {
   protected familyService = inject(FamilyService);
   private destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   // Two-way binding for familyId
   readonly familyId = model<number | null>(null);
@@ -85,6 +87,7 @@ export class FamilySelectComponent implements ControlValueAccessor, OnInit {
     this.familyService.getActiveFamilies(search).subscribe({
       next: (families) => {
         this.filteredFamilies = families;
+        this.cdr.markForCheck();
         this.isLoading = false;
       },
       error: () => {

@@ -12,6 +12,24 @@ using Serilog;
 using System.Text;
 using System.Text.Json;
 
+// Deployment owns schema changes explicitly; this command never seeds authentication data.
+if (args.Length == 2 && args[0] == "database" && args[1] == "migrate")
+{
+    try
+    {
+        var migrationBuilder = WebApplication.CreateBuilder(Array.Empty<string>());
+        migrationBuilder.Services.AddInfrastructure(migrationBuilder.Configuration);
+        await using var migrationApp = migrationBuilder.Build();
+        await migrationApp.Services.EnsureDatabaseCreatedAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Migration failed: {ex.Message}");
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 // Handle CLI commands before starting the web host
 if (ImportParseCommand.IsImportParseCommand(args))
 {
@@ -33,20 +51,39 @@ if (ImportRunCommand.IsImportRunCommand(args))
 
     var parser = new LegacyParser();
 
-    // Build a minimal service provider with database access for full imports
-    var cliBuilder = WebApplication.CreateBuilder(Array.Empty<string>());
-    cliBuilder.Services.AddInfrastructure(cliBuilder.Configuration);
-    cliBuilder.Services.AddLogging(lb => lb.AddConsole());
-    var cliApp = cliBuilder.Build();
-
-    // Run migrations to ensure DB schema is up to date
-    await cliApp.Services.InitializeDatabaseAsync();
-
-    using var scope = cliApp.Services.CreateScope();
-    var importService = scope.ServiceProvider.GetService<IImportExecutionService>();
-
-    var exitCode = await ImportRunCommand.ExecuteAsync(args, parser, Console.Out, importService);
-    Environment.Exit(exitCode);
+    using var cancellation = new CancellationTokenSource();
+    ConsoleCancelEventHandler cancelHandler = (_, e) => { e.Cancel = true; cancellation.Cancel(); };
+    Console.CancelKeyPress += cancelHandler;
+    WebApplication? cliApp = null;
+    IServiceScope? cliScope = null;
+    try
+    {
+        var exitCode = await ImportRunCommand.ExecuteAsync(args, parser, Console.Out, importServiceFactory: async () =>
+        {
+            var cliBuilder = WebApplication.CreateBuilder(Array.Empty<string>());
+            cliBuilder.Services.AddInfrastructure(cliBuilder.Configuration);
+            cliApp = cliBuilder.Build();
+            await cliApp.Services.EnsureDatabaseCreatedAsync();
+            cliScope = cliApp.Services.CreateScope();
+            // Legacy school records reference the fixed truck catalogue; authentication is not seeded.
+            await Kcow.Infrastructure.Database.Seeders.TruckSeeder.SeedAsync(
+                cliScope.ServiceProvider.GetRequiredService<Kcow.Application.Interfaces.ITruckRepository>(),
+                cliScope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Import"));
+            return cliScope.ServiceProvider.GetRequiredService<IImportExecutionService>();
+        }, cancellationToken: cancellation.Token);
+        Environment.ExitCode = exitCode;
+    }
+    catch (OperationCanceledException)
+    {
+        Console.Error.WriteLine("Import cancelled. Current entity rolled back; earlier entity commits remain. Reconcile before rerunning.");
+        Environment.ExitCode = 130;
+    }
+    finally
+    {
+        Console.CancelKeyPress -= cancelHandler;
+        cliScope?.Dispose();
+        if (cliApp is not null) await cliApp.DisposeAsync();
+    }
     return;
 }
 
@@ -59,12 +96,6 @@ Log.Information("Starting KCOW API");
 try
 {
     var builder = WebApplication.CreateBuilder(args ?? Array.Empty<string>());
-
-    // Register database initialization hosted service for development and E2E testing
-    if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("E2E"))
-    {
-        builder.Services.AddHostedService<DatabaseInitializationService>();
-    }
 
     // Configure Serilog
     if (!builder.Environment.IsEnvironment("Testing"))
@@ -208,9 +239,10 @@ try
     });
 
     var app = builder.Build();
+    if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("E2E"))
+        await app.Services.InitializeDatabaseAsync();
 
     // Configure the HTTP request pipeline
-    // Note: Database initialization moved to a hosted service for test compatibility
     app.UseGlobalExceptionHandler();
     // app.UseStatusCodePages();
 
@@ -249,6 +281,9 @@ try
         .WithName("ApiHealthCheck")
         .WithTags("Health");
 
+    app.MapGet("/health/ready", async (Kcow.Application.Common.IDatabaseReadiness database, CancellationToken ct) =>
+        await database.IsReadyAsync(ct) ? Results.Ok(new { status = "ready" }) : Results.StatusCode(503));
+
     app.Run();
 }
 catch (Microsoft.Extensions.Hosting.HostAbortedException ex)
@@ -261,6 +296,7 @@ catch (Microsoft.Extensions.Hosting.HostAbortedException ex)
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    Environment.ExitCode = 1;
 }
 finally
 {
@@ -269,35 +305,3 @@ finally
 
 // Make the implicit Program class public so test projects can access it
 public partial class Program { }
-
-/// <summary>
-/// Background service that initializes the database on application startup in development.
-/// </summary>
-public class DatabaseInitializationService : BackgroundService
-{
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DatabaseInitializationService> _logger;
-
-    public DatabaseInitializationService(IServiceProvider serviceProvider, ILogger<DatabaseInitializationService> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("Database initialization service starting");
-
-        try
-        {
-            using var scope = _serviceProvider.CreateScope();
-            await scope.ServiceProvider.InitializeDatabaseAsync();
-            _logger.LogInformation("Database initialization completed successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Database initialization failed");
-            throw;
-        }
-    }
-}

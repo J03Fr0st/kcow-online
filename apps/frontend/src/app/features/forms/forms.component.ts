@@ -88,14 +88,14 @@ export class FormsComponent implements OnInit {
     const field = this.registrationForm.get(fieldName);
     if (!field || !field.errors) return '';
 
-    if (field.errors.required) return 'This field is required';
-    if (field.errors.email) return 'Invalid email address';
-    if (field.errors.minlength)
-      return `Minimum ${field.errors.minlength.requiredLength} characters required`;
-    if (field.errors.passwordStrength)
+    if (field.errors['required']) return 'This field is required';
+    if (field.errors['email']) return 'Invalid email address';
+    if (field.errors['minlength'])
+      return `Minimum ${field.errors['minlength'].requiredLength} characters required`;
+    if (field.errors['passwordStrength'])
       return 'Password must contain uppercase, lowercase, and number';
-    if (field.errors.passwordMismatch) return 'Passwords do not match';
-    if (field.errors.requiredTrue) return 'You must accept the terms';
+    if (field.errors['passwordMismatch']) return 'Passwords do not match';
+    if (field.errors['requiredTrue']) return 'You must accept the terms';
 
     return 'Invalid value';
   }
@@ -109,9 +109,9 @@ export class FormsComponent implements OnInit {
     const field = this.contactForm.get(fieldName);
     if (!field || !field.errors) return '';
 
-    if (field.errors.required) return 'This field is required';
-    if (field.errors.minlength)
-      return `Minimum ${field.errors.minlength.requiredLength} characters required`;
+    if (field.errors['required']) return 'This field is required';
+    if (field.errors['minlength'])
+      return `Minimum ${field.errors['minlength'].requiredLength} characters required`;
 
     return 'Invalid value';
   }

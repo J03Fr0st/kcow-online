@@ -24,7 +24,8 @@ public static class ImportRunCommand
 
     public static async Task<int> ExecuteAsync(
         string[] args, ILegacyParser parser, TextWriter? output = null,
-        IImportExecutionService? importService = null)
+        IImportExecutionService? importService = null,
+        Func<Task<IImportExecutionService>>? importServiceFactory = null, CancellationToken cancellationToken = default)
     {
         output ??= Console.Out;
 
@@ -48,11 +49,8 @@ public static class ImportRunCommand
             return 1;
         }
 
-        // Parse all legacy files
-        var parseResults = ParseAllEntities(parser, options.InputPath, output);
-
-        // Map parsed records through data mappers
-        var previewReport = BuildPreviewReport(parseResults, options.InputPath);
+        var plan = new ImportPlanBuilder(parser).Build(options.InputPath, options.ConflictMode, cancellationToken);
+        var previewReport = BuildPreviewReport(plan);
 
         if (options.Preview)
         {
@@ -68,6 +66,9 @@ public static class ImportRunCommand
         }
         else
         {
+            // Acquire write-capable dependencies only after options and preview are handled.
+            if (importService is null && importServiceFactory is not null)
+                importService = await importServiceFactory();
             // Full import mode — requires import execution service
             if (importService is null)
             {
@@ -76,7 +77,7 @@ public static class ImportRunCommand
                 return 1;
             }
 
-            var importResult = await importService.ExecuteAsync(options.InputPath, options.ConflictMode);
+            var importResult = await importService.ExecuteAsync(plan, cancellationToken);
             PrintImportResult(importResult, output);
 
             // Write exceptions file if there are any
@@ -89,169 +90,30 @@ public static class ImportRunCommand
                 output.WriteLine($"Exceptions saved to: {exceptionsPath}");
             }
 
-            return importResult.TotalFailed > 0 ? 1 : 0;
+            return importResult.TotalFailed > 0 || importResult.Exceptions.Any(e => e.Field == "_parse") ? 1 : 0;
         }
     }
 
-    private static ParsedEntityResults ParseAllEntities(ILegacyParser parser, string inputPath, TextWriter output)
+    private static ImportPreviewReport BuildPreviewReport(ImportPlan plan) => new()
     {
-        var results = new ParsedEntityResults();
+        InputPath = plan.InputPath, ExecutedAt = DateTime.UtcNow,
+        Schools = Preview(plan.Schools, s => $"{s.Id}. {s.Name} - {s.Address ?? "(no address)"}"),
+        ClassGroups = Preview(plan.ClassGroups, cg => $"{cg.Name} - {cg.DayOfWeek} {cg.StartTime}-{cg.EndTime}"),
+        Activities = Preview(plan.Activities, a => $"{a.Id}. {a.Name} ({a.Code})"),
+        Students = Preview(plan.Students, s => $"{s.Student.Reference}: {s.Student.FirstName} {s.Student.LastName}"),
+        SkippedEntities = new[] { ("School", plan.Schools.Missing), ("ClassGroup", plan.ClassGroups.Missing),
+            ("Activity", plan.Activities.Missing), ("Children", plan.Students.Missing) }.Where(x => x.Item2).Select(x => x.Item1).ToList(),
+        SourceFingerprint = plan.SourceFingerprint, RunId = plan.RunId
+    };
 
-        var entityConfigs = new[]
-        {
-            ("School", "1_School", "School.xml", "School.xsd"),
-            ("ClassGroup", "2_Class_Group", "Class Group.xml", "Class Group.xsd"),
-            ("Activity", "3_Activity", "Activity.xml", "Activity.xsd"),
-            ("Children", "4_Children", "Children.xml", "Children.xsd")
-        };
-
-        foreach (var (entityName, folder, xmlFile, xsdFile) in entityConfigs)
-        {
-            var entityFolder = Path.Combine(inputPath, folder);
-            var xmlPath = Path.Combine(entityFolder, xmlFile);
-            var xsdPath = Path.Combine(entityFolder, xsdFile);
-
-            if (!File.Exists(xmlPath) || !File.Exists(xsdPath))
-            {
-                results.SkippedEntities.Add(entityName);
-                continue;
-            }
-
-            try
-            {
-                switch (entityName)
-                {
-                    case "School":
-                        results.Schools = parser.ParseSchools(xmlPath, xsdPath);
-                        break;
-                    case "ClassGroup":
-                        results.ClassGroups = parser.ParseClassGroups(xmlPath, xsdPath);
-                        break;
-                    case "Activity":
-                        results.Activities = parser.ParseActivities(xmlPath, xsdPath);
-                        break;
-                    case "Children":
-                        results.Children = parser.ParseChildren(xmlPath, xsdPath);
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                results.ParseErrors.Add($"{entityName}: {ex.Message}");
-            }
-        }
-
-        return results;
-    }
-
-    private static ImportPreviewReport BuildPreviewReport(ParsedEntityResults parseResults, string inputPath)
+    private static EntityPreviewResult? Preview<T>(EntityPlan<T> entity, Func<T, string> sample)
     {
-        var report = new ImportPreviewReport
-        {
-            ExecutedAt = DateTime.UtcNow,
-            InputPath = inputPath,
-            SkippedEntities = parseResults.SkippedEntities
-        };
-
-        // Map Schools
-        if (parseResults.Schools is not null && !parseResults.Schools.HasErrors)
-        {
-            var schoolMapper = new SchoolDataMapper();
-            var schoolResult = schoolMapper.MapMany(parseResults.Schools.Records);
-            report.Schools = new EntityPreviewResult
-            {
-                TotalParsed = parseResults.Schools.Records.Count,
-                TotalMapped = schoolResult.Data?.Count ?? 0,
-                Warnings = schoolResult.Warnings.Select(w => $"{w.Field}: {w.Message}").ToList(),
-                Errors = schoolResult.Errors.Select(e => $"{e.Field}: {e.Message}").ToList(),
-                SampleRecords = schoolResult.Data?.Take(5)
-                    .Select(s => $"{s.Id}. {s.Name} - {s.Address ?? "(no address)"}")
-                    .ToList() ?? new()
-            };
-        }
-        else if (parseResults.Schools?.HasErrors == true)
-        {
-            report.Schools = new EntityPreviewResult
-            {
-                ParseErrors = parseResults.Schools.Errors.Select(e => e.ToString()).ToList()
-            };
-        }
-
-        // Map ClassGroups
-        if (parseResults.ClassGroups is not null && !parseResults.ClassGroups.HasErrors)
-        {
-            var classGroupMapper = new ClassGroupDataMapper();
-            var cgResult = classGroupMapper.MapMany(parseResults.ClassGroups.Records);
-            report.ClassGroups = new EntityPreviewResult
-            {
-                TotalParsed = parseResults.ClassGroups.Records.Count,
-                TotalMapped = cgResult.Data?.Count ?? 0,
-                Warnings = cgResult.Warnings.Select(w => $"{w.Field}: {w.Message}").ToList(),
-                Errors = cgResult.Errors.Select(e => $"{e.Field}: {e.Message}").ToList(),
-                SampleRecords = cgResult.Data?.Take(5)
-                    .Select(cg => $"{cg.Name} - {cg.DayOfWeek} {cg.StartTime}-{cg.EndTime}")
-                    .ToList() ?? new()
-            };
-        }
-        else if (parseResults.ClassGroups?.HasErrors == true)
-        {
-            report.ClassGroups = new EntityPreviewResult
-            {
-                ParseErrors = parseResults.ClassGroups.Errors.Select(e => e.ToString()).ToList()
-            };
-        }
-
-        // Map Activities
-        if (parseResults.Activities is not null && !parseResults.Activities.HasErrors)
-        {
-            var activityMapper = new ActivityDataMapper();
-            var actResult = activityMapper.MapMany(parseResults.Activities.Records);
-            report.Activities = new EntityPreviewResult
-            {
-                TotalParsed = parseResults.Activities.Records.Count,
-                TotalMapped = actResult.Data?.Count ?? 0,
-                Warnings = actResult.Warnings.Select(w => $"{w.Field}: {w.Message}").ToList(),
-                Errors = actResult.Errors.Select(e => $"{e.Field}: {e.Message}").ToList(),
-                SampleRecords = actResult.Data?.Take(5)
-                    .Select(a => $"{a.Id}. {a.Name} ({a.Code})")
-                    .ToList() ?? new()
-            };
-        }
-        else if (parseResults.Activities?.HasErrors == true)
-        {
-            report.Activities = new EntityPreviewResult
-            {
-                ParseErrors = parseResults.Activities.Errors.Select(e => e.ToString()).ToList()
-            };
-        }
-
-        // Map Students
-        if (parseResults.Children is not null && !parseResults.Children.HasErrors)
-        {
-            var studentMapper = new StudentDataMapper();
-            var studentResult = studentMapper.MapMany(parseResults.Children.Records);
-            report.Students = new EntityPreviewResult
-            {
-                TotalParsed = parseResults.Children.Records.Count,
-                TotalMapped = studentResult.Data?.Count ?? 0,
-                Warnings = studentResult.Warnings.Select(w => $"{w.Field}: {w.Message}").ToList(),
-                Errors = studentResult.Errors.Select(e => $"{e.Field}: {e.Message}").ToList(),
-                SampleRecords = studentResult.Data?.Take(5)
-                    .Select(s => $"{s.Student.Reference}: {s.Student.FirstName} {s.Student.LastName}")
-                    .ToList() ?? new()
-            };
-        }
-        else if (parseResults.Children?.HasErrors == true)
-        {
-            report.Students = new EntityPreviewResult
-            {
-                ParseErrors = parseResults.Children.Errors.Select(e => e.ToString()).ToList()
-            };
-        }
-
-        report.ParseErrors = parseResults.ParseErrors;
-
-        return report;
+        if (entity.Missing) return null;
+        var mapping = entity.GetMapping();
+        return new EntityPreviewResult { TotalParsed = entity.Parsed, TotalMapped = mapping.Data?.Count ?? 0,
+            Warnings = mapping.Warnings.Select(w => $"{w.Field}: {w.Message}").ToList(),
+            Errors = mapping.Errors.Select(e => $"{e.Field}: {e.Message}").Concat(entity.ParseErrors).ToList(),
+            ParseErrors = entity.ParseErrors.ToList(), SampleRecords = mapping.Data?.Take(5).Select(sample).ToList() ?? [] };
     }
 
     private static void PrintPreviewReport(ImportPreviewReport report, TextWriter output)
@@ -259,6 +121,8 @@ public static class ImportRunCommand
         output.WriteLine();
         output.WriteLine("=== IMPORT PREVIEW ===");
         output.WriteLine("NOTE: NO data will be written to the database.");
+        output.WriteLine($"Run {report.RunId}; source {report.SourceFingerprint}");
+        output.WriteLine("Database conflicts and optional references are resolved only during execution; accepted rows commit per entity type.");
         output.WriteLine();
 
         output.WriteLine("Record Counts:");
@@ -334,6 +198,8 @@ public static class ImportRunCommand
         output.WriteLine(isReimport ? "=== RE-IMPORT COMPLETE ===" : "=== IMPORT COMPLETE ===");
         output.WriteLine();
 
+        output.WriteLine($"Run {result.RunId}; source {result.SourceFingerprint}");
+        output.WriteLine("Accepted rows committed per entity type; rejected rows are reported below.");
         output.WriteLine("Results:");
         PrintEntityImportCount(output, "Schools", result.Schools);
         PrintEntityImportCount(output, "Class Groups", result.ClassGroups);
@@ -366,7 +232,7 @@ public static class ImportRunCommand
 
     private static void PrintEntityImportCount(TextWriter output, string name, EntityImportResult result)
     {
-        var parts = new List<string>();
+        var parts = new List<string> { result.Committed ? "transaction committed" : "no transaction" };
         if (result.Imported > 0) parts.Add($"{result.Imported} new");
         if (result.Updated > 0) parts.Add($"{result.Updated} updated");
         if (result.Skipped > 0) parts.Add($"{result.Skipped} skipped");
@@ -531,6 +397,8 @@ public sealed class ParsedEntityResults
 /// </summary>
 public sealed class ImportPreviewReport
 {
+    public string RunId { get; set; } = "";
+    public string SourceFingerprint { get; set; } = "";
     public DateTime ExecutedAt { get; set; }
     public string InputPath { get; set; } = string.Empty;
     public EntityPreviewResult? Schools { get; set; }

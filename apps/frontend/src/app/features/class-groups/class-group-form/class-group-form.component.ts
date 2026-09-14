@@ -12,10 +12,10 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, type FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ClassGroupService } from '@core/services/class-group.service';
+import { ClassGroupService } from '@features/class-groups/data-access/class-group.service';
 import { NotificationService } from '@core/services/notification.service';
-import { type School, SchoolService } from '@core/services/school.service';
-import { TruckService } from '@core/services/truck.service';
+import { type School, SchoolService } from '@features/schools/data-access/school.service';
+import { TruckService } from '@features/trucks/data-access/truck.service';
 import type {
   CheckConflictsRequest,
   ClassGroup,
@@ -381,14 +381,14 @@ export class ClassGroupFormComponent implements OnInit {
       return 'This field is required';
     }
     if (field.hasError('maxlength')) {
-      const maxLength = field.errors?.maxlength?.requiredLength || 0;
+      const maxLength = field.errors?.['maxlength']?.requiredLength || 0;
       return `Maximum length is ${maxLength} characters`;
     }
     if (field.hasError('min')) {
       return 'Value must be at least 1';
     }
     if (field.hasError('minlength')) {
-      const minLength = field.errors?.minlength?.requiredLength || 0;
+      const minLength = field.errors?.['minlength']?.requiredLength || 0;
       return `Minimum length is ${minLength} characters`;
     }
 
