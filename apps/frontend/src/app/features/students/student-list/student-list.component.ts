@@ -118,6 +118,13 @@ export class StudentListComponent implements OnInit {
     this.loadStudents();
   }
 
+  protected clearFilters(): void {
+    this.schoolFilter.set(null);
+    this.classGroupFilter.set(null);
+    this.currentPage.set(1);
+    this.loadStudents();
+  }
+
   /**
    * Handle sort column click
    */

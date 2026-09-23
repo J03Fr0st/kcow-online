@@ -16,17 +16,17 @@ namespace Kcow.Application.Import.Mappers;
 public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, ClassGroup>
 {
     private static readonly IReadOnlySet<int> EmptyIds = new HashSet<int>();
-    private readonly IReadOnlySet<int> _validSchoolIds;
+    private readonly IReadOnlyDictionary<int, int>? _schoolIdsByLegacyId;
     private readonly IReadOnlySet<int> _validTruckIds;
 
-    public ClassGroupDataMapper() : this(EmptyIds, EmptyIds) { }
+    public ClassGroupDataMapper() : this(null, EmptyIds) { }
 
-    public ClassGroupDataMapper(IReadOnlySet<int> validSchoolIds)
-        : this(validSchoolIds, EmptyIds) { }
+    public ClassGroupDataMapper(IReadOnlyDictionary<int, int> schoolIdsByLegacyId)
+        : this(schoolIdsByLegacyId, EmptyIds) { }
 
-    public ClassGroupDataMapper(IReadOnlySet<int> validSchoolIds, IReadOnlySet<int> validTruckIds)
+    public ClassGroupDataMapper(IReadOnlyDictionary<int, int>? schoolIdsByLegacyId, IReadOnlySet<int> validTruckIds)
     {
-        _validSchoolIds = validSchoolIds;
+        _schoolIdsByLegacyId = schoolIdsByLegacyId;
         _validTruckIds = validTruckIds;
     }
 
@@ -47,11 +47,23 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
         var result = new MappingResult<ClassGroup> { Success = true };
 
         // Validate SchoolId - treat 0 as null (missing from legacy data)
-        int? schoolId = source.SchoolId == 0 ? null : (int)source.SchoolId;
-        if (schoolId.HasValue && _validSchoolIds.Count > 0 && !_validSchoolIds.Contains(schoolId.Value))
+        int? schoolId = null;
+        if (source.SchoolId != 0)
         {
-            return MappingResult<ClassGroup>.Fail("SchoolId",
-                $"Class group references invalid SchoolId {source.SchoolId}.");
+            if (_schoolIdsByLegacyId is null)
+            {
+                // Preview mapping has no database lookup; retain the source ID for display.
+                schoolId = source.SchoolId;
+            }
+            else if (_schoolIdsByLegacyId.TryGetValue(source.SchoolId, out var resolvedId))
+            {
+                schoolId = resolvedId;
+            }
+            else
+            {
+                return MappingResult<ClassGroup>.Fail("SchoolId",
+                    $"Class group references invalid SchoolId {source.SchoolId}.");
+            }
         }
 
         // Parse DayId to DayOfWeek (1=Monday, 2=Tuesday, etc.)

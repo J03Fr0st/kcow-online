@@ -50,7 +50,6 @@ describe('TrucksListComponent', () => {
   }));
 
   afterEach(() => {
-    httpMock.match(`${environment.apiUrl}/trucks`).forEach((request) => { request.flush(mockTrucks); });
     httpMock.verify();
   });
 
@@ -62,16 +61,17 @@ describe('TrucksListComponent', () => {
     it('should load trucks on init', () => {
       const loadSpy = jest.spyOn(component, 'loadTrucks');
 
-      component.ngOnInit();
+      fixture.detectChanges();
 
       expect(loadSpy).toHaveBeenCalled();
+      httpMock.expectOne(`${environment.apiUrl}/trucks`).flush(mockTrucks);
     });
 
     it('should display loading state while loading', () => {
-      component.ngOnInit();
       fixture.detectChanges();
 
       expect(component.loading()).toBe(true);
+      httpMock.expectOne(`${environment.apiUrl}/trucks`).flush(mockTrucks);
     });
 
     it('should display trucks after loading', () => {

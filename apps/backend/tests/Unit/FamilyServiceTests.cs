@@ -31,6 +31,9 @@ public class FamilyServiceTests : IDisposable
                 reference TEXT, is_active INTEGER);
             CREATE TABLE student_families (student_id INTEGER, family_id INTEGER,
                 relationship_type TEXT);
+            CREATE TABLE families (id INTEGER PRIMARY KEY, family_name TEXT,
+                primary_contact_name TEXT, phone TEXT, email TEXT, address TEXT,
+                notes TEXT, is_active INTEGER, created_at TEXT, updated_at TEXT);
             """);
         _connectionFactory.Create().Returns(_ => new SqliteConnection(connectionString));
         _service = new FamilyService(
@@ -41,6 +44,36 @@ public class FamilyServiceTests : IDisposable
     }
 
     public void Dispose() => _keepAlive.Dispose();
+
+    [Fact]
+    public async Task GetByStudentIdAsync_MapsOnlyLinkedFamilies()
+    {
+        _keepAlive.Execute("""
+            INSERT INTO families (id, family_name, primary_contact_name, phone, email,
+                address, notes, is_active, created_at, updated_at)
+            VALUES (1, 'Smith', 'John Smith', '555-1234', 'smith@example.com',
+                'Main Street', 'Primary', 1, '2024-01-01', '2024-02-01'),
+                   (2, 'Jones', 'Jane Jones', NULL, NULL, NULL, NULL, 1, '2024-01-02', NULL),
+                   (3, 'Other', 'Other Contact', NULL, NULL, NULL, NULL, 1, '2024-01-03', NULL);
+            INSERT INTO student_families (student_id, family_id, relationship_type)
+            VALUES (10, 1, 'Parent'), (10, 2, 'Guardian'), (11, 3, 'Parent');
+            """);
+
+        var families = await _service.GetByStudentIdAsync(10);
+
+        Assert.Equal(2, families.Count);
+        var smith = Assert.Single(families, family => family.Id == 1);
+        Assert.Equal("Smith", smith.FamilyName);
+        Assert.Equal("John Smith", smith.PrimaryContactName);
+        Assert.Equal("555-1234", smith.Phone);
+        Assert.Equal("smith@example.com", smith.Email);
+        Assert.Equal("Main Street", smith.Address);
+        Assert.Equal("Primary", smith.Notes);
+        Assert.True(smith.IsActive);
+        Assert.Equal(new DateTime(2024, 1, 1), smith.CreatedAt);
+        Assert.Equal(new DateTime(2024, 2, 1), smith.UpdatedAt);
+        Assert.Empty(smith.Students);
+    }
 
     [Fact]
     public async Task CreateAsync_Persists_Family()

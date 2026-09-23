@@ -57,7 +57,6 @@ describe('ActivitiesListComponent', () => {
   }));
 
   afterEach(() => {
-    httpMock.match(`${environment.apiUrl}/activities`).forEach((request) => { request.flush(mockActivities); });
     httpMock.verify();
   });
 
@@ -69,16 +68,17 @@ describe('ActivitiesListComponent', () => {
     it('should load activities on init', () => {
       const loadSpy = jest.spyOn(component, 'loadActivities');
 
-      component.ngOnInit();
+      fixture.detectChanges();
 
       expect(loadSpy).toHaveBeenCalled();
+      httpMock.expectOne(`${environment.apiUrl}/activities`).flush(mockActivities);
     });
 
     it('should display loading state while loading', () => {
-      component.ngOnInit();
       fixture.detectChanges();
 
       expect(component.loading()).toBe(true);
+      httpMock.expectOne(`${environment.apiUrl}/activities`).flush(mockActivities);
     });
 
     it('should display activities after loading', () => {

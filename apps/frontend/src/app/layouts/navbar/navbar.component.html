@@ -47,7 +47,7 @@
 
       <!-- Theme Toggle -->
       <div class="dropdown dropdown-end">
-        <button type="button" class="btn btn-ghost btn-sm gap-2">
+        <button type="button" class="btn btn-ghost btn-sm gap-2" aria-label="Choose theme">
           <span class="text-lg">
             @if (themeService.currentTheme() === 'light') {
               ☀️
@@ -86,7 +86,7 @@
 
       <!-- User Menu -->
       <div class="dropdown dropdown-end">
-        <button type="button" class="btn btn-ghost btn-sm gap-2">
+        <button type="button" class="btn btn-ghost btn-sm gap-2" aria-label="Open user menu">
           <div class="avatar placeholder">
             <div class="bg-primary text-primary-content rounded-full w-8">
               <span class="text-sm">{{ currentUserInitials }}</span>

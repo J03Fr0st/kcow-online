@@ -44,7 +44,6 @@ describe('ActivityFormComponent', () => {
   }));
 
   afterEach(() => {
-    httpMock.match(`${environment.apiUrl}/activities/1`).forEach((request) => { request.flush(mockActivity); });
     httpMock.verify();
   });
 
@@ -284,6 +283,7 @@ describe('ActivityFormComponent', () => {
     beforeEach(() => {
       fixture.componentRef.setInput('activityId', 1);
       component.ngOnInit();
+      httpMock.expectOne(`${environment.apiUrl}/activities/1`).flush(mockActivity);
       component.form.setValue({
         code: 'ACT001',
         name: 'Updated Activity',

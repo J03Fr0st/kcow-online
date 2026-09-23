@@ -51,7 +51,7 @@
     <button
       class="btn btn-outline btn-sm"
       [disabled]="studentService.isLoading()"
-      (click)="schoolFilter.set(null); classGroupFilter.set(null); loadStudents();">
+      (click)="clearFilters()">
       Clear Filters
     </button>
   </div>

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, signal } from '@angular/core';
-import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { type School, SchoolService } from '@core/services/school.service';

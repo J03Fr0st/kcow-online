@@ -40,7 +40,6 @@ describe('TruckFormComponent', () => {
   }));
 
   afterEach(() => {
-    httpMock.match(`${environment.apiUrl}/trucks/1`).forEach((request) => { request.flush(mockTruck); });
     httpMock.verify();
   });
 
@@ -243,6 +242,7 @@ describe('TruckFormComponent', () => {
     beforeEach(() => {
       fixture.componentRef.setInput('truckId', 1);
       component.ngOnInit();
+      httpMock.expectOne(`${environment.apiUrl}/trucks/1`).flush(mockTruck);
       component.form.setValue({
         name: 'Updated Truck',
         registrationNumber: 'CA 123 456',

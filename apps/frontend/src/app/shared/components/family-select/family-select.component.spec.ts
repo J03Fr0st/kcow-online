@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { type ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { type Family, FamilyService } from '@core/services/family.service';
@@ -180,8 +180,10 @@ describe('FamilySelectComponent', () => {
       const familyItems = fixture.debugElement.queryAll(
         By.css('.dropdown-content li a:not(.text-primary):not(.disabled)'),
       );
-      // Should match Smith family by guardian name
-      expect(familyItems.length).toBe(3); // No Family + Smith family + Create New
+      // John matches the Smith guardian and the Johnson family name.
+      expect(familyItems.length).toBe(3);
+      expect(familyItems[1].nativeElement.textContent).toContain('Smith Family');
+      expect(familyItems[2].nativeElement.textContent).toContain('Johnson Family');
     });
   });
 
