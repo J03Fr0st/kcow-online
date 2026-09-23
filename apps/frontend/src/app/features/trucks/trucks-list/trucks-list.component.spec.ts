@@ -3,7 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NotificationService } from '@core/services/notification.service';
 import { TruckService } from '@core/services/truck.service';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '@environments/environment';
+import { of, throwError } from 'rxjs';
 import { TruckFormComponent } from '../truck-form/truck-form.component';
 import { TrucksListComponent } from './trucks-list.component';
 
@@ -60,19 +61,21 @@ describe('TrucksListComponent', () => {
     it('should load trucks on init', () => {
       const loadSpy = jest.spyOn(component, 'loadTrucks');
 
-      component.ngOnInit();
+      fixture.detectChanges();
 
       expect(loadSpy).toHaveBeenCalled();
+      httpMock.expectOne(`${environment.apiUrl}/trucks`).flush(mockTrucks);
     });
 
     it('should display loading state while loading', () => {
-      component.ngOnInit();
       fixture.detectChanges();
 
       expect(component.loading()).toBe(true);
+      httpMock.expectOne(`${environment.apiUrl}/trucks`).flush(mockTrucks);
     });
 
     it('should display trucks after loading', () => {
+      fixture.detectChanges();
       const request = httpMock.expectOne(`${environment.apiUrl}/trucks`);
       request.flush(mockTrucks);
 
@@ -83,6 +86,7 @@ describe('TrucksListComponent', () => {
     });
 
     it('should display empty state when no trucks exist', () => {
+      fixture.detectChanges();
       const request = httpMock.expectOne(`${environment.apiUrl}/trucks`);
       request.flush([]);
 
@@ -142,12 +146,7 @@ describe('TrucksListComponent', () => {
     });
 
     it('should confirm delete and call service', () => {
-      const deleteSpy = jest.spyOn(truckService, 'deleteTruck').mockReturnValue({
-        subscribe: (callbacks: any) => {
-          callbacks.next?.();
-          return { unsubscribe: () => {} };
-        },
-      } as any);
+      const deleteSpy = jest.spyOn(truckService, 'deleteTruck').mockReturnValue(of(undefined));
       const successSpy = jest.spyOn(notificationService, 'success');
 
       component.confirmDelete(mockTrucks[0]);
@@ -158,12 +157,7 @@ describe('TrucksListComponent', () => {
     });
 
     it('should handle delete error', () => {
-      const _deleteSpy = jest.spyOn(truckService, 'deleteTruck').mockReturnValue({
-        subscribe: (callbacks: any) => {
-          callbacks.error?.({ message: 'Error' });
-          return { unsubscribe: () => {} };
-        },
-      } as any);
+      jest.spyOn(truckService, 'deleteTruck').mockReturnValue(throwError(() => new Error('Error')));
       const errorSpy = jest.spyOn(notificationService, 'error');
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 

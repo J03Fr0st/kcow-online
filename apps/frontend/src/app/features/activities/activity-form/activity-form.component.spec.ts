@@ -4,7 +4,8 @@ import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivityService } from '@core/services/activity.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Activity } from '@features/activities/models/activity.model';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '@environments/environment';
+import { of } from 'rxjs';
 import { ActivityFormComponent } from './activity-form.component';
 
 describe('ActivityFormComponent', () => {
@@ -103,7 +104,7 @@ describe('ActivityFormComponent', () => {
 
   describe('Load Activity for Edit', () => {
     it('should load activity data when activityId is provided', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       component.ngOnInit();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/activities/1`);
@@ -120,7 +121,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should set icon preview when activity has icon', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       component.ngOnInit();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/activities/1`);
@@ -130,7 +131,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should set loading state during load', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       component.ngOnInit();
 
       expect(component.isLoading()).toBe(true);
@@ -142,14 +143,14 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should handle load error', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       const errorSpy = jest.spyOn(notificationService, 'error');
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       component.ngOnInit();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/activities/1`);
-      request.flush({ message: 'Not found' }, { status: 404 });
+      request.flush({ message: 'Not found' }, { status: 404, statusText: 'Not Found' });
 
       expect(component.error()).not.toBeNull();
       expect(errorSpy).toHaveBeenCalled();
@@ -280,8 +281,9 @@ describe('ActivityFormComponent', () => {
 
   describe('Submit Form - Update', () => {
     beforeEach(() => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       component.ngOnInit();
+      httpMock.expectOne(`${environment.apiUrl}/activities/1`).flush(mockActivity);
       component.form.setValue({
         code: 'ACT001',
         name: 'Updated Activity',
@@ -293,9 +295,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should call updateActivity service method', () => {
-      const updateSpy = jest.spyOn(activityService, 'updateActivity').mockReturnValue({
-        pipe: () => ({ subscribe: (callbacks: any) => callbacks.next?.(mockActivity) }),
-      } as any);
+      const updateSpy = jest.spyOn(activityService, 'updateActivity').mockReturnValue(of(mockActivity));
 
       component.submitForm();
 
@@ -325,7 +325,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should show "Edit Activity" title for edit mode', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       expect(component.title).toBe('Edit Activity');
     });
 
@@ -334,7 +334,7 @@ describe('ActivityFormComponent', () => {
     });
 
     it('should show "Update Activity" button text for edit mode', () => {
-      component.activityId.set(1);
+      fixture.componentRef.setInput('activityId', 1);
       expect(component.submitButtonText).toBe('Update Activity');
     });
 

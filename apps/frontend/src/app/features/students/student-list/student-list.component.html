@@ -20,7 +20,7 @@
         id="school-filter"
         class="select select-bordered select-sm w-48"
         [disabled]="studentService.isLoading()"
-        (change)="onSchoolFilterChange(($event.target as HTMLSelectElement).valueAsNumber)">
+        (change)="onSchoolFilterChange(+$any($event.target).value)">
         <option [value]="0">All Schools</option>
         @for (school of schools(); track school.id) {
           <option [value]="school.id" [selected]="schoolFilter() === school.id">
@@ -36,7 +36,7 @@
         id="class-group-filter"
         class="select select-bordered select-sm w-48"
         [disabled]="studentService.isLoading() || !schoolFilter()"
-        (change)="onClassGroupFilterChange(($event.target as HTMLSelectElement).valueAsNumber)">
+        (change)="onClassGroupFilterChange(+$any($event.target).value)">
         <option [value]="0">All Classes</option>
         @for (classGroup of classGroups(); track classGroup.id) {
           @if (!schoolFilter() || classGroup.schoolId === schoolFilter()) {
@@ -51,7 +51,7 @@
     <button
       class="btn btn-outline btn-sm"
       [disabled]="studentService.isLoading()"
-      (click)="schoolFilter.set(null); classGroupFilter.set(null); loadStudents();">
+      (click)="clearFilters()">
       Clear Filters
     </button>
   </div>

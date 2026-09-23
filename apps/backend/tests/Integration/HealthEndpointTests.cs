@@ -44,6 +44,10 @@ public class HealthEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         Assert.Equal($"Data Source={_factory.DatabasePath}",
             configuration.GetConnectionString("DefaultConnection"));
+        var connectionFactory = _factory.Services.GetRequiredService<Kcow.Infrastructure.Database.IDbConnectionFactory>();
+        using var connection = connectionFactory.Create();
+        Assert.Equal(_factory.DatabasePath,
+            ((Microsoft.Data.Sqlite.SqliteConnection)connection).DataSource);
     }
 
     private record HealthResponse(string Status, DateTime Timestamp);

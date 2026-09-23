@@ -159,24 +159,31 @@ public class LegacyParserTests
     }
 
     [Fact]
-    public void ParseChildren_WithActualLegacyFile_ReturnsRecords()
+    public void ParseChildren_WithRepresentativeLegacyRecord_ReturnsRecords()
     {
-        // Arrange - use actual legacy XML and XSD files
         var xsdPath = FindRepoFile("docs/legacy/4_Children/Children.xsd");
-        var xmlPath = FindRepoFile("docs/legacy/4_Children/Children.xml");
+        var xmlPath = WriteTempFile("""
+            <?xml version="1.0" encoding="utf-8"?>
+            <dataroot>
+              <Children>
+                <Reference>REF001</Reference>
+                <Child_x0020_Name>Alice</Child_x0020_Name>
+              </Children>
+            </dataroot>
+            """);
 
-        var parser = new LegacyParser();
+        try
+        {
+            var result = new LegacyParser().ParseChildren(xmlPath, xsdPath);
 
-        // Act
-        var result = parser.ParseChildren(xmlPath, xsdPath);
-
-        // Assert - actual file should parse without XSD errors
-        // XSD validation errors are acceptable for legacy data files
-        Assert.True(result.Records.Count > 0, "Should have parsed at least one record");
-
-        // Verify first record has expected fields
-        var firstRecord = result.Records[0];
-        Assert.NotNull(firstRecord.Reference);
+            Assert.Single(result.Records);
+            Assert.Equal("REF001", result.Records[0].Reference);
+            Assert.Equal("Alice", result.Records[0].ChildName);
+        }
+        finally
+        {
+            File.Delete(xmlPath);
+        }
     }
 
     [Fact]

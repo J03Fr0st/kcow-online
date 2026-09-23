@@ -139,7 +139,7 @@ describe('FamilySectionComponent', () => {
     component = fixture.componentInstance;
 
     // Set the required input
-    component.student.set(mockStudent);
+    fixture.componentRef.setInput('student', mockStudent);
   });
 
   describe('Component Creation', () => {
@@ -268,9 +268,7 @@ describe('FamilySectionComponent', () => {
     });
 
     it('should show edit form when guardian edit is clicked', () => {
-      const editButton = fixture.debugElement
-        .queryAll(By.css('button'))
-        .find((b) => b.nativeElement.textContent.includes('Edit'));
+      const editButton = fixture.debugElement.query(By.css('button[aria-label="Edit John Smith Sr."]'));
       editButton?.nativeElement.click();
       fixture.detectChanges();
 
@@ -355,7 +353,7 @@ describe('FamilySectionComponent', () => {
 
   describe('No Family State', () => {
     beforeEach(() => {
-      component.student.set({ id: 1 });
+      fixture.componentRef.setInput('student', { id: 1 });
       fixture.detectChanges();
     });
 

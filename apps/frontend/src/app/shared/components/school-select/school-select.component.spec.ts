@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, signal } from '@angular/core';
-import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { type School, SchoolService } from '@core/services/school.service';
@@ -102,49 +102,49 @@ describe('SchoolSelectComponent', () => {
       expect(items.length).toBe(3);
     });
 
-    it('should filter schools based on search query with debounce', fakeAsync(() => {
+    it('should filter schools based on search query with debounce', async () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       // Simulate typing
       input.nativeElement.value = 'Primary';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
       // After 300ms debounce
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       const items = fixture.debugElement.queryAll(By.css('.dropdown-content li a:not(.disabled)'));
       expect(items.length).toBe(1);
       expect(items[0].nativeElement.textContent).toContain('Primary School');
-    }));
+    });
 
-    it('should filter by school shortName', fakeAsync(() => {
+    it('should filter by school shortName', async () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'HS';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       const items = fixture.debugElement.queryAll(By.css('.dropdown-content li a:not(.disabled)'));
       expect(items.length).toBe(1);
       expect(items[0].nativeElement.textContent).toContain('High School');
-    }));
+    });
 
-    it('should show "No schools found" when no matches', fakeAsync(() => {
+    it('should show "No schools found" when no matches', async () => {
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'xyz123';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       const noResults = fixture.debugElement.query(By.css('.disabled'));
       expect(noResults).toBeTruthy();
       expect(noResults.nativeElement.textContent).toContain('No schools found');
-    }));
+    });
   });
 
   describe('Selection Functionality', () => {

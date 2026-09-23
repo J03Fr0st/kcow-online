@@ -131,10 +131,18 @@ public sealed class ImportExecutionService : IImportExecutionService
         var parseResult = _parser.ParseClassGroups(xmlPath, xsdPath);
         AddParseExceptions(parseResult, "ClassGroup", exceptions);
 
-        // Load valid school IDs so the mapper can null-out invalid FK references
-        var validSchoolIds = new HashSet<int>(
-            (await connection.QueryAsync<int>("SELECT id FROM schools")).ToList());
-        var mapper = new ClassGroupDataMapper(validSchoolIds);
+        // Class group source IDs refer to schools.legacy_id, not the generated school PK.
+        var schools = await connection.QueryAsync<School>("SELECT id AS Id, legacy_id AS LegacyId FROM schools WHERE legacy_id IS NOT NULL");
+        var schoolIdsByLegacyId = new Dictionary<int, int>();
+        foreach (var school in schools)
+        {
+            if (int.TryParse(school.LegacyId, out var legacyId) &&
+                !schoolIdsByLegacyId.TryAdd(legacyId, school.Id))
+            {
+                throw new InvalidOperationException($"Duplicate legacy school ID {legacyId}.");
+            }
+        }
+        var mapper = new ClassGroupDataMapper(schoolIdsByLegacyId);
         var mapResult = mapper.MapMany(parseResult.Records);
         AddMappingExceptions(mapResult, "ClassGroup", exceptions, ref counts);
 

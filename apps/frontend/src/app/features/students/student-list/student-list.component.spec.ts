@@ -188,6 +188,28 @@ describe('StudentListComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Showing 1 to 25 of 50 students');
   });
 
+  it('should return to page one when filters are cleared', () => {
+    mockStudentService.students.set(mockStudents);
+    mockStudentService.totalCount.set(50);
+    component['currentPage'].set(2);
+    component['schoolFilter'].set(4);
+    fixture.detectChanges();
+    mockStudentService.getStudents.mockClear();
+
+    const clearButton = fixture.debugElement.queryAll(By.css('button'))
+      .find((button) => button.nativeElement.textContent.includes('Clear Filters'));
+    clearButton?.triggerEventHandler('click', null);
+
+    expect(component['currentPage']()).toBe(1);
+    expect(component['schoolFilter']()).toBeNull();
+    expect(mockStudentService.getStudents).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 25,
+      sortBy: undefined,
+      sortDirection: 'asc',
+    });
+  });
+
   it('should not display pagination when only one page', () => {
     mockStudentService.students.set(mockStudents);
     mockStudentService.totalCount.set(2);

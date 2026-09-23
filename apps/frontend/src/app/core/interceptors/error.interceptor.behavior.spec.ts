@@ -29,7 +29,7 @@ describe('errorInterceptor HTTP contract', () => {
   it('does not retry a payment POST after a transient response', fakeAsync(() => {
     let receivedError: HttpErrorResponse | undefined;
     http.post('/api/students/1/payments', { amount: 100 }).subscribe({
-      error: (error: HttpErrorResponse) => (receivedError = error),
+      error: (error: HttpErrorResponse) => { receivedError = error; },
     });
 
     requests.expectOne('/api/students/1/payments').flush('Unavailable', {
@@ -44,7 +44,7 @@ describe('errorInterceptor HTTP contract', () => {
 
   it('still retries a safe GET after a transient response', fakeAsync(() => {
     let result: { status: string } | undefined;
-    http.get<{ status: string }>('/api/health').subscribe((value) => (result = value));
+    http.get<{ status: string }>('/api/health').subscribe((value) => { result = value; });
 
     requests.expectOne('/api/health').flush('Unavailable', {
       status: 503,
@@ -59,7 +59,7 @@ describe('errorInterceptor HTTP contract', () => {
   it('preserves the HTTP status for callers handling authentication errors', () => {
     let receivedError: HttpErrorResponse | undefined;
     http.get('/api/auth/me').subscribe({
-      error: (error: HttpErrorResponse) => (receivedError = error),
+      error: (error: HttpErrorResponse) => { receivedError = error; },
     });
 
     requests.expectOne('/api/auth/me').flush('Unauthorized', {

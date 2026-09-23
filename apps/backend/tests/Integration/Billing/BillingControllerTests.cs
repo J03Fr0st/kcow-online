@@ -1,6 +1,8 @@
 using Kcow.Application.Auth;
 using Kcow.Application.Billing;
+using Kcow.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -27,6 +29,8 @@ public class BillingControllerTests : IClassFixture<CustomWebApplicationFactory>
     private async Task<HttpClient> CreateAuthenticatedClientAsync()
     {
         var client = CreateHttpsClient();
+        using var scope = _factory.Services.CreateScope();
+        await scope.ServiceProvider.InitializeDatabaseAsync();
 
         var loginRequest = new
         {

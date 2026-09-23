@@ -76,7 +76,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(loginResponse.Token);
         Assert.NotEmpty(loginResponse.Token);
         Assert.Equal("admin@kcow.local", loginResponse.User.Email);
-        Assert.Equal("Administrator", loginResponse.User.Name);
+        Assert.Equal("System Admin", loginResponse.User.Name);
         Assert.Equal("Admin", loginResponse.User.Role);
     }
 
@@ -159,7 +159,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
         var userDto = await response.Content.ReadFromJsonAsync<UserDto>();
         Assert.NotNull(userDto);
         Assert.Equal("admin@kcow.local", userDto.Email);
-        Assert.Equal("Administrator", userDto.Name);
+        Assert.Equal("System Admin", userDto.Name);
         Assert.Equal("Admin", userDto.Role);
     }
 

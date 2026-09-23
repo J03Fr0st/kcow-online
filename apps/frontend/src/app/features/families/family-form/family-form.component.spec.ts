@@ -137,6 +137,14 @@ describe('FamilyFormComponent', () => {
     });
 
     it('should create family and guardian on submit', () => {
+      (component as any).onGuardianSubmit({
+        firstName: 'Jane',
+        lastName: 'Doe',
+        relationship: 'Mother',
+        phone: '555-5678',
+        email: 'jane@example.com',
+        isPrimaryContact: true,
+      });
       (component as any).form.setValue({ familyName: 'Test Family', notes: 'Test notes' });
       (component as any).onSubmit();
 

@@ -312,9 +312,9 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
 
-        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         Assert.NotNull(problem);
-        Assert.Contains("Name", problem!.Title);
+        Assert.Contains("Name", problem!.Errors.Keys);
     }
 
     [Fact]
@@ -561,11 +561,13 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
         // Arrange
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
+        var (schoolId, _) = await CreateTestDataAsync(client);
 
         var updateRequest = new UpdateClassGroupRequest
         {
             Name = "Test",
-            SchoolId = 1,
+            SchoolId = schoolId,
+            Sequence = 1,
             DayOfWeek = DayOfWeek.Monday,
             StartTime = new TimeOnly(9, 0),
             EndTime = new TimeOnly(10, 0)
@@ -753,9 +755,9 @@ public class ClassGroupsControllerTests : IClassFixture<CustomWebApplicationFact
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         Assert.NotNull(problem);
-        Assert.Contains("Name", problem!.Title);
+        Assert.Contains("Name", problem!.Errors.Keys);
     }
 
     #endregion

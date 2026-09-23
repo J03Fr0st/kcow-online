@@ -1,30 +1,78 @@
+using Dapper;
 using Kcow.Application.Families;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Kcow.Infrastructure.Database;
 using Kcow.Infrastructure.Families;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace Kcow.Unit.Tests;
 
-public class FamilyServiceTests
+public class FamilyServiceTests : IDisposable
 {
     private readonly IFamilyRepository _familyRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly FamilyService _service;
+    private readonly SqliteConnection _keepAlive;
 
     public FamilyServiceTests()
     {
         _familyRepository = Substitute.For<IFamilyRepository>();
         _studentRepository = Substitute.For<IStudentRepository>();
         _connectionFactory = Substitute.For<IDbConnectionFactory>();
+        var connectionString = $"Data Source=family-unit-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+        _keepAlive = new SqliteConnection(connectionString);
+        _keepAlive.Open();
+        _keepAlive.Execute("""
+            CREATE TABLE students (id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT,
+                reference TEXT, is_active INTEGER);
+            CREATE TABLE student_families (student_id INTEGER, family_id INTEGER,
+                relationship_type TEXT);
+            CREATE TABLE families (id INTEGER PRIMARY KEY, family_name TEXT,
+                primary_contact_name TEXT, phone TEXT, email TEXT, address TEXT,
+                notes TEXT, is_active INTEGER, created_at TEXT, updated_at TEXT);
+            """);
+        _connectionFactory.Create().Returns(_ => new SqliteConnection(connectionString));
         _service = new FamilyService(
             _familyRepository,
             _studentRepository,
             _connectionFactory,
             NullLogger<FamilyService>.Instance);
+    }
+
+    public void Dispose() => _keepAlive.Dispose();
+
+    [Fact]
+    public async Task GetByStudentIdAsync_MapsOnlyLinkedFamilies()
+    {
+        _keepAlive.Execute("""
+            INSERT INTO families (id, family_name, primary_contact_name, phone, email,
+                address, notes, is_active, created_at, updated_at)
+            VALUES (1, 'Smith', 'John Smith', '555-1234', 'smith@example.com',
+                'Main Street', 'Primary', 1, '2024-01-01', '2024-02-01'),
+                   (2, 'Jones', 'Jane Jones', NULL, NULL, NULL, NULL, 1, '2024-01-02', NULL),
+                   (3, 'Other', 'Other Contact', NULL, NULL, NULL, NULL, 1, '2024-01-03', NULL);
+            INSERT INTO student_families (student_id, family_id, relationship_type)
+            VALUES (10, 1, 'Parent'), (10, 2, 'Guardian'), (11, 3, 'Parent');
+            """);
+
+        var families = await _service.GetByStudentIdAsync(10);
+
+        Assert.Equal(2, families.Count);
+        var smith = Assert.Single(families, family => family.Id == 1);
+        Assert.Equal("Smith", smith.FamilyName);
+        Assert.Equal("John Smith", smith.PrimaryContactName);
+        Assert.Equal("555-1234", smith.Phone);
+        Assert.Equal("smith@example.com", smith.Email);
+        Assert.Equal("Main Street", smith.Address);
+        Assert.Equal("Primary", smith.Notes);
+        Assert.True(smith.IsActive);
+        Assert.Equal(new DateTime(2024, 1, 1), smith.CreatedAt);
+        Assert.Equal(new DateTime(2024, 2, 1), smith.UpdatedAt);
+        Assert.Empty(smith.Students);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using Kcow.Application.Activities;
+using Kcow.Application.Interfaces;
 using Kcow.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -186,7 +187,10 @@ public class ActivitiesControllerTests : IClassFixture<CustomWebApplicationFacto
         EnsureDatabaseInitialized();
         using var client = await CreateAuthenticatedClientAsync();
 
-        var specificId = 99900 + new Random().Next(1, 99);
+        using var scope = _factory.Services.CreateScope();
+        var activityRepository = scope.ServiceProvider.GetRequiredService<IActivityRepository>();
+        var highestId = (await activityRepository.GetAllAsync()).Select(activity => activity.Id).DefaultIfEmpty().Max();
+        var specificId = Math.Max(100000, highestId + 1000);
         var code = GenerateUniqueCode("ID");
         var request = new CreateActivityRequest
         {

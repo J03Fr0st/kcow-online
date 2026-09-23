@@ -1,6 +1,10 @@
+using Kcow.Infrastructure.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Kcow.Integration.Tests;
 
@@ -23,6 +27,18 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:DefaultConnection"] = $"Data Source={_databasePath}"
             });
+        });
+        builder.ConfigureServices(services =>
+        {
+            // The application registers these before test configuration is applied.
+            var connectionString = $"Data Source={_databasePath};Pooling=False";
+            services.RemoveAll<IDbConnectionFactory>();
+            services.RemoveAll<DbUpBootstrapper>();
+            services.AddSingleton<IDbConnectionFactory>(_ => new SqliteConnectionFactory(connectionString));
+            services.AddSingleton(serviceProvider => new DbUpBootstrapper(
+                connectionString,
+                serviceProvider.GetRequiredService<ILogger<DbUpBootstrapper>>(),
+                Path.Combine(AppContext.BaseDirectory, "Migrations", "Scripts")));
         });
     }
 

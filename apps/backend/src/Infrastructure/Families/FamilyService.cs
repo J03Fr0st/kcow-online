@@ -119,36 +119,18 @@ public class FamilyService : IFamilyService
     public async Task<List<FamilyDto>> GetByStudentIdAsync(int studentId, CancellationToken cancellationToken = default)
     {
         const string sql = @"
-            SELECT f.id, f.family_name, f.primary_contact_name, f.phone, f.email,
-                   f.address, f.notes, f.is_active, f.created_at, f.updated_at,
-                   sf.relationship_type
+            SELECT f.id AS Id, f.family_name AS FamilyName,
+                   f.primary_contact_name AS PrimaryContactName, f.phone AS Phone,
+                   f.email AS Email, f.address AS Address, f.notes AS Notes,
+                   f.is_active AS IsActive, f.created_at AS CreatedAt,
+                   f.updated_at AS UpdatedAt
             FROM families f
             INNER JOIN student_families sf ON f.id = sf.family_id
             WHERE sf.student_id = @StudentId";
 
         using var connection = _connectionFactory.Create();
-        var records = await connection.QueryAsync(sql, new { StudentId = studentId });
-
-        var result = new List<FamilyDto>();
-        foreach (var record in records)
-        {
-            result.Add(new FamilyDto
-            {
-                Id = record.id,
-                FamilyName = record.family_name,
-                PrimaryContactName = record.primary_contact_name,
-                Phone = record.phone,
-                Email = record.email,
-                Address = record.address,
-                Notes = record.notes,
-                IsActive = record.is_active,
-                CreatedAt = record.created_at,
-                UpdatedAt = record.updated_at,
-                Students = new List<StudentFamilyDto>() // Empty list to avoid N+1 queries
-            });
-        }
-
-        return result;
+        var records = await connection.QueryAsync<Family>(sql, new { StudentId = studentId });
+        return records.Select(family => MapToDto(family, new List<StudentFamilyDto>())).ToList();
     }
 
     public async Task<bool> LinkToStudentAsync(int studentId, LinkFamilyRequest request, CancellationToken cancellationToken = default)

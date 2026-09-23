@@ -208,6 +208,7 @@ describe('StudentFormComponent', () => {
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
+        reference: 'REF001',
       });
       fixture.detectChanges();
       const saveButton = fixture.debugElement.query(By.css('button[type="submit"]'));
@@ -235,6 +236,7 @@ describe('StudentFormComponent', () => {
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
+        reference: 'REF001',
       });
 
       component.onSubmit();
@@ -248,6 +250,7 @@ describe('StudentFormComponent', () => {
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
+        reference: 'REF001',
       });
 
       component.onSubmit();
@@ -264,6 +267,7 @@ describe('StudentFormComponent', () => {
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
+        reference: 'REF001',
       });
 
       component.onSubmit();
@@ -280,6 +284,7 @@ describe('StudentFormComponent', () => {
         firstName: 'John',
         lastName: 'Doe',
         schoolId: 1,
+        reference: 'REF001',
       });
 
       component.onSubmit();

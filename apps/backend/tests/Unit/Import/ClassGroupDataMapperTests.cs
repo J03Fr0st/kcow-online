@@ -44,14 +44,36 @@ public class ClassGroupDataMapperTests
     [Fact]
     public void Map_InvalidSchoolId_ReturnsError()
     {
-        var validSchoolIds = new HashSet<int> { 1, 2, 3 };
-        var mapper = new ClassGroupDataMapper(validSchoolIds);
+        var schoolIdsByLegacyId = new Dictionary<int, int> { [1] = 10, [2] = 20, [3] = 30 };
+        var mapper = new ClassGroupDataMapper(schoolIdsByLegacyId);
         var record = CreateRecord(schoolId: 99);
 
         var result = mapper.Map(record);
 
         Assert.False(result.Success);
         Assert.Null(result.Data);
+    }
+
+    [Fact]
+    public void Map_LegacySchoolId_ResolvesGeneratedSchoolId()
+    {
+        var mapper = new ClassGroupDataMapper(new Dictionary<int, int> { [42] = 7 });
+
+        var result = mapper.Map(CreateRecord(schoolId: 42));
+
+        Assert.True(result.Success);
+        Assert.Equal(7, result.Data!.SchoolId);
+    }
+
+    [Fact]
+    public void Map_EmptySchoolLookup_RejectsNonzeroReference()
+    {
+        var mapper = new ClassGroupDataMapper(new Dictionary<int, int>());
+
+        var result = mapper.Map(CreateRecord(schoolId: 42));
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, error => error.Field == "SchoolId");
     }
 
     [Fact]
@@ -115,7 +137,7 @@ public class ClassGroupDataMapperTests
     public void Map_ValidTruckId_SetsTruckId()
     {
         var validTruckIds = new HashSet<int> { 5 };
-        var mapper = new ClassGroupDataMapper(new HashSet<int>(), validTruckIds);
+        var mapper = new ClassGroupDataMapper(null, validTruckIds);
         var record = CreateRecord(dayTruck: "5", startTime: "08:00", endTime: "09:00");
 
         var result = mapper.Map(record);
@@ -128,7 +150,7 @@ public class ClassGroupDataMapperTests
     public void Map_InvalidTruckId_WarnsAndNullsTruck()
     {
         var validTruckIds = new HashSet<int> { 1, 2 };
-        var mapper = new ClassGroupDataMapper(new HashSet<int>(), validTruckIds);
+        var mapper = new ClassGroupDataMapper(null, validTruckIds);
         var record = CreateRecord(dayTruck: "99", startTime: "08:00", endTime: "09:00");
 
         var result = mapper.Map(record);

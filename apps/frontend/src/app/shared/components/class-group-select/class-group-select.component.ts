@@ -2,17 +2,15 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   effect,
   forwardRef,
   inject,
   input,
   model,
-  type OnInit,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
-import { type ClassGroup, ClassGroupService } from '@core/services/class-group.service';
+import { ClassGroupService } from '@core/services/class-group.service';
+import type { ClassGroup } from '@features/class-groups/models/class-group.model';
 
 @Component({
   selector: 'app-class-group-select',
@@ -29,9 +27,8 @@ import { type ClassGroup, ClassGroupService } from '@core/services/class-group.s
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ClassGroupSelectComponent implements ControlValueAccessor, OnInit {
+export class ClassGroupSelectComponent implements ControlValueAccessor {
   protected classGroupService = inject(ClassGroupService);
-  private destroyRef = inject(DestroyRef);
 
   // Input: School ID to filter class groups
   readonly schoolId = input<number | null>(null);
@@ -56,48 +53,18 @@ export class ClassGroupSelectComponent implements ControlValueAccessor, OnInit {
   private onTouched: () => void = () => {};
 
   constructor() {
-    // Use effect to reactively load class groups when schoolId changes
     effect(() => {
       const school = this.schoolId();
-      this.loadClassGroups(school);
+      if (school) this.classGroupService.loadClassGroups(school);
     });
-  }
-
-  ngOnInit(): void {
-    // Initial load if schoolId is set
-    const school = this.schoolId();
-    if (school) {
-      this.loadClassGroups(school);
-    }
-  }
-
-  /**
-   * Load class groups filtered by school
-   */
-  private loadClassGroups(schoolId: number | null): void {
-    this.filteredClassGroups = []; // Clear previous results
-
-    if (!schoolId) {
-      return; // No school selected, don't load anything
-    }
-
-    this.isLoading = true;
-    this.classGroupService.loadClassGroups(schoolId);
-
-    this.classGroupService.classGroups.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (classGroups) => {
-        this.filteredClassGroups = classGroups;
-        this.isLoading = false;
-
-        // Update display name if current selection is still valid
-        if (this.classGroupId()) {
-          const selected = this.filteredClassGroups.find((cg) => cg.id === this.classGroupId());
-          this.displayClassName = selected ? `${selected.name} (${selected.code})` : '';
-        }
-      },
-      error: () => {
-        this.isLoading = false;
-      },
+    effect(() => {
+      const school = this.schoolId();
+      this.filteredClassGroups = school
+        ? this.classGroupService.classGroups().filter((group) => group.schoolId === school)
+        : [];
+      this.isLoading = this.classGroupService.loading();
+      const selected = this.filteredClassGroups.find((group) => group.id === this.classGroupId());
+      this.displayClassName = selected?.name ?? '';
     });
   }
 
@@ -107,7 +74,7 @@ export class ClassGroupSelectComponent implements ControlValueAccessor, OnInit {
   protected selectClassGroup(classGroupId: number): void {
     this.classGroupId.set(classGroupId);
     const selected = this.filteredClassGroups.find((cg) => cg.id === classGroupId);
-    this.displayClassName = selected ? `${selected.name} (${selected.code})` : '';
+    this.displayClassName = selected?.name ?? '';
     this.onChange(classGroupId);
     this.onTouched();
   }
@@ -127,7 +94,7 @@ export class ClassGroupSelectComponent implements ControlValueAccessor, OnInit {
     this.classGroupId.set(value);
     if (value && this.filteredClassGroups.length > 0) {
       const selected = this.filteredClassGroups.find((cg) => cg.id === value);
-      this.displayClassName = selected ? `${selected.name} (${selected.code})` : '';
+      this.displayClassName = selected?.name ?? '';
     } else {
       this.displayClassName = '';
     }

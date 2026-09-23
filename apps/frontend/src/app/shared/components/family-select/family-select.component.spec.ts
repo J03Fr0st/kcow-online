@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { type ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { type ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { type Family, FamilyService } from '@core/services/family.service';
@@ -142,16 +142,16 @@ describe('FamilySelectComponent', () => {
       expect(items.length).toBe(5);
     });
 
-    it('should filter families based on family name search query with debounce', fakeAsync(() => {
+    it('should filter families based on family name search query with debounce', async () => {
       // Clear the initial call from ngOnInit
       mockFamilyService.getActiveFamilies.mockClear();
 
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'Smith';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       expect(mockFamilyService.getActiveFamilies).toHaveBeenCalledWith('Smith');
@@ -159,20 +159,20 @@ describe('FamilySelectComponent', () => {
       const familyItems = fixture.debugElement.queryAll(
         By.css('.dropdown-content li a:not(.text-primary):not(.disabled)'),
       );
-      // Should show "No Family" + 1 Smith family + "Create New"
-      expect(familyItems.length).toBe(3);
-    }));
+      // The selector excludes "Create New", leaving "No Family" and Smith.
+      expect(familyItems.length).toBe(2);
+    });
 
-    it('should filter families based on guardian name search query with debounce', fakeAsync(() => {
+    it('should filter families based on guardian name search query with debounce', async () => {
       // Clear the initial call from ngOnInit
       mockFamilyService.getActiveFamilies.mockClear();
 
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'John';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       expect(mockFamilyService.getActiveFamilies).toHaveBeenCalledWith('John');
@@ -180,9 +180,11 @@ describe('FamilySelectComponent', () => {
       const familyItems = fixture.debugElement.queryAll(
         By.css('.dropdown-content li a:not(.text-primary):not(.disabled)'),
       );
-      // Should match Smith family by guardian name
-      expect(familyItems.length).toBe(3); // No Family + Smith family + Create New
-    }));
+      // John matches the Smith guardian and the Johnson family name.
+      expect(familyItems.length).toBe(3);
+      expect(familyItems[1].nativeElement.textContent).toContain('Smith Family');
+      expect(familyItems[2].nativeElement.textContent).toContain('Johnson Family');
+    });
   });
 
   describe('Enhanced Display Features', () => {

@@ -15,6 +15,7 @@ namespace Kcow.Application.Import.Mappers;
 public sealed class ActivityDataMapper : IDataMapper<LegacyActivityRecord, Activity>
 {
     private const int MaxFieldLength = 255;
+    private const int LargeIconLength = 100_000;
 
     public MappingResult<Activity> Map(LegacyActivityRecord source)
     {
@@ -43,6 +44,10 @@ public sealed class ActivityDataMapper : IDataMapper<LegacyActivityRecord, Activ
                 $"Activity {source.ActivityId}: Grade (GradeLevel) truncated from {source.Grade.Length} to {MaxFieldLength} characters."));
 
         // Icon: strip OLE wrapper and extract raw image data
+        if (source.Icon?.Length > LargeIconLength)
+            result.Warnings.Add(new MappingWarning("Icon",
+                $"Activity {source.ActivityId}: Large icon ({source.Icon.Length} encoded characters)."));
+
         var icon = StripOleWrapper(source.Icon, source.ActivityId, result);
 
         result.Data = new Activity

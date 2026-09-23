@@ -37,12 +37,12 @@ describe('SidebarComponent', () => {
 
   // Accessibility Tests (Story 1.5 AC#2: Keyboard navigation)
   it('should have navigation links for keyboard accessibility', () => {
-    const navLinks = fixture.nativeElement.querySelectorAll('nav a[routerLink]');
+    const navLinks = fixture.nativeElement.querySelectorAll('nav a[href]');
     expect(navLinks.length).toBeGreaterThan(0);
 
     // All navigation links should be focusable
     navLinks.forEach((link: HTMLAnchorElement) => {
-      expect(link.getAttribute('routerLink')).toBeTruthy();
+      expect(link.getAttribute('href')).toBeTruthy();
       // Links receive focus ring via global CSS: styles.css @layer base
     });
   });
