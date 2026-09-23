@@ -281,6 +281,29 @@ public class BillingServiceTests
     }
 
     [Fact]
+    public async Task CreatePaymentAsync_WithAnotherStudentsInvoice_RejectsPayment()
+    {
+        _studentRepository.ExistsAsync(1, Arg.Any<CancellationToken>()).Returns(true);
+        _invoiceRepository.GetByIdAsync(10, Arg.Any<CancellationToken>())
+            .Returns(new Invoice { Id = 10, StudentId = 2, Amount = 1000m });
+
+        var request = new CreatePaymentRequest
+        {
+            InvoiceId = 10,
+            PaymentDate = "2026-02-10",
+            Amount = 500m,
+            PaymentMethod = 0
+        };
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _service.CreatePaymentAsync(1, request, "test-user"));
+
+        Assert.Contains("does not belong to student", exception.Message);
+        await _paymentRepository.DidNotReceive()
+            .CreateAsync(Arg.Any<Payment>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task CreatePaymentAsync_WithNonExistingStudent_ThrowsInvalidOperationException()
     {
         // Arrange

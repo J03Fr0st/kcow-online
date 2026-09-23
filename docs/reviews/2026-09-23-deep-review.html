@@ -87,34 +87,34 @@
     <main>
       <header>
         <p class="meta">KCOW · repository audit · 23 September 2026 · origin/main @ 4035031</p>
-        <h1>Protect billing writes and credentials before the next release</h1>
-        <p class="lede">The reviewed baseline has three high-impact paths that can misattribute payments, duplicate financial records, or expose a submitted password in browser logs. Two error-handling defects and a broken test gate add operational risk.</p>
+        <h1>Five review findings fixed; full test gates remain red</h1>
+        <p class="lede">The origin/main review found paths that could misattribute payments, repeat financial writes, expose a submitted password, lose HTTP status, or mask failed startup. This PR fixes all five and repairs two billing import defects found during verification. The repository-wide test suites still contain failures outside these paths.</p>
       </header>
 
       <div class="stats wide" aria-label="Review summary">
-        <div class="stat"><span class="stat-value">3</span><span class="stat-label">P1 findings</span></div>
-        <div class="stat"><span class="stat-value">2</span><span class="stat-label">P2 findings</span></div>
-        <div class="stat"><span class="stat-value">20 / 228</span><span class="stat-label">backend integration tests failed</span></div>
-        <div class="stat"><span class="stat-value">78 / 81</span><span class="stat-label">frontend Jest suites failed</span></div>
+        <div class="stat"><span class="stat-value">5 / 5</span><span class="stat-label">review findings fixed</span></div>
+        <div class="stat"><span class="stat-value">6 / 6</span><span class="stat-label">billing import tests passing</span></div>
+        <div class="stat"><span class="stat-value">13 / 13</span><span class="stat-label">billing service tests passing</span></div>
+        <div class="stat"><span class="stat-value">21 / 21</span><span class="stat-label">interceptor tests passing</span></div>
       </div>
 
       <nav class="toc" aria-label="Contents">
         <ol>
           <li><a href="#findings">Confirmed findings</a></li>
-          <li><a href="#sequence">Recommended order</a></li>
+          <li><a href="#sequence">Remediation status</a></li>
           <li><a href="#checks">Checks and coverage</a></li>
         </ol>
       </nav>
 
       <h2 id="findings">Confirmed findings</h2>
-      <p>The findings below describe behavior present at the fixed baseline. Each identifies a concrete trigger and the code that carries it.</p>
+      <p>The findings below describe behavior present at the reviewed origin/main commit. Each identifies a concrete trigger, its source evidence, and the fix in this PR.</p>
 
       <section class="finding" aria-labelledby="f1">
         <p class="severity p1">P1 · data integrity</p>
         <h3 id="f1">A payment can reference another student's invoice</h3>
         <p>For <code>POST /api/students/1/payments</code> with an existing invoice owned by student 2, <code>CreatePaymentAsync</code> verifies only that the invoice exists, then inserts a payment for student 1 with student 2's invoice ID. The migration has separate foreign keys for <code>student_id</code> and <code>invoice_id</code>, so it does not reject that combination. Student 1's balance decreases while student 2's invoice is not settled by the invoice-payment query.</p>
         <p class="source">Evidence: <code>apps/backend/src/Infrastructure/Billing/BillingService.cs:115–140,165–179</code>; <code>apps/backend/src/Infrastructure/Migrations/Scripts/014_CreatePayments.sql:2–13</code>. Story 6.1 defines student-scoped payment routes.</p>
-        <p><strong>Action:</strong> reject an invoice whose <code>StudentId</code> differs from the route student, and add a regression test for that pair.</p>
+        <p><strong>Fixed:</strong> payment creation rejects an invoice whose <code>StudentId</code> differs from the route student. A unit regression test checks the rejected pair.</p>
       </section>
 
       <section class="finding" aria-labelledby="f2">
@@ -122,7 +122,7 @@
         <h3 id="f2">The global interceptor retries payment and invoice creation</h3>
         <p>The interceptor retries every HTTP method after network, timeout, 503, or 504 errors. Billing uses POST for both invoice and payment creation. If the server commits a write and the client receives one of those errors, resubscribing can send the same write up to two more times. The API has no idempotency key for these endpoints, so the student can receive duplicate charges or payments.</p>
         <p class="source">Evidence: <code>apps/frontend/src/app/core/interceptors/error.interceptor.ts:25–48</code>; <code>apps/frontend/src/app/core/services/billing.service.ts:50–60,85–92</code>; <code>apps/backend/src/Api/Controllers/BillingController.cs:94,179</code>.</p>
-        <p><strong>Action:</strong> limit automatic retries to safe reads, then add an explicit idempotency design before retrying writes.</p>
+        <p><strong>Fixed:</strong> automatic retries now apply only to GET and HEAD. An HTTP test checks a payment POST is sent once after a 503 and a GET still retries.</p>
       </section>
 
       <section class="finding" aria-labelledby="f3">
@@ -130,7 +130,7 @@
         <h3 id="f3">A failed login logs the submitted password</h3>
         <p>When the login POST returns 401, the error interceptor passes the entire request body into the log context and enables console logging. The logging service retains that context in error history and prints it with <code>console.error</code>. The login body includes the password, so an ordinary failed sign-in exposes the submitted secret to browser diagnostics and any collected console output.</p>
         <p class="source">Evidence: <code>apps/frontend/src/app/core/interceptors/error.interceptor.ts:53–67</code>; <code>apps/frontend/src/app/core/services/error-logging.service.ts:79–99,262–284</code>; <code>apps/frontend/src/app/core/services/auth.service.ts:50–54</code>.</p>
-        <p><strong>Action:</strong> remove request bodies from generic error context or redact sensitive fields before storage and output.</p>
+        <p><strong>Fixed:</strong> generic error context no longer includes request bodies. The failed-login test checks the logger receives no password and the login screen is not redirected again.</p>
       </section>
 
       <section class="finding" aria-labelledby="f4">
@@ -138,7 +138,7 @@
         <h3 id="f4">Error conversion drops the HTTP status callers need</h3>
         <p>After handling a 401, the error interceptor rethrows an <code>AppError</code> with <code>statusCode</code> rather than the original <code>HttpErrorResponse</code> with <code>status</code>. The outer auth interceptor and <code>AuthService.getCurrentUser()</code> both test <code>error.status === 401</code>. Their cleanup does not run, leaving the expired token in local storage. The route guard sees that token and allows a protected route to activate again.</p>
         <p class="source">Evidence: <code>apps/frontend/src/app/core/interceptors/error.interceptor.ts:71</code>; <code>apps/frontend/src/app/models/error.model.ts:36–51</code>; <code>apps/frontend/src/app/core/interceptors/auth.interceptor.ts:22–27</code>; <code>apps/frontend/src/app/core/services/auth.service.ts:119–132</code>; <code>apps/frontend/src/app/core/guards/auth.guard.ts:21–24</code>.</p>
-        <p><strong>Action:</strong> preserve the original HTTP error for downstream callers, or update the contract and all status consumers together.</p>
+        <p><strong>Fixed:</strong> the interceptor logs the error and rethrows the original <code>HttpErrorResponse</code>. The auth interceptor clears a session only when it attached a token; anonymous login failures remain on the login screen.</p>
       </section>
 
       <section class="finding" aria-labelledby="f5">
@@ -146,41 +146,43 @@
         <h3 id="f5">Fatal API startup errors can exit successfully</h3>
         <p>A missing production JWT key throws during host setup. The outer catch logs a fatal error but neither rethrows nor sets a nonzero process exit code. The process reaches the end of <code>Program.cs</code> normally, so a supervisor or deployment step that relies on exit status can treat failed startup as success.</p>
         <p class="source">Evidence: <code>apps/backend/src/Api/Program.cs:87–89,261–270</code>.</p>
-        <p><strong>Action:</strong> preserve a nonzero exit status after logging startup failures and test the missing-key path.</p>
+        <p><strong>Fixed:</strong> the startup catch sets process exit code 1. A missing-key startup was reproduced with exit code 0 before the change and exit code 1 after it.</p>
       </section>
 
-      <h2 id="sequence">Fix the financial and credential paths first</h2>
-      <div class="table-wrap wide" tabindex="0" role="region" aria-label="Recommended remediation order">
+      <h2 id="sequence">Remediation status</h2>
+      <div class="table-wrap wide" tabindex="0" role="region" aria-label="Remediation status">
         <table>
-          <caption>Remediation sequence based on impact and shared code paths</caption>
-          <thead><tr><th scope="col">Order</th><th scope="col">Change</th><th scope="col">Proof to require</th></tr></thead>
+          <caption>Fixes delivered in this PR and remaining validation work</caption>
+          <thead><tr><th scope="col">Area</th><th scope="col">Change</th><th scope="col">Verification</th></tr></thead>
           <tbody>
-            <tr><th scope="row">1</th><td>Validate invoice ownership for payments.</td><td>Cross-student invoice ID is rejected; same-student payment still succeeds.</td></tr>
-            <tr><th scope="row">2</th><td>Stop retries of POST, PUT, PATCH, and DELETE.</td><td>A transient error resubscribes GET only; payment POST is sent once.</td></tr>
-            <tr><th scope="row">3</th><td>Redact request bodies from error logs.</td><td>Failed login retains useful status and URL without the password in history or console.</td></tr>
-            <tr><th scope="row">4</th><td>Preserve HTTP error status and startup failure codes.</td><td>Expired token clears; missing JWT key returns a nonzero process exit.</td></tr>
-            <tr><th scope="row">5</th><td>Restore test gates before merging product fixes.</td><td>Backend integration and frontend Jest commands complete without failed suites.</td></tr>
+            <tr><th scope="row">Billing writes</th><td>Validate invoice ownership; stop retries of write requests.</td><td>13 billing service tests and POST/GET retry tests pass.</td></tr>
+            <tr><th scope="row">Credentials and auth</th><td>Remove request bodies from logs; retain HTTP errors for callers; avoid anonymous-login redirects.</td><td>21 focused interceptor tests pass.</td></tr>
+            <tr><th scope="row">Startup</th><td>Return exit code 1 on fatal host setup errors.</td><td>Missing-key process exit checked before and after the change.</td></tr>
+            <tr><th scope="row">Import</th><td>Parse SQLite amount text as decimals and continue legacy receipt numbering across import runs.</td><td>6 billing import integration tests pass, including a repeated-date regression.</td></tr>
+            <tr><th scope="row">Test isolation</th><td>Give integration factories separate temporary SQLite databases and run the integration assembly serially.</td><td>Factory configuration assertion passes; unrelated suite failures remain.</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h2 id="checks">Checks exposed a broken baseline test gate</h2>
+      <h2 id="checks">Focused checks pass; full suites still fail</h2>
       <div class="table-wrap wide" tabindex="0" role="region" aria-label="Validation results">
         <table>
-          <caption>Commands run against the untouched origin/main checkout</caption>
+          <caption>Baseline and current-branch verification</caption>
           <thead><tr><th scope="col">Command</th><th scope="col">Result</th><th scope="col">What it establishes</th></tr></thead>
           <tbody>
-            <tr><th scope="row"><code>npm run build</code></th><td>Pass</td><td>Vite produced a production bundle; it also warned about large chunks.</td></tr>
-            <tr><th scope="row"><code>dotnet test apps/backend</code></th><td>20 failed, 208 passed</td><td>Integration suite is red. An isolated login test fails because it expects “Administrator” while the seeder creates “System Admin”. Other failures need separate diagnosis.</td></tr>
-            <tr><th scope="row"><code>npm test -- --runInBand --silent</code></th><td>78 failed, 3 passed suites</td><td>Jest includes Playwright <code>e2e</code> specs and reports TypeScript/module errors in unit specs. This run cannot validate frontend behavior.</td></tr>
-            <tr><th scope="row">Targeted invalid-email login integration test</th><td>Pass</td><td>The no-user login path returned 401 in this baseline.</td></tr>
+            <tr><th scope="row">Origin/main: backend integration</th><td>20 failed, 208 passed</td><td>Baseline test gate was red before fixes.</td></tr>
+            <tr><th scope="row">Origin/main: frontend Jest</th><td>78 failed, 3 passed suites</td><td>Baseline included Playwright <code>e2e</code> files in Jest and TypeScript errors in unit specs.</td></tr>
+            <tr><th scope="row">Current: <code>npm run build</code></th><td>Pass</td><td>Production bundle builds with existing large-chunk and sourcemap warnings.</td></tr>
+            <tr><th scope="row">Current: focused backend and interceptor tests</th><td>Pass</td><td>Billing service 13/13, billing import 6/6, and interceptors 21/21 pass.</td></tr>
+            <tr><th scope="row">Current: full backend solution</th><td>22 unit and 12 integration failures</td><td>Unit: 191/213 pass. Integration: 218/230 pass. Remaining failures include stale mapper and authentication expectations, attendance mocks, and family service test setup.</td></tr>
+            <tr><th scope="row">Current: full frontend Jest</th><td>55 failed, 27 passed suites</td><td>Many component specs still have TypeScript/test setup errors, and Jest still discovers Playwright tests.</td></tr>
           </tbody>
         </table>
       </div>
 
       <aside class="callout warn">
         <p class="callout-label">Coverage boundary</p>
-        <p>This is a deep, risk-led audit of the origin/main baseline, not a review of a nonempty change diff. The current local checkout's uncommitted BMAD deletions and untracked scripts were excluded. The audit traced billing, authentication, HTTP interception, persistence constraints, startup, relevant specifications, and test configuration. It did not read every one of the repository's 1,285 tracked files or run browser E2E flows. Unexamined modules may contain additional defects.</p>
+        <p>This is a deep, risk-led audit of the origin/main baseline followed by fixes in an isolated worktree. The separate root checkout's uncommitted BMAD deletions and untracked scripts were excluded. The audit traced billing, authentication, HTTP interception, persistence constraints, startup, relevant specifications, and test configuration. It did not read every one of the repository's 1,285 tracked files or run browser E2E flows. Unexamined modules may contain additional defects.</p>
       </aside>
       <p class="footnote">Fixed point: <code>4035031cefc904b3d4f18fb0e7775e5062d70e4a</code>. The report contains inline styles only and has no network dependency.</p>
     </main>

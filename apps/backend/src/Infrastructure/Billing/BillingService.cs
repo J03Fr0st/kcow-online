@@ -121,6 +121,8 @@ public class BillingService : IBillingService
             var invoice = await _invoiceRepository.GetByIdAsync(request.InvoiceId.Value, cancellationToken);
             if (invoice == null)
                 throw new InvalidOperationException($"Invoice with ID {request.InvoiceId.Value} does not exist");
+            if (invoice.StudentId != studentId)
+                throw new InvalidOperationException($"Invoice with ID {request.InvoiceId.Value} does not belong to student {studentId}");
         }
 
         var payment = new Payment
