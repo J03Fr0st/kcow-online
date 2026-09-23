@@ -248,7 +248,17 @@ public class LegacyAttendanceEvaluationImportServiceTests : IClassFixture<Custom
         using var scope = _factory.Services.CreateScope();
         var service = CreateImportService(scope);
 
-        var xmlPath = FindRepoFile("docs/legacy/3_Activity/Activity.xml");
+        var xmlPath = Path.GetTempFileName();
+        await File.WriteAllTextAsync(xmlPath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <dataroot>
+              <Activity>
+                <ActivityID>1</ActivityID>
+                <Program>test-prog</Program>
+                <ProgramName>Test Program</ProgramName>
+              </Activity>
+            </dataroot>
+            """);
         var xsdPath = FindRepoFile("docs/legacy/3_Activity/Activity.xsd");
 
         var uniqueAttDate = $"2024-05-{Random.Shared.Next(10, 28):D2}";
@@ -280,6 +290,7 @@ public class LegacyAttendanceEvaluationImportServiceTests : IClassFixture<Custom
         }
         finally
         {
+            File.Delete(xmlPath);
             File.Delete(auditPath);
             File.Delete(summaryPath);
         }

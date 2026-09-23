@@ -2,6 +2,7 @@ export default {
   preset: 'jest-preset-angular',
   setupFilesAfterEnv: ['<rootDir>/setup-jest.ts'],
   testEnvironment: 'jsdom',
+  testMatch: ['**/src/**/*.spec.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   coverageDirectory: 'coverage',
   collectCoverageFrom: [

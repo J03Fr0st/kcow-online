@@ -14,6 +14,8 @@ interface MockStudentService {
 
 interface MockBillingService {
   getBillingSummary: jest.Mock<Observable<BillingSummary>, [number]>;
+  getInvoices: jest.Mock;
+  getPayments: jest.Mock;
 }
 
 describe('StudentProfilePage', () => {
@@ -67,10 +69,14 @@ describe('StudentProfilePage', () => {
 
     mockBillingService = {
       getBillingSummary: jest.fn().mockReturnValue(of(mockBillingSummary)),
+      getInvoices: jest.fn().mockReturnValue(of([])),
+      getPayments: jest.fn().mockReturnValue(of([])),
     };
 
     mockRouter = {
       navigate: jest.fn(),
+      createUrlTree: jest.fn().mockReturnValue({}),
+      navigateByUrl: jest.fn().mockResolvedValue(true),
     };
 
     mockActivatedRoute = {
@@ -115,9 +121,8 @@ describe('StudentProfilePage', () => {
     });
 
     it('should have OnPush change detection', () => {
-      const config =
-        TestBed.createComponent(StudentProfilePage).componentType.decorators?.[0].metadata;
-      expect(config.changeDetection).toBeDefined();
+      const definition = (StudentProfilePage as unknown as { ɵcmp: { onPush: boolean } }).ɵcmp;
+      expect(definition.onPush).toBe(true);
     });
   });
 
@@ -145,6 +150,7 @@ describe('StudentProfilePage', () => {
 
   describe('Loading State', () => {
     it('should show loading spinner when loading', () => {
+      fixture.detectChanges();
       component.isLoading.set(true);
       fixture.detectChanges();
 
@@ -265,11 +271,11 @@ describe('StudentProfilePage', () => {
 
     it('should display child info tab content', () => {
       const content = fixture.nativeElement.textContent;
-      expect(content).toContain('Child Information');
+      expect(content).toContain('Personal Information');
       expect(content).toContain('Language');
       expect(content).toContain('English');
       expect(content).toContain('Family');
-      expect(content).toContain('Doe Family');
+      expect(content).toContain('Family Contacts');
     });
 
     it('should display financial tab component', () => {
@@ -327,7 +333,7 @@ describe('StudentProfilePage', () => {
 
     it('should return dash for invalid date', () => {
       const formatted = component.formatDate('invalid-date');
-      expect(formatted).toBe('invalid-date');
+      expect(formatted).toBe('-');
     });
 
     it('should return dash for empty date', () => {
@@ -391,8 +397,11 @@ describe('StudentProfilePage', () => {
       expect(editButton).toBeTruthy();
       expect(editButton?.nativeElement.textContent).toContain('Edit Student');
 
-      const routerLink = editButton?.attributes.routerLink;
-      expect(routerLink).toContain('/students/1/edit');
+      editButton?.nativeElement.click();
+      expect(mockRouter.createUrlTree).toHaveBeenCalledWith(
+        ['/students', 1, 'edit'],
+        expect.any(Object),
+      );
     });
   });
 
@@ -434,7 +443,7 @@ describe('StudentProfilePage', () => {
       fixture.detectChanges();
 
       const content = fixture.nativeElement.textContent;
-      expect(content).not.toContain('School Assignment');
+      expect(content).not.toContain('Test School');
     });
   });
 

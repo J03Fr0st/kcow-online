@@ -3,7 +3,8 @@ import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/test
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NotificationService } from '@core/services/notification.service';
 import { type Truck, TruckService } from '@core/services/truck.service';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '@environments/environment';
+import { of } from 'rxjs';
 import { TruckFormComponent } from './truck-form.component';
 
 describe('TruckFormComponent', () => {
@@ -39,6 +40,7 @@ describe('TruckFormComponent', () => {
   }));
 
   afterEach(() => {
+    httpMock.match(`${environment.apiUrl}/trucks/1`).forEach((request) => { request.flush(mockTruck); });
     httpMock.verify();
   });
 
@@ -109,7 +111,7 @@ describe('TruckFormComponent', () => {
 
   describe('Load Truck for Edit', () => {
     it('should load truck data when truckId is provided', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       component.ngOnInit();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/trucks/1`);
@@ -124,7 +126,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should set loading state during load', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       component.ngOnInit();
 
       expect(component.isLoading()).toBe(true);
@@ -136,14 +138,14 @@ describe('TruckFormComponent', () => {
     });
 
     it('should handle load error', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       const errorSpy = jest.spyOn(notificationService, 'error');
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
       component.ngOnInit();
 
       const request = httpMock.expectOne(`${environment.apiUrl}/trucks/1`);
-      request.flush({ message: 'Not found' }, { status: 404 });
+      request.flush({ message: 'Not found' }, { status: 404, statusText: 'Not Found' });
 
       expect(component.error()).not.toBeNull();
       expect(errorSpy).toHaveBeenCalled();
@@ -239,7 +241,7 @@ describe('TruckFormComponent', () => {
 
   describe('Submit Form - Update', () => {
     beforeEach(() => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       component.ngOnInit();
       component.form.setValue({
         name: 'Updated Truck',
@@ -250,9 +252,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should call updateTruck service method', () => {
-      const updateSpy = jest.spyOn(truckService, 'updateTruck').mockReturnValue({
-        pipe: () => ({ subscribe: (callbacks: any) => callbacks.next?.(mockTruck) }),
-      } as any);
+      const updateSpy = jest.spyOn(truckService, 'updateTruck').mockReturnValue(of(mockTruck));
 
       component.submitForm();
 
@@ -281,7 +281,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should show "Edit Truck" title for edit mode', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       expect(component.title).toBe('Edit Truck');
     });
 
@@ -290,7 +290,7 @@ describe('TruckFormComponent', () => {
     });
 
     it('should show "Update Truck" button text for edit mode', () => {
-      component.truckId.set(1);
+      fixture.componentRef.setInput('truckId', 1);
       expect(component.submitButtonText).toBe('Update Truck');
     });
 

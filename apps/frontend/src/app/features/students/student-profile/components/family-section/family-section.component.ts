@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   EventEmitter,
   inject,
   input,
@@ -31,6 +32,7 @@ import type { ProblemDetails } from '@core/services/student.service';
 })
 export class FamilySectionComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly familyService = inject(FamilyService);
   private readonly router = inject(Router);
   private readonly notificationService = inject(NotificationService);
@@ -101,7 +103,7 @@ export class FamilySectionComponent implements OnInit {
 
     this.familyService
       .getFamilyById(s.familyId)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (family) => {
           this.family.set(family);
@@ -125,7 +127,7 @@ export class FamilySectionComponent implements OnInit {
   private loadSiblings(familyId: number): void {
     this.familyService
       .getStudentsByFamily(familyId)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (students) => {
           // Filter out the current student
@@ -197,7 +199,7 @@ export class FamilySectionComponent implements OnInit {
 
     this.familyService
       .updateFamily(f.id, updateRequest)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (updatedFamily) => {
           this.family.set(updatedFamily);
@@ -298,7 +300,7 @@ export class FamilySectionComponent implements OnInit {
       const guardianId = editingGuardianId;
       this.familyService
         .updateGuardian(f.id, guardianId, formValue)
-        .pipe(takeUntilDestroyed(this))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (updatedGuardian) => {
             this.guardians.update((guardians) =>
@@ -319,7 +321,7 @@ export class FamilySectionComponent implements OnInit {
       // Create new guardian
       this.familyService
         .addGuardian(f.id, formValue)
-        .pipe(takeUntilDestroyed(this))
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (newGuardian) => {
             this.guardians.update((guardians) => [...guardians, newGuardian]);
@@ -351,7 +353,7 @@ export class FamilySectionComponent implements OnInit {
 
     this.familyService
       .deleteGuardian(f.id, guardianId)
-      .pipe(takeUntilDestroyed(this))
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.guardians.update((guardians) => guardians.filter((g) => g.id !== guardianId));

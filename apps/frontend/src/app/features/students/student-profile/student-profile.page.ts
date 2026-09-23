@@ -146,6 +146,7 @@ export class StudentProfilePage implements OnInit {
     if (!dateString) return '-';
     try {
       const date = new Date(dateString);
+      if (Number.isNaN(date.getTime())) return '-';
       return date.toLocaleDateString();
     } catch {
       return dateString;

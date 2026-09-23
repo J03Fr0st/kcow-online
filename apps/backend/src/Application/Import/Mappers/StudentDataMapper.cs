@@ -44,14 +44,12 @@ public sealed class StudentDataMapper : IDataMapper<LegacyChildRecord, StudentMa
         _classGroupIdsByCode = classGroupIdsByCode ?? EmptyDict;
     }
 
-    private int _autoRefCounter;
-
     public MappingResult<StudentMappingData> Map(LegacyChildRecord source)
     {
         var reference = source.Reference;
         if (string.IsNullOrWhiteSpace(reference))
         {
-            reference = $"AUTO-{++_autoRefCounter:D6}";
+            return MappingResult<StudentMappingData>.Fail("Reference", "Student reference is required.");
         }
 
         var result = new MappingResult<StudentMappingData> { Success = true };

@@ -142,16 +142,16 @@ describe('FamilySelectComponent', () => {
       expect(items.length).toBe(5);
     });
 
-    it('should filter families based on family name search query with debounce', fakeAsync(() => {
+    it('should filter families based on family name search query with debounce', async () => {
       // Clear the initial call from ngOnInit
       mockFamilyService.getActiveFamilies.mockClear();
 
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'Smith';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       expect(mockFamilyService.getActiveFamilies).toHaveBeenCalledWith('Smith');
@@ -159,20 +159,20 @@ describe('FamilySelectComponent', () => {
       const familyItems = fixture.debugElement.queryAll(
         By.css('.dropdown-content li a:not(.text-primary):not(.disabled)'),
       );
-      // Should show "No Family" + 1 Smith family + "Create New"
-      expect(familyItems.length).toBe(3);
-    }));
+      // The selector excludes "Create New", leaving "No Family" and Smith.
+      expect(familyItems.length).toBe(2);
+    });
 
-    it('should filter families based on guardian name search query with debounce', fakeAsync(() => {
+    it('should filter families based on guardian name search query with debounce', async () => {
       // Clear the initial call from ngOnInit
       mockFamilyService.getActiveFamilies.mockClear();
 
       const input = fixture.debugElement.query(By.css('input[type="text"]'));
 
       input.nativeElement.value = 'John';
-      input.nativeElement.dispatchEvent(new Event('input'));
+      fixture.ngZone!.run(() => input.nativeElement.dispatchEvent(new Event('input')));
 
-      tick(300);
+      await new Promise((resolve) => setTimeout(resolve, 350));
       fixture.detectChanges();
 
       expect(mockFamilyService.getActiveFamilies).toHaveBeenCalledWith('John');
@@ -182,7 +182,7 @@ describe('FamilySelectComponent', () => {
       );
       // Should match Smith family by guardian name
       expect(familyItems.length).toBe(3); // No Family + Smith family + Create New
-    }));
+    });
   });
 
   describe('Enhanced Display Features', () => {

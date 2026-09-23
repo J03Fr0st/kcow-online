@@ -4,7 +4,8 @@ import { type ComponentFixture, TestBed, waitForAsync } from '@angular/core/test
 import { ActivityService } from '@core/services/activity.service';
 import { NotificationService } from '@core/services/notification.service';
 import type { Activity } from '@features/activities/models/activity.model';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '@environments/environment';
+import { of, throwError } from 'rxjs';
 import { ActivityFormComponent } from '../activity-form/activity-form.component';
 import { ActivitiesListComponent } from './activities-list.component';
 
@@ -56,6 +57,7 @@ describe('ActivitiesListComponent', () => {
   }));
 
   afterEach(() => {
+    httpMock.match(`${environment.apiUrl}/activities`).forEach((request) => { request.flush(mockActivities); });
     httpMock.verify();
   });
 
@@ -80,6 +82,7 @@ describe('ActivitiesListComponent', () => {
     });
 
     it('should display activities after loading', () => {
+      fixture.detectChanges();
       const request = httpMock.expectOne(`${environment.apiUrl}/activities`);
       request.flush(mockActivities);
 
@@ -90,6 +93,7 @@ describe('ActivitiesListComponent', () => {
     });
 
     it('should display empty state when no activities exist', () => {
+      fixture.detectChanges();
       const request = httpMock.expectOne(`${environment.apiUrl}/activities`);
       request.flush([]);
 
@@ -149,12 +153,7 @@ describe('ActivitiesListComponent', () => {
     });
 
     it('should confirm delete and call service', () => {
-      const deleteSpy = jest.spyOn(activityService, 'deleteActivity').mockReturnValue({
-        subscribe: (callbacks: any) => {
-          callbacks.next?.();
-          return { unsubscribe: () => {} };
-        },
-      } as any);
+      const deleteSpy = jest.spyOn(activityService, 'deleteActivity').mockReturnValue(of(undefined));
       const successSpy = jest.spyOn(notificationService, 'success');
 
       component.confirmDelete(mockActivities[0]);
@@ -165,12 +164,7 @@ describe('ActivitiesListComponent', () => {
     });
 
     it('should handle delete error', () => {
-      const _deleteSpy = jest.spyOn(activityService, 'deleteActivity').mockReturnValue({
-        subscribe: (callbacks: any) => {
-          callbacks.error?.({ message: 'Error' });
-          return { unsubscribe: () => {} };
-        },
-      } as any);
+      jest.spyOn(activityService, 'deleteActivity').mockReturnValue(throwError(() => new Error('Error')));
       const errorSpy = jest.spyOn(notificationService, 'error');
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 

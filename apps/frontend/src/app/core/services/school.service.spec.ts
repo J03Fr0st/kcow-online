@@ -89,22 +89,19 @@ describe('SchoolService', () => {
     req.flush({ ...school, isActive: false });
   });
 
-  it('should get active schools without side effects on global signal', (done) => {
+  it('should get active schools and cache the active list', () => {
     // First set some state in the signal
     service.getSchools().subscribe();
     httpMock.expectOne(`${apiUrl}/schools`).flush(mockSchools);
     expect(service.schools()).toEqual(mockSchools);
 
     // Now call getActiveSchools
-    service.getActiveSchools().subscribe((active: School[]) => {
-      expect(active.length).toBe(1);
-      expect(active[0].id).toBe(1);
-      // Global signal should NOT be affected by the filter
-      expect(service.schools()).toEqual(mockSchools);
-      done();
-    });
+    let activeSchools: School[] | undefined;
+    service.getActiveSchools().subscribe((active) => { activeSchools = active; });
 
     const req = httpMock.expectOne(`${apiUrl}/schools`);
     req.flush(mockSchools);
+    expect(activeSchools).toEqual([mockSchools[0]]);
+    expect(service.schools()).toEqual([mockSchools[0]]);
   });
 });

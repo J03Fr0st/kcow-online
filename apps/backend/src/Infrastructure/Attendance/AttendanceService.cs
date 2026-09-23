@@ -250,15 +250,6 @@ public class AttendanceService : IAttendanceService
                 continue;
             }
 
-            // Check for duplicate attendance record
-            var duplicateExists = await _attendanceRepository.ExistsByStudentClassGroupDateAsync(
-                entry.StudentId, request.ClassGroupId, request.SessionDate, cancellationToken);
-            if (duplicateExists)
-            {
-                errors.Add($"Student {entry.StudentId}: Attendance record already exists for student {entry.StudentId}, class group {request.ClassGroupId} on date {request.SessionDate}.");
-                continue;
-            }
-
             attendanceRecords.Add(new Domain.Entities.Attendance
             {
                 StudentId = entry.StudentId,

@@ -21,6 +21,8 @@ public class AttendanceServiceTests
         _studentRepository = Substitute.For<IStudentRepository>();
         _classGroupRepository = Substitute.For<IClassGroupRepository>();
         _auditService = Substitute.For<IAuditService>();
+        _studentRepository.ExistsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        _classGroupRepository.ExistsAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
         _service = new Infrastructure.Attendance.AttendanceService(
             _attendanceRepository,
             _studentRepository,

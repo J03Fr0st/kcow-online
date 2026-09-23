@@ -1,31 +1,46 @@
+using Dapper;
 using Kcow.Application.Families;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Kcow.Infrastructure.Database;
 using Kcow.Infrastructure.Families;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 
 namespace Kcow.Unit.Tests;
 
-public class FamilyServiceTests
+public class FamilyServiceTests : IDisposable
 {
     private readonly IFamilyRepository _familyRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly FamilyService _service;
+    private readonly SqliteConnection _keepAlive;
 
     public FamilyServiceTests()
     {
         _familyRepository = Substitute.For<IFamilyRepository>();
         _studentRepository = Substitute.For<IStudentRepository>();
         _connectionFactory = Substitute.For<IDbConnectionFactory>();
+        var connectionString = $"Data Source=family-unit-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+        _keepAlive = new SqliteConnection(connectionString);
+        _keepAlive.Open();
+        _keepAlive.Execute("""
+            CREATE TABLE students (id INTEGER PRIMARY KEY, first_name TEXT, last_name TEXT,
+                reference TEXT, is_active INTEGER);
+            CREATE TABLE student_families (student_id INTEGER, family_id INTEGER,
+                relationship_type TEXT);
+            """);
+        _connectionFactory.Create().Returns(_ => new SqliteConnection(connectionString));
         _service = new FamilyService(
             _familyRepository,
             _studentRepository,
             _connectionFactory,
             NullLogger<FamilyService>.Instance);
     }
+
+    public void Dispose() => _keepAlive.Dispose();
 
     [Fact]
     public async Task CreateAsync_Persists_Family()

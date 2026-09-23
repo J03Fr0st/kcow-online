@@ -27,11 +27,12 @@ public class LegacySchoolImportServiceTests : IClassFixture<CustomWebApplication
         EnsureDatabaseInitialized();
 
         var schoolId = Random.Shared.Next(100000, 999999);
+        var schoolName = $"Import Test {schoolId}";
         var xmlPath = WriteTempFile($"""
             <?xml version="1.0" encoding="utf-8"?>
             <dataroot>
               <School>
-                <Short_x0020_School>Import Test</Short_x0020_School>
+                <Short_x0020_School>{schoolName}</Short_x0020_School>
                 <School_x0020_Id>{schoolId}</School_x0020_Id>
                 <Print>1</Print>
                 <Import>1</Import>
@@ -60,11 +61,11 @@ public class LegacySchoolImportServiceTests : IClassFixture<CustomWebApplication
 
             var schools = await response.Content.ReadFromJsonAsync<List<SchoolDto>>();
             Assert.NotNull(schools);
-            Assert.Contains(schools, s => s.Id == schoolId);
+            Assert.Contains(schools, s => s.Name == schoolName);
 
             // Verify field mappings - AC #2 validation
-            var importedSchool = schools.First(s => s.Id == schoolId);
-            Assert.Equal("Import Test", importedSchool.Name); // ShortSchool → Name fallback
+            var importedSchool = schools.First(s => s.Name == schoolName);
+            Assert.Equal(schoolName, importedSchool.Name); // ShortSchool → Name fallback
             Assert.True(importedSchool.PrintInvoice); // Print=1 mapped correctly
             Assert.True(importedSchool.ImportFlag); // Import=1 mapped correctly
         }

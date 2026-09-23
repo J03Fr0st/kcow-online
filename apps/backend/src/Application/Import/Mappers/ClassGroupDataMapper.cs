@@ -41,7 +41,7 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
         var name = Trim(source.Description) ?? Trim(source.ClassGroup) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(name))
         {
-            name = $"ClassGroup-{source.SchoolId}-Unnamed";
+            return MappingResult<ClassGroup>.Fail("Name", "Class group name is required.");
         }
 
         var result = new MappingResult<ClassGroup> { Success = true };
@@ -50,11 +50,8 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
         int? schoolId = source.SchoolId == 0 ? null : (int)source.SchoolId;
         if (schoolId.HasValue && _validSchoolIds.Count > 0 && !_validSchoolIds.Contains(schoolId.Value))
         {
-            // Invalid school reference - set to null rather than failing
-            schoolId = null;
-            result.Warnings.Add(new MappingWarning("SchoolId",
-                $"Class Group references invalid SchoolId {source.SchoolId}. Set to null.",
-                source.SchoolId.ToString(), null));
+            return MappingResult<ClassGroup>.Fail("SchoolId",
+                $"Class group references invalid SchoolId {source.SchoolId}.");
         }
 
         // Parse DayId to DayOfWeek (1=Monday, 2=Tuesday, etc.)
@@ -103,11 +100,8 @@ public sealed class ClassGroupDataMapper : IDataMapper<LegacyClassGroupRecord, C
 
         if (startTime.HasValue && endTime.HasValue && endTime <= startTime)
         {
-            // Swap times if end is before start
-            (startTime, endTime) = (endTime, startTime);
-            result.Warnings.Add(new MappingWarning("EndTime",
-                "End Time was before Start Time - times were swapped.",
-                source.EndTime, endTime.ToString()));
+            return MappingResult<ClassGroup>.Fail("EndTime",
+                "End Time must be after Start Time.");
         }
 
         // Parse TruckId from DayTruck
