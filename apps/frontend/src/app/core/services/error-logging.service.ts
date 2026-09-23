@@ -219,7 +219,7 @@ export class ErrorLoggingService {
       userMessage,
       statusCode,
       url,
-      method: options.context?.['method'],
+      method: typeof options.context?.['method'] === 'string' ? options.context['method'] : undefined,
       stack,
       context: options.context,
       handled: true,

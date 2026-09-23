@@ -3,6 +3,7 @@ using Kcow.Application.Import;
 using Kcow.Application.Interfaces;
 using Kcow.Domain.Entities;
 using Kcow.Infrastructure.Database;
+using System.Globalization;
 
 namespace Kcow.Infrastructure.Import;
 
@@ -60,8 +61,9 @@ public sealed class LegacyBillingImportService
         var validStudentIds = await LoadStudentIdsAsync(cancellationToken);
         var referenceToStudentId = await LoadStudentReferenceMappingAsync(cancellationToken);
         var schoolPrices = await LoadSchoolPricesAsync(cancellationToken);
+        var nextReceiptNumber = await LoadNextReceiptNumberAsync(cancellationToken);
 
-        var mapper = new LegacyBillingMapper(validStudentIds, referenceToStudentId, schoolPrices);
+        var mapper = new LegacyBillingMapper(validStudentIds, referenceToStudentId, schoolPrices, nextReceiptNumber);
         var invoices = new List<Invoice>();
         var payments = new List<Payment>();
         var invoicesSkipped = 0;
@@ -191,29 +193,39 @@ public sealed class LegacyBillingImportService
     {
         using var connection = _connectionFactory.Create();
 
-        // Get all invoices with their payment totals
+        // Amounts are stored as TEXT. Sum parsed decimals in .NET to preserve
+        // financial precision and avoid SQLite's floating-point SUM conversion.
         const string sql = @"
-            SELECT i.id, i.student_id, i.amount, COALESCE(SUM(p.amount), 0) as paid_amount
+            SELECT i.id AS Id, i.amount AS InvoiceAmount, p.amount AS PaymentAmount
             FROM invoices i
             LEFT JOIN payments p ON p.invoice_id = i.id
-            WHERE i.status = 0
-            GROUP BY i.id, i.student_id, i.amount";
+            WHERE i.status = 0";
 
-        var invoiceStatuses = await connection.QueryAsync<dynamic>(sql);
+        var rows = await connection.QueryAsync<InvoicePaymentRow>(
+            new CommandDefinition(sql, cancellationToken: cancellationToken));
 
-        foreach (var inv in invoiceStatuses)
+        foreach (var invoiceRows in rows.GroupBy(row => row.Id))
         {
-            var invoiceAmount = (decimal)inv.amount;
-            var paidAmount = (decimal)inv.paid_amount;
+            var invoiceAmount = decimal.Parse(invoiceRows.First().InvoiceAmount, CultureInfo.InvariantCulture);
+            var paidAmount = invoiceRows.Sum(row => row.PaymentAmount is null
+                ? 0m
+                : decimal.Parse(row.PaymentAmount, CultureInfo.InvariantCulture));
 
             if (paidAmount >= invoiceAmount)
             {
                 // Mark as Paid
                 await connection.ExecuteAsync(
                     "UPDATE invoices SET status = 1 WHERE id = @Id",
-                    new { Id = (int)inv.id });
+                    new { Id = invoiceRows.Key });
             }
         }
+    }
+
+    private sealed class InvoicePaymentRow
+    {
+        public int Id { get; set; }
+        public string InvoiceAmount { get; set; } = string.Empty;
+        public string? PaymentAmount { get; set; }
     }
 
     private void WriteOutputFiles(string? auditLogPath, string? summaryOutputPath,
@@ -276,5 +288,16 @@ public sealed class LegacyBillingImportService
         return prices
             .Where(p => p.Price.HasValue)
             .ToDictionary(p => p.Id, p => p.Price!.Value);
+    }
+
+    private async Task<int> LoadNextReceiptNumberAsync(CancellationToken cancellationToken)
+    {
+        using var connection = _connectionFactory.Create();
+        // Legacy receipts use RCP-LEGACY-YYYYMMDD-NNNNN. Continue the sequence
+        // across import runs so a repeated payment date cannot reuse a receipt.
+        const string sql = "SELECT COALESCE(MAX(CAST(SUBSTR(receipt_number, 21) AS INTEGER)), 0) + 1 " +
+            "FROM payments WHERE receipt_number LIKE 'RCP-LEGACY-%'";
+        return await connection.QuerySingleAsync<int>(
+            new CommandDefinition(sql, cancellationToken: cancellationToken));
     }
 }

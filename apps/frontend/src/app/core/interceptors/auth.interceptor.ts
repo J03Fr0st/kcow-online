@@ -21,7 +21,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401) {
+      if (token && error.status === 401) {
         // Clear session synchronously and redirect to login
         authService.clearSessionAndRedirect();
       }

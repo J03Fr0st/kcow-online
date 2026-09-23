@@ -261,6 +261,7 @@ catch (Microsoft.Extensions.Hosting.HostAbortedException ex)
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    Environment.ExitCode = 1;
 }
 finally
 {

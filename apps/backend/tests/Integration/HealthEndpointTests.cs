@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 
@@ -32,6 +34,16 @@ public class HealthEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var content = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(content);
         Assert.Equal("healthy", content.Status);
+    }
+
+    [Fact]
+    public void EachFactoryUsesItsOwnDatabase()
+    {
+        using var client = _factory.CreateClient();
+        var configuration = _factory.Services.GetRequiredService<IConfiguration>();
+
+        Assert.Equal($"Data Source={_factory.DatabasePath}",
+            configuration.GetConnectionString("DefaultConnection"));
     }
 
     private record HealthResponse(string Status, DateTime Timestamp);

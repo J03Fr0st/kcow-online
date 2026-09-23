@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KCOW deep review — 23 September 2026</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#fafaf9, #0c0a09);
+        --surface: light-dark(#ffffff, #1c1917);
+        --ink: light-dark(#1c1917, #f5f5f4);
+        --muted: light-dark(#57534e, #a8a29e);
+        --border: light-dark(#e7e5e4, #44403c);
+        --accent: light-dark(#0f766e, #2dd4bf);
+        --danger: light-dark(#991b1b, #fca5a5);
+        --warn: light-dark(#92400e, #fbbf24);
+        --mark: light-dark(#fef3c7, #422006);
+        --text-xs: 0.75rem;
+        --text-sm: 0.875rem;
+        --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+        --text-lg: 1.35rem;
+        --text-xl: 1.75rem;
+        --text-2xl: clamp(2.1rem, 1.6rem + 2vw, 2.8rem);
+        --space-2xs: 0.25rem;
+        --space-xs: 0.5rem;
+        --space-sm: 0.75rem;
+        --space-md: 1rem;
+        --space-lg: 1.5rem;
+        --space-xl: 2.5rem;
+        --space-2xl: clamp(2.5rem, 4vw, 3.5rem);
+        --measure: 74ch;
+        --wide: 1080px;
+        --radius: 10px;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: var(--text-base)/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      main { display: grid; grid-template-columns: 1fr min(var(--measure), calc(100% - 3rem)) 1fr; padding: clamp(2rem, 5vw, 4rem) 0 6rem; row-gap: var(--space-md); }
+      main > * { grid-column: 2; }
+      main > .wide { grid-column: 1 / -1; width: min(100% - 3rem, var(--wide)); margin-inline: auto; }
+      header { display: grid; gap: var(--space-xs); }
+      h1, h2, h3 { line-height: 1.16; text-wrap: balance; margin: 0; }
+      h1 { font-size: var(--text-2xl); letter-spacing: -0.025em; }
+      h2 { font-size: var(--text-xl); letter-spacing: -0.015em; margin-top: var(--space-2xl); }
+      h3 { font-size: var(--text-lg); margin-top: var(--space-lg); }
+      p { margin: 0; text-wrap: pretty; }
+      ul, ol { margin-block: 0; padding-left: 1.3rem; }
+      li { margin-bottom: 0.35rem; }
+      a { color: var(--accent); text-underline-offset: 2px; }
+      strong { font-weight: 650; }
+      code { font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+      :not(pre) > code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.1em 0.35em; }
+      .meta, .eyebrow { color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em; }
+      .lede { color: var(--muted); font-size: var(--text-lg); line-height: 1.45; }
+      .toc { border-left: 2px solid var(--border); padding-left: var(--space-md); margin-top: var(--space-lg); }
+      .toc ol { color: var(--muted); }
+      .toc a { text-decoration: none; }
+      .toc a:hover { text-decoration: underline; }
+      .stats { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-lg); }
+      .stat { flex: 1 1 11rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-sm) var(--space-md); display: grid; gap: var(--space-2xs); }
+      .stat-value { font-size: var(--text-xl); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+      .stat-label { color: var(--muted); font-size: var(--text-xs); }
+      .finding { display: grid; gap: var(--space-xs); padding: var(--space-lg) 0; border-bottom: 1px solid var(--border); }
+      .finding h3 { margin: 0; }
+      .severity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+      .severity.p1 { color: var(--danger); }
+      .severity.p2 { color: var(--warn); }
+      .source { color: var(--muted); font-size: var(--text-sm); }
+      .callout { border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0; padding: var(--space-sm) var(--space-md); display: grid; gap: var(--space-2xs); }
+      .callout.warn { border-left-color: var(--warn); }
+      .callout-label { color: var(--muted); font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+      .table-wrap { overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; font-size: var(--text-sm); }
+      caption { text-align: left; color: var(--muted); font-size: var(--text-sm); margin-bottom: var(--space-xs); }
+      th, td { text-align: left; vertical-align: top; padding: var(--space-sm); border-bottom: 1px solid var(--border); }
+      thead th { color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; }
+      tbody th { font-weight: 650; }
+      .footnote { color: var(--muted); font-size: var(--text-sm); }
+      :where(a, [tabindex]):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+      [id] { scroll-margin-top: 2rem; }
+      @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+      @media print { :root { color-scheme: light; } body { font-size: 10.5pt; } main { display: block; padding: 0; } main > .wide { width: auto; } h2, h3 { break-after: avoid; } .finding, .callout, .stats, table { break-inside: avoid; } a::after { content: " (" attr(href) ")"; font-size: 0.85em; color: #555; } a[href^="#"]::after { content: ""; } @page { margin: 18mm; } }
+    </style>
+  </head>
+  <body data-profile="analytical">
+    <main>
+      <header>
+        <p class="meta">KCOW · repository audit · 23 September 2026 · origin/main @ 4035031</p>
+        <h1>Five review findings fixed; full test gates remain red</h1>
+        <p class="lede">The origin/main review found paths that could misattribute payments, repeat financial writes, expose a submitted password, lose HTTP status, or mask failed startup. This PR fixes all five and repairs two billing import defects found during verification. The repository-wide test suites still contain failures outside these paths.</p>
+      </header>
+
+      <div class="stats wide" aria-label="Review summary">
+        <div class="stat"><span class="stat-value">5 / 5</span><span class="stat-label">review findings fixed</span></div>
+        <div class="stat"><span class="stat-value">6 / 6</span><span class="stat-label">billing import tests passing</span></div>
+        <div class="stat"><span class="stat-value">13 / 13</span><span class="stat-label">billing service tests passing</span></div>
+        <div class="stat"><span class="stat-value">21 / 21</span><span class="stat-label">interceptor tests passing</span></div>
+      </div>
+
+      <nav class="toc" aria-label="Contents">
+        <ol>
+          <li><a href="#findings">Confirmed findings</a></li>
+          <li><a href="#sequence">Remediation status</a></li>
+          <li><a href="#checks">Checks and coverage</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="findings">Confirmed findings</h2>
+      <p>The findings below describe behavior present at the reviewed origin/main commit. Each identifies a concrete trigger, its source evidence, and the fix in this PR.</p>
+
+      <section class="finding" aria-labelledby="f1">
+        <p class="severity p1">P1 · data integrity</p>
+        <h3 id="f1">A payment can reference another student's invoice</h3>
+        <p>For <code>POST /api/students/1/payments</code> with an existing invoice owned by student 2, <code>CreatePaymentAsync</code> verifies only that the invoice exists, then inserts a payment for student 1 with student 2's invoice ID. The migration has separate foreign keys for <code>student_id</code> and <code>invoice_id</code>, so it does not reject that combination. Student 1's balance decreases while student 2's invoice is not settled by the invoice-payment query.</p>
+        <p class="source">Evidence: <code>apps/backend/src/Infrastructure/Billing/BillingService.cs:115–140,165–179</code>; <code>apps/backend/src/Infrastructure/Migrations/Scripts/014_CreatePayments.sql:2–13</code>. Story 6.1 defines student-scoped payment routes.</p>
+        <p><strong>Fixed:</strong> payment creation rejects an invoice whose <code>StudentId</code> differs from the route student. A unit regression test checks the rejected pair.</p>
+      </section>
+
+      <section class="finding" aria-labelledby="f2">
+        <p class="severity p1">P1 · financial reliability</p>
+        <h3 id="f2">The global interceptor retries payment and invoice creation</h3>
+        <p>The interceptor retries every HTTP method after network, timeout, 503, or 504 errors. Billing uses POST for both invoice and payment creation. If the server commits a write and the client receives one of those errors, resubscribing can send the same write up to two more times. The API has no idempotency key for these endpoints, so the student can receive duplicate charges or payments.</p>
+        <p class="source">Evidence: <code>apps/frontend/src/app/core/interceptors/error.interceptor.ts:25–48</code>; <code>apps/frontend/src/app/core/services/billing.service.ts:50–60,85–92</code>; <code>apps/backend/src/Api/Controllers/BillingController.cs:94,179</code>.</p>
+        <p><strong>Fixed:</strong> automatic retries now apply only to GET and HEAD. An HTTP test checks a payment POST is sent once after a 503 and a GET still retries.</p>
+      </section>
+
+      <section class="finding" aria-labelledby="f3">
+        <p class="severity p1">P1 · credential exposure</p>
+        <h3 id="f3">A failed login logs the submitted password</h3>
+        <p>When the login POST returns 401, the error interceptor passes the entire request body into the log context and enables console logging. The logging service retains that context in error history and prints it with <code>console.error</code>. The login body includes the password, so an ordinary failed sign-in exposes the submitted secret to browser diagnostics and any collected console output.</p>
+        <p class="source">Evidence: <code>apps/frontend/src/app/core/interceptors/error.interceptor.ts:53–67</code>; <code>apps/frontend/src/app/core/services/error-logging.service.ts:79–99,262–284</code>; <code>apps/frontend/src/app/core/services/auth.service.ts:50–54</code>.</p>
+        <p><strong>Fixed:</strong> generic error context no longer includes request bodies. The failed-login test checks the logger receives no password and the login screen is not redirected again.</p>
+      </section>
+
+      <section class="finding" aria-labelledby="f4">
+        <p class="severity p2">P2 · authentication recovery</p>
+        <h3 id="f4">Error conversion drops the HTTP status callers need</h3>
+        <p>After handling a 401, the error interceptor rethrows an <code>AppError</code> with <code>statusCode</code> rather than the original <code>HttpErrorResponse</code> with <code>status</code>. The outer auth interceptor and <code>AuthService.getCurrentUser()</code> both test <code>error.status === 401</code>. Their cleanup does not run, leaving the expired token in local storage. The route guard sees that token and allows a protected route to activate again.</p>
+        <p class="source">Evidence: <code>apps/frontend/src/app/core/interceptors/error.interceptor.ts:71</code>; <code>apps/frontend/src/app/models/error.model.ts:36–51</code>; <code>apps/frontend/src/app/core/interceptors/auth.interceptor.ts:22–27</code>; <code>apps/frontend/src/app/core/services/auth.service.ts:119–132</code>; <code>apps/frontend/src/app/core/guards/auth.guard.ts:21–24</code>.</p>
+        <p><strong>Fixed:</strong> the interceptor logs the error and rethrows the original <code>HttpErrorResponse</code>. The auth interceptor clears a session only when it attached a token; anonymous login failures remain on the login screen.</p>
+      </section>
+
+      <section class="finding" aria-labelledby="f5">
+        <p class="severity p2">P2 · deployment signals</p>
+        <h3 id="f5">Fatal API startup errors can exit successfully</h3>
+        <p>A missing production JWT key throws during host setup. The outer catch logs a fatal error but neither rethrows nor sets a nonzero process exit code. The process reaches the end of <code>Program.cs</code> normally, so a supervisor or deployment step that relies on exit status can treat failed startup as success.</p>
+        <p class="source">Evidence: <code>apps/backend/src/Api/Program.cs:87–89,261–270</code>.</p>
+        <p><strong>Fixed:</strong> the startup catch sets process exit code 1. A missing-key startup was reproduced with exit code 0 before the change and exit code 1 after it.</p>
+      </section>
+
+      <h2 id="sequence">Remediation status</h2>
+      <div class="table-wrap wide" tabindex="0" role="region" aria-label="Remediation status">
+        <table>
+          <caption>Fixes delivered in this PR and remaining validation work</caption>
+          <thead><tr><th scope="col">Area</th><th scope="col">Change</th><th scope="col">Verification</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Billing writes</th><td>Validate invoice ownership; stop retries of write requests.</td><td>13 billing service tests and POST/GET retry tests pass.</td></tr>
+            <tr><th scope="row">Credentials and auth</th><td>Remove request bodies from logs; retain HTTP errors for callers; avoid anonymous-login redirects.</td><td>21 focused interceptor tests pass.</td></tr>
+            <tr><th scope="row">Startup</th><td>Return exit code 1 on fatal host setup errors.</td><td>Missing-key process exit checked before and after the change.</td></tr>
+            <tr><th scope="row">Import</th><td>Parse SQLite amount text as decimals and continue legacy receipt numbering across import runs.</td><td>6 billing import integration tests pass, including a repeated-date regression.</td></tr>
+            <tr><th scope="row">Test isolation</th><td>Give integration factories separate temporary SQLite databases and run the integration assembly serially.</td><td>Factory configuration assertion passes; unrelated suite failures remain.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="checks">Focused checks pass; full suites still fail</h2>
+      <div class="table-wrap wide" tabindex="0" role="region" aria-label="Validation results">
+        <table>
+          <caption>Baseline and current-branch verification</caption>
+          <thead><tr><th scope="col">Command</th><th scope="col">Result</th><th scope="col">What it establishes</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Origin/main: backend integration</th><td>20 failed, 208 passed</td><td>Baseline test gate was red before fixes.</td></tr>
+            <tr><th scope="row">Origin/main: frontend Jest</th><td>78 failed, 3 passed suites</td><td>Baseline included Playwright <code>e2e</code> files in Jest and TypeScript errors in unit specs.</td></tr>
+            <tr><th scope="row">Current: <code>npm run build</code></th><td>Pass</td><td>Production bundle builds with existing large-chunk and sourcemap warnings.</td></tr>
+            <tr><th scope="row">Current: focused backend and interceptor tests</th><td>Pass</td><td>Billing service 13/13, billing import 6/6, and interceptors 21/21 pass.</td></tr>
+            <tr><th scope="row">Current: full backend solution</th><td>22 unit and 12 integration failures</td><td>Unit: 191/213 pass. Integration: 218/230 pass. Remaining failures include stale mapper and authentication expectations, attendance mocks, and family service test setup.</td></tr>
+            <tr><th scope="row">Current: full frontend Jest</th><td>55 failed, 27 passed suites</td><td>Many component specs still have TypeScript/test setup errors, and Jest still discovers Playwright tests.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="callout warn">
+        <p class="callout-label">Coverage boundary</p>
+        <p>This is a deep, risk-led audit of the origin/main baseline followed by fixes in an isolated worktree. The separate root checkout's uncommitted BMAD deletions and untracked scripts were excluded. The audit traced billing, authentication, HTTP interception, persistence constraints, startup, relevant specifications, and test configuration. It did not read every one of the repository's 1,285 tracked files or run browser E2E flows. Unexamined modules may contain additional defects.</p>
+      </aside>
+      <p class="footnote">Fixed point: <code>4035031cefc904b3d4f18fb0e7775e5062d70e4a</code>. The report contains inline styles only and has no network dependency.</p>
+    </main>
+  </body>
+</html>

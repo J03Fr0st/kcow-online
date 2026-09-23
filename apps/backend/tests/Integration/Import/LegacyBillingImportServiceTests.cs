@@ -196,6 +196,32 @@ public class LegacyBillingImportServiceTests : IClassFixture<CustomWebApplicatio
         Assert.True(summary.TotalPaid >= 1500m);
     }
 
+    [Fact]
+    public async Task ImportAsync_RepeatedDate_KeepsReceiptNumbersUnique()
+    {
+        EnsureDatabaseInitialized();
+        using var scope = _factory.Services.CreateScope();
+        var service = CreateImportService(scope);
+        var receiptNumbers = new List<string>();
+
+        for (var index = 0; index < 2; index++)
+        {
+            var (studentId, schoolId, testRef) = await CreateTestDataAsync();
+            var record = new LegacyBillingImportRecord(
+                studentId, null, schoolId, testRef, null, "100", "50", "2024-03-15",
+                null, null, null, null);
+
+            var result = await service.ImportAsync(new[] { record }, null, null);
+            Assert.Equal(1, result.PaymentsImported);
+
+            var repository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
+            var payment = Assert.Single(await repository.GetByStudentIdAsync(studentId));
+            receiptNumbers.Add(payment.ReceiptNumber);
+        }
+
+        Assert.Equal(2, receiptNumbers.Distinct().Count());
+    }
+
     private LegacyBillingImportService CreateImportService(IServiceScope scope)
     {
         return new LegacyBillingImportService(

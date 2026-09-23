@@ -32,7 +32,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         if (error instanceof HttpErrorResponse) {
           const retryableStatuses = [0, 408, 503, 504]; // Network, timeout, service unavailable, gateway timeout
 
-          if (retryableStatuses.includes(error.status)) {
+          if ((req.method === 'GET' || req.method === 'HEAD') && retryableStatuses.includes(error.status)) {
             // Exponential backoff: 1s, 2s
             const delayMs = 2 ** (retryCount - 1) * 1000;
             console.log(
@@ -53,22 +53,21 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const problemDetails = parseProblemDetails(error);
 
       // Log the error with ProblemDetails context
-      const appError = errorLogger.logHttpError(error, req.url, req.method, {
+      errorLogger.logHttpError(error, req.url, req.method, {
         logToConsole: true,
         logToServer: shouldLogToServer(error),
         showUserNotification: shouldShowNotification(error),
         context: {
-          requestBody: req.body,
           headers: extractHeaders(req.headers),
           problemDetails: problemDetails, // Include ProblemDetails for debugging
         },
       });
 
       // Handle specific error types using ProblemDetails when available
-      handleSpecificErrors(error, router, problemDetails);
+      handleSpecificErrors(error, router, problemDetails, req.url);
 
       // Re-throw the error for component handling
-      return throwError(() => appError);
+      return throwError(() => error);
     }),
   );
 };
@@ -112,6 +111,7 @@ function handleSpecificErrors(
   error: HttpErrorResponse,
   router: Router,
   problemDetails: ProblemDetails | null,
+  requestUrl: string,
 ): void {
   const status = error.status;
   const title = problemDetails?.title || getErrorMessage(status);
@@ -119,6 +119,7 @@ function handleSpecificErrors(
 
   switch (status) {
     case 401:
+      if (/\/auth\/login(?:\?|$)/i.test(requestUrl)) break;
       // Unauthorized - redirect to login
       console.log('Unauthorized access - redirecting to login');
       // Clear expired token from storage

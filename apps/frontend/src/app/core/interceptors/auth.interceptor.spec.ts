@@ -64,4 +64,19 @@ describe('authInterceptor', () => {
 
     expect(authServiceSpy.clearSessionAndRedirect).toHaveBeenCalled();
   });
+
+  it('does not clear a session for a failed anonymous login', () => {
+    authServiceSpy.getToken.mockReturnValue(null);
+
+    httpClient.post('/api/auth/login', { email: 'person@example.com', password: 'wrong' }).subscribe({
+      error: () => undefined,
+    });
+
+    httpMock.expectOne('/api/auth/login').flush('Unauthorized', {
+      status: 401,
+      statusText: 'Unauthorized',
+    });
+
+    expect(authServiceSpy.clearSessionAndRedirect).not.toHaveBeenCalled();
+  });
 });
